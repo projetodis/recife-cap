@@ -114,8 +114,11 @@ export default function ClienteHome() {
   }, [])
 
   useEffect(() => {
-    if (!edicaoId) return
-    fetch(`/api/cliente/premios?edicao_id=${edicaoId}`)
+    const url = edicaoId
+      ? `/api/cliente/premios?edicao_id=${edicaoId}`
+      : '/api/cliente/premios'
+    console.log('Buscando prêmios:', url)
+    fetch(url)
       .then(r => r.json())
       .then(data => {
         console.log('Prêmios recebidos:', data)
