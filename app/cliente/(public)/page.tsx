@@ -33,15 +33,16 @@ function IconYoutube({ size = 16 }: { size?: number }) {
   )
 }
 
-// ── Ganhadores fictícios ───────────────────────────────────────────────────────
-const GANHADORES = [
-  { id: 1, nome: 'Maria S.',  cidade: 'Recife, PE',   premio: 'R$ 120.000', sorteio: 'Prêmio Principal', depoimento: 'Não acreditei quando recebi a ligação! Que sorte incrível, obrigada Recife Cap!',                      foto: 'https://randomuser.me/api/portraits/women/44.jpg' },
-  { id: 2, nome: 'João C.',   cidade: 'Olinda, PE',   premio: 'R$ 5.000',   sorteio: '1º Prêmio',       depoimento: 'Comprei um título na semana passada e já ganhei. Inacreditável!',                                       foto: 'https://randomuser.me/api/portraits/men/32.jpg'   },
-  { id: 3, nome: 'Ana R.',    cidade: 'Caruaru, PE',  premio: 'R$ 10.000',  sorteio: '2º Prêmio',       depoimento: 'Sempre acreditei. Todo domingo acompanho ao vivo e finalmente meu número saiu!',                        foto: 'https://randomuser.me/api/portraits/women/68.jpg' },
-  { id: 4, nome: 'Pedro M.',  cidade: 'Paulista, PE', premio: 'R$ 15.000',  sorteio: '3º Prêmio',       depoimento: 'Melhor investimento de R$ 10 que já fiz na vida. Super recomendo!',                                     foto: 'https://randomuser.me/api/portraits/men/75.jpg'   },
-  { id: 5, nome: 'Lucia B.',  cidade: 'Recife, PE',   premio: 'R$ 1.000',   sorteio: 'Giro da Sorte',   depoimento: 'Participo há 3 meses e finalmente ganhei. O sorteio é transparente e ao vivo!',                         foto: 'https://randomuser.me/api/portraits/women/26.jpg' },
-  { id: 6, nome: 'Carlos N.', cidade: 'Jaboatão, PE', premio: 'R$ 120.000', sorteio: 'Prêmio Principal', depoimento: 'Minha vida mudou completamente. Obrigado Recife Cap e Hospital Varela Santiago!',                     foto: 'https://randomuser.me/api/portraits/men/52.jpg'   },
-]
+// ── Tipos do carrossel ─────────────────────────────────────────────────────────
+interface DepoimentoItem {
+  id: string
+  nome: string
+  cidade: string
+  premio: string
+  sorteio: string
+  depoimento: string
+  foto_url: string | null
+}
 
 const cardVariants = {
   enter: (dir: number) => ({ x: dir > 0 ? 300 : -300, opacity: 0, scale: 0.9 }),
@@ -51,37 +52,58 @@ const cardVariants = {
 
 // ── Carrossel de depoimentos ───────────────────────────────────────────────────
 function CarrosselDepoimentos() {
-  const [atual,     setAtual]     = useState(0)
-  const [direction, setDirection] = useState(0)
+  const [depoimentos, setDepoimentos] = useState<DepoimentoItem[]>([])
+  const [atual,       setAtual]       = useState(0)
+  const [direction,   setDirection]   = useState(0)
+
+  useEffect(() => {
+    fetch('/api/cliente/depoimentos')
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data) && data.length > 0) setDepoimentos(data) })
+      .catch(() => {})
+  }, [])
+
+  const total = depoimentos.length
 
   const anterior = () => {
     setDirection(-1)
-    setAtual(prev => (prev === 0 ? GANHADORES.length - 1 : prev - 1))
+    setAtual(prev => (prev === 0 ? total - 1 : prev - 1))
   }
   const proximo = () => {
     setDirection(1)
-    setAtual(prev => (prev + 1) % GANHADORES.length)
+    setAtual(prev => (prev + 1) % total)
   }
   const irPara = (i: number) => { setDirection(i > atual ? 1 : -1); setAtual(i) }
 
   useEffect(() => {
+    if (total === 0) return
     const t = setInterval(proximo, 5000)
     return () => clearInterval(t)
-  }, [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [total])
 
-  const g     = GANHADORES[atual]
-  const prev1 = GANHADORES[(atual - 1 + GANHADORES.length) % GANHADORES.length]
-  const next1 = GANHADORES[(atual + 1) % GANHADORES.length]
+  if (total === 0) return null
 
-  const CardPrincipal = ({ item }: { item: typeof GANHADORES[0] }) => (
+  const g     = depoimentos[atual]
+  const prev1 = depoimentos[(atual - 1 + total) % total]
+  const next1 = depoimentos[(atual + 1) % total]
+
+  const CardPrincipal = ({ item }: { item: DepoimentoItem }) => (
     <>
       {/* Foto com anel gradiente */}
       <div className="relative mb-4">
         <div className="w-20 h-20 rounded-full p-0.5 mx-auto"
           style={{ background: 'linear-gradient(135deg, #FFC107, #2E7D32)' }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={item.foto} alt={item.nome}
-            className="w-full h-full rounded-full object-cover border-2 border-white" />
+          {item.foto_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={item.foto_url} alt={item.nome}
+              className="w-full h-full rounded-full object-cover border-2 border-white" />
+          ) : (
+            <div className="w-full h-full rounded-full border-2 border-white flex items-center justify-center text-2xl font-black"
+              style={{ background: '#2E7D32', color: '#FFC107' }}>
+              {item.nome.charAt(0).toUpperCase()}
+            </div>
+          )}
         </div>
         <div className="absolute bottom-0 right-1/2 translate-x-8 w-6 h-6 rounded-full flex items-center justify-center"
           style={{ background: '#2E7D32' }}>
@@ -126,8 +148,15 @@ function CarrosselDepoimentos() {
           <div className="w-64 h-64 rounded-3xl p-6 flex flex-col items-center text-center opacity-40 scale-90 transition-all cursor-pointer flex-shrink-0"
             style={{ background: 'white', border: '1px solid #e5e7eb', filter: 'blur(1px)' }}
             onClick={anterior}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={prev1.foto} alt={prev1.nome} className="w-14 h-14 rounded-full object-cover mb-3 border-2 border-[#2E7D32]" />
+            {prev1.foto_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={prev1.foto_url} alt={prev1.nome} className="w-14 h-14 rounded-full object-cover mb-3 border-2 border-[#2E7D32]" />
+            ) : (
+              <div className="w-14 h-14 rounded-full mb-3 border-2 border-[#2E7D32] flex items-center justify-center font-black text-lg"
+                style={{ background: '#E8F5E9', color: '#2E7D32' }}>
+                {prev1.nome.charAt(0).toUpperCase()}
+              </div>
+            )}
             <p className="font-black text-gray-900 text-sm">{prev1.nome}</p>
             <p className="text-xs text-gray-500">{prev1.cidade}</p>
           </div>
@@ -156,8 +185,15 @@ function CarrosselDepoimentos() {
           <div className="w-64 h-64 rounded-3xl p-6 flex flex-col items-center text-center opacity-40 scale-90 transition-all cursor-pointer flex-shrink-0"
             style={{ background: 'white', border: '1px solid #e5e7eb', filter: 'blur(1px)' }}
             onClick={proximo}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={next1.foto} alt={next1.nome} className="w-14 h-14 rounded-full object-cover mb-3 border-2 border-[#2E7D32]" />
+            {next1.foto_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={next1.foto_url} alt={next1.nome} className="w-14 h-14 rounded-full object-cover mb-3 border-2 border-[#2E7D32]" />
+            ) : (
+              <div className="w-14 h-14 rounded-full mb-3 border-2 border-[#2E7D32] flex items-center justify-center font-black text-lg"
+                style={{ background: '#E8F5E9', color: '#2E7D32' }}>
+                {next1.nome.charAt(0).toUpperCase()}
+              </div>
+            )}
             <p className="font-black text-gray-900 text-sm">{next1.nome}</p>
             <p className="text-xs text-gray-500">{next1.cidade}</p>
           </div>
@@ -200,7 +236,7 @@ function CarrosselDepoimentos() {
             <ChevronLeft size={18} />
           </button>
           <div className="flex gap-2">
-            {GANHADORES.map((_, i) => (
+            {depoimentos.map((_, i) => (
               <button key={i} onClick={() => irPara(i)}
                 className="transition-all duration-300 rounded-full"
                 style={{
