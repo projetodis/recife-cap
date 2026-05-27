@@ -24,6 +24,7 @@ type Ponto = {
   endereco?: string
   bairro?: string
   cidade?: string
+  uf?: string
   cartelas: number
   visitado: boolean
   visitado_em?: string
@@ -43,8 +44,28 @@ function formatarHora(iso?: string): string {
   return new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
 }
 
-function enderecoLabel(p: Ponto): string {
-  return [p.endereco, p.bairro, p.cidade].filter(Boolean).join(' · ') || 'Endereço não informado'
+function montarEndereco(p: Ponto): string {
+  const partes = [p.endereco, p.bairro, p.cidade, p.uf]
+    .filter(v => v && v.trim() !== '')
+  return partes.length > 0 ? partes.join(' · ') : 'Endereço não informado'
+}
+
+async function geocodificarEndereco(p: Ponto): Promise<{ lat: number; lng: number } | null> {
+  const query = [p.endereco, p.bairro, p.cidade, p.uf, 'Brasil']
+    .filter(v => v && v.trim() !== '')
+    .join(', ')
+  if (!query) return null
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`,
+      { headers: { 'User-Agent': 'RecifeCap/1.0' } }
+    )
+    const data = await res.json()
+    if (data[0]) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) }
+  } catch (_e) {
+    console.warn('Geocoding falhou para:', query)
+  }
+  return null
 }
 
 function calcularDistancia(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -125,7 +146,7 @@ export default function RotaClienteWrapper({ nomeMotoboy, nomeRota, rotaId, pont
       ordem:            p.ordem,
     }))
 
-  const mapaKey = pontosState.map(p => `${p.parada_id}:${p.visitado}`).join(',')
+  const mapaKey = pontosState.map(p => `${p.parada_id}:${p.visitado}:${p.lat}:${p.lng}`).join(',')
 
   async function buscarRotaOSRM(pts: Ponto[]): Promise<void> {
     const comGeo = pts.filter(p => !p.visitado && p.lat != null && p.lng != null)
@@ -179,6 +200,29 @@ export default function RotaClienteWrapper({ nomeMotoboy, nomeRota, rotaId, pont
     )
 
     return () => navigator.geolocation.clearWatch(watchId)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Geocoding para PDVs sem coordenadas (Nominatim, 1 req/s)
+  useEffect(() => {
+    const semGeo = pontos.filter(p => p.lat === null || p.lng === null)
+    if (semGeo.length === 0) return
+    let cancelado = false
+
+    async function geocodar() {
+      for (const p of semGeo) {
+        if (cancelado) break
+        const coords = await geocodificarEndereco(p)
+        if (coords && !cancelado) {
+          setPontosState(prev => prev.map(pt =>
+            pt.parada_id === p.parada_id ? { ...pt, lat: coords.lat, lng: coords.lng } : pt
+          ))
+        }
+        await new Promise(r => setTimeout(r, 1100)) // respeita limite Nominatim 1 req/s
+      }
+    }
+
+    geocodar()
+    return () => { cancelado = true }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   function navegarParaParada(p: Ponto) {
@@ -388,7 +432,7 @@ export default function RotaClienteWrapper({ nomeMotoboy, nomeRota, rotaId, pont
                       }`}>
                         {p.nome}
                       </p>
-                      <p className="text-xs text-gray-500 truncate mt-0.5">{enderecoLabel(p)}</p>
+                      <p className="text-xs text-gray-500 truncate mt-0.5">{montarEndereco(p)}</p>
                     </div>
                     {isVisitada ? (
                       <span className="text-xs bg-emerald-900/50 text-emerald-400 px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0">
@@ -435,7 +479,7 @@ export default function RotaClienteWrapper({ nomeMotoboy, nomeRota, rotaId, pont
             </span>
             <div className="flex-1 min-w-0">
               <p className="text-base font-bold text-white leading-tight truncate">{paradaAtual.nome}</p>
-              <p className="text-xs text-gray-400 truncate mt-0.5">{enderecoLabel(paradaAtual)}</p>
+              <p className="text-xs text-gray-400 truncate mt-0.5">{montarEndereco(paradaAtual)}</p>
             </div>
             <div className="text-right flex-shrink-0">
               <p className="text-xs text-gray-400">Cartelas</p>
