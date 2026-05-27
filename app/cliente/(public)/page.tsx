@@ -114,17 +114,11 @@ export default function ClienteHome() {
   }, [])
 
   useEffect(() => {
-    const url = edicaoId
-      ? `/api/cliente/premios?edicao_id=${edicaoId}`
-      : '/api/cliente/premios'
-    console.log('Buscando prêmios:', url)
-    fetch(url)
+    if (!edicaoId) return
+    fetch(`/api/cliente/premios?edicao_id=${edicaoId}`)
       .then(r => r.json())
-      .then(data => {
-        console.log('Prêmios recebidos:', data)
-        if (Array.isArray(data)) setPremios(data)
-      })
-      .catch(err => console.error('Erro ao buscar prêmios:', err))
+      .then(data => { if (Array.isArray(data)) setPremios(data) })
+      .catch(() => {})
   }, [edicaoId])
 
   function scrollTo(id: string) {
@@ -342,14 +336,14 @@ export default function ClienteHome() {
                       style={p.destaque ? { background: 'linear-gradient(135deg, #1B5E20, #2E7D32)' } : undefined}>
 
                       {/* Foto do prêmio */}
-                      <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center"
+                      <div className="w-20 h-16 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center"
                         style={{ background: '#000' }}>
                         {p.foto_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={p.foto_url}
                             alt={p.nome}
-                            className="w-full h-full object-contain"
+                            className="w-full h-full object-contain p-1"
                             onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
                           />
                         ) : (
