@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 
 const MapaLeaflet = dynamic(() => import('@/components/maps/MapaLeaflet'), {
@@ -47,16 +47,56 @@ function enderecoLabel(p: Ponto): string {
   return [p.endereco, p.bairro, p.cidade].filter(Boolean).join(' · ') || 'Endereço não informado'
 }
 
+function calcularDistancia(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLng = (lng2 - lng1) * Math.PI / 180
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+function otimizarPontos(pts: Ponto[], startLat: number, startLng: number): Ponto[] {
+  const pendentes     = pts.filter(p => !p.visitado && p.lat != null && p.lng != null)
+  const semGeo        = pts.filter(p => !p.visitado && (p.lat == null || p.lng == null))
+  const jaVisitados   = pts.filter(p => p.visitado)
+
+  const restantes  = [...pendentes]
+  const ordenados: Ponto[] = []
+  let curLat = startLat, curLng = startLng
+
+  while (restantes.length > 0) {
+    let melhorIdx = 0, melhorDist = Infinity
+    restantes.forEach((p, i) => {
+      const d = calcularDistancia(curLat, curLng, p.lat!, p.lng!)
+      if (d < melhorDist) { melhorDist = d; melhorIdx = i }
+    })
+    const prox = restantes.splice(melhorIdx, 1)[0]
+    ordenados.push(prox)
+    curLat = prox.lat!; curLng = prox.lng!
+  }
+
+  return [
+    ...jaVisitados,
+    ...ordenados.map((p, i) => ({ ...p, ordem: jaVisitados.length + i + 1 })),
+    ...semGeo,
+  ]
+}
+
 export default function RotaClienteWrapper({ nomeMotoboy, nomeRota, rotaId, pontos }: Props) {
   const [pontosState, setPontosState] = useState<Ponto[]>(pontos)
   const [paradaAtual, setParadaAtual] = useState<Ponto | null>(
     pontos.find(p => !p.visitado) ?? null
   )
-  const [vistaLista, setVistaLista] = useState(false)
-  const [concluida, setConcluida]   = useState(
+  const [vistaLista, setVistaLista]             = useState(false)
+  const [concluida, setConcluida]               = useState(
     pontos.length > 0 && pontos.every(p => p.visitado)
   )
-  const [carregando, setCarregando] = useState(false)
+  const [carregando, setCarregando]             = useState(false)
+  const [localizacaoAtual, setLocalizacaoAtual] = useState<{ lat: number; lng: number } | null>(null)
+  const [rotaCoords, setRotaCoords]             = useState<[number, number][]>([])
+  const [distanciaKm, setDistanciaKm]           = useState(0)
 
   const visitados = pontosState.filter(p => p.visitado).length
   const total     = pontosState.length
@@ -85,9 +125,61 @@ export default function RotaClienteWrapper({ nomeMotoboy, nomeRota, rotaId, pont
       ordem:            p.ordem,
     }))
 
-  console.log('Pontos com coordenadas:', pontosDoMapa.length)
-
   const mapaKey = pontosState.map(p => `${p.parada_id}:${p.visitado}`).join(',')
+
+  async function buscarRotaOSRM(pts: Ponto[]): Promise<void> {
+    const comGeo = pts.filter(p => !p.visitado && p.lat != null && p.lng != null)
+    if (comGeo.length < 2) {
+      setRotaCoords([])
+      setDistanciaKm(0)
+      return
+    }
+    try {
+      const coordStr = comGeo.map(p => `${p.lng!},${p.lat!}`).join(';')
+      const res = await fetch(
+        `https://router.project-osrm.org/route/v1/driving/${coordStr}?overview=full&geometries=geojson`
+      )
+      if (!res.ok) return
+      const data = await res.json()
+      const rota = data.routes?.[0]
+      if (!rota) return
+      const coords: [number, number][] = (rota.geometry.coordinates as [number, number][]).map(
+        ([lng, lat]) => [lat, lng]
+      )
+      setRotaCoords(coords)
+      setDistanciaKm(Math.round(rota.distance / 100) / 10)
+    } catch (_e) {
+      // OSRM indisponível, mantém rota atual
+    }
+  }
+
+  useEffect(() => {
+    if (!navigator?.geolocation) {
+      buscarRotaOSRM(pontos)
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const { latitude: lat, longitude: lng } = pos.coords
+        setLocalizacaoAtual({ lat, lng })
+        const otimizados = otimizarPontos(pontos, lat, lng)
+        setPontosState(otimizados)
+        setParadaAtual(otimizados.find(p => !p.visitado) ?? null)
+        buscarRotaOSRM(otimizados)
+      },
+      () => buscarRotaOSRM(pontos),
+      { enableHighAccuracy: true, timeout: 10000 }
+    )
+
+    const watchId = navigator.geolocation.watchPosition(
+      pos => setLocalizacaoAtual({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 5000 }
+    )
+
+    return () => navigator.geolocation.clearWatch(watchId)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   function navegarParaParada(p: Ponto) {
     if (!p.lat || !p.lng) return
@@ -149,6 +241,10 @@ export default function RotaClienteWrapper({ nomeMotoboy, nomeRota, rotaId, pont
         .update({ status: 'concluida', concluida_em: agora })
         .eq('id', rotaId)
       setConcluida(true)
+      setRotaCoords([])
+      setDistanciaKm(0)
+    } else if (proxima) {
+      await buscarRotaOSRM(atualizados)
     }
 
     setCarregando(false)
@@ -219,9 +315,14 @@ export default function RotaClienteWrapper({ nomeMotoboy, nomeRota, rotaId, pont
           />
         </div>
 
-        {/* Linha 4: contagem + toggle */}
+        {/* Linha 4: contagem + distância + toggle */}
         <div className="flex items-center justify-between">
-          <p className="text-xs text-gray-400">{visitados} de {total} concluídas</p>
+          <p className="text-xs text-gray-400">
+            {visitados} de {total} concluídas
+            {distanciaKm > 0 && (
+              <span className="ml-2 text-emerald-400">· {distanciaKm} km restante</span>
+            )}
+          </p>
           <div className="flex gap-1">
             <button
               onClick={() => setVistaLista(false)}
@@ -253,6 +354,8 @@ export default function RotaClienteWrapper({ nomeMotoboy, nomeRota, rotaId, pont
             mostrarRota
             centroLat={centroLat}
             centroLng={centroLng}
+            rotaCoords={rotaCoords}
+            locAtual={localizacaoAtual}
           />
         ) : (
           <div className="p-3 space-y-2 pb-6">

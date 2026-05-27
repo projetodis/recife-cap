@@ -10,11 +10,18 @@ export default async function MotoboyListPage() {
   const { data: dist } = await supabase
     .from('distribuidores').select('id').eq('user_id', user.id).single()
 
-  const { data: motoboys } = await supabase
+  const { data: motoboys, error: motoboyError } = await supabase
     .from('motoboys')
     .select('*, profiles(email)')
     .eq('distribuidor_id', dist?.id)
     .order('created_at', { ascending: false })
+
+  console.log('[motoboys-debug]', {
+    userId:  user.id,
+    distId:  dist?.id ?? null,
+    total:   motoboys?.length ?? 0,
+    erro:    motoboyError?.message ?? null,
+  })
 
   // Rotas de hoje por motoboy
   const hoje = new Date().toISOString().split('T')[0]

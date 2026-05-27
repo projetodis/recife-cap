@@ -31,40 +31,44 @@ export default async function MotoboyRotasPage() {
 
   const hoje = new Date().toISOString().split('T')[0]
 
-  const { data: rota } = await supabase
+  // Busca TODAS as rotas do dia (sem limit) — evita pegar a rota errada
+  const { data: rotasList } = await supabase
     .from('rotas_entrega')
     .select('*')
     .eq('motoboy_id', motoboy.id)
     .eq('data_rota', hoje)
     .in('status', ['pendente', 'em_andamento'])
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
+    .order('created_at', { ascending: true })
 
-  let paradas: any[] = []
-  if (rota) {
-    const { data } = await supabase
-      .from('paradas_rota')
-      .select(`
-        id,
-        ordem,
-        quantidade_cartelas,
-        status,
-        visitado_em,
-        pdv_id,
-        pontos_de_venda (
-          id, nome, responsavel_nome, telefone,
-          endereco, numero, bairro, cidade, uf,
-          latitude, longitude
-        )
-      `)
-      .eq('rota_id', rota.id)
-      .order('ordem', { ascending: true })
+  const rotasComParadas = rotasList ? await Promise.all(
+    rotasList.map(async (r) => {
+      const { data: paradasRota } = await supabase
+        .from('paradas_rota')
+        .select(`
+          id,
+          ordem,
+          quantidade_cartelas,
+          status,
+          visitado_em,
+          pdv_id,
+          pontos_de_venda (
+            id, nome, responsavel_nome, telefone,
+            endereco, numero, bairro, cidade, uf,
+            latitude, longitude
+          )
+        `)
+        .eq('rota_id', r.id)
+        .order('ordem', { ascending: true })
+      return { ...r, paradas: paradasRota ?? [] }
+    })
+  ) : []
 
-    paradas = data ?? []
-  }
+  // Prioriza rota em_andamento; senão usa a mais antiga (primeira criada)
+  const rota = rotasComParadas.find(r => r.status === 'em_andamento')
+    ?? rotasComParadas[0]
+    ?? null
 
-  const pontos = paradas.map((p: any) => {
+  const pontos = (rota?.paradas ?? []).map((p: any) => {
     const pdv = Array.isArray(p.pontos_de_venda) ? p.pontos_de_venda[0] : p.pontos_de_venda
     return {
       parada_id:   p.id,

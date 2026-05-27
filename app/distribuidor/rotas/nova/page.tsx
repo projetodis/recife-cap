@@ -205,7 +205,7 @@ export default function NovaRotaPage() {
         .from('distribuidores').select('id').eq('user_id', user.id).single()
       if (!distribuidor) throw new Error('Distribuidor não encontrado')
 
-      const { data: rota, error: rotaError } = await supabase
+      const { data: rotaCriada, error: rotaError } = await supabase
         .from('rotas_entrega')
         .insert({
           motoboy_id:      motoboyId,
@@ -214,22 +214,28 @@ export default function NovaRotaPage() {
           data_rota:       dataRota,
           status:          'pendente',
         })
-        .select()
+        .select('id')
         .single()
 
-      if (rotaError) throw new Error(rotaError.message)
+      if (rotaError || !rotaCriada?.id) {
+        console.error('[rotas] Erro ao criar rota:', rotaError)
+        throw new Error(rotaError?.message ?? 'ID da rota não retornado')
+      }
 
       const { error: paradasError } = await supabase
         .from('paradas_rota')
         .insert(paradas.map(p => ({
-          rota_id:             rota.id,
+          rota_id:             rotaCriada.id,
           pdv_id:              p.pdv.id,
           ordem:               p.ordem,
           quantidade_cartelas: p.quantidade,
           status:              'pendente',
         })))
 
-      if (paradasError) throw new Error(paradasError.message)
+      if (paradasError) {
+        console.error('[rotas] Erro ao criar paradas:', paradasError)
+        throw new Error(paradasError.message)
+      }
 
       router.push('/distribuidor/rotas')
     } catch (err: unknown) {

@@ -25,6 +25,8 @@ interface MapaProps {
   mostrarRota?: boolean
   centroLat?: number
   centroLng?: number
+  rotaCoords?: [number, number][]
+  locAtual?: { lat: number; lng: number } | null
 }
 
 const COR_STATUS: Record<string, string> = {
@@ -41,10 +43,15 @@ export default function MapaLeaflet({
   mostrarRota = false,
   centroLat,
   centroLng,
+  rotaCoords,
+  locAtual,
 }: MapaProps) {
   const mapRef       = useRef<any>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const rotaPolyRef  = useRef<any>(null)
+  const gpsMarkerRef = useRef<any>(null)
 
+  // ── Init do mapa (roda uma vez por montagem) ─────────────────────
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (mapRef.current) return
@@ -174,10 +181,10 @@ export default function MapaLeaflet({
         `, { maxWidth: 260 })
       })
 
-      // Rota tracejada
+      // Polyline tracejada como fallback (substituída pela OSRM quando disponível)
       if (mostrarRota && pontos.length > 1) {
         const coords = pontos.map(p => [p.lat, p.lng] as [number, number])
-        L.polyline(coords, {
+        rotaPolyRef.current = L.polyline(coords, {
           color:     '#10b981',
           weight:    3,
           dashArray: '8, 6',
@@ -197,8 +204,49 @@ export default function MapaLeaflet({
         mapRef.current.remove()
         mapRef.current = null
       }
+      rotaPolyRef.current  = null
+      gpsMarkerRef.current = null
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Rota OSRM — substitui polyline tracejada por rota real ───────
+  useEffect(() => {
+    if (!mapRef.current || !rotaCoords || rotaCoords.length < 2) return
+    import('leaflet').then(L => {
+      if (!mapRef.current) return
+      rotaPolyRef.current?.remove()
+      rotaPolyRef.current = L.polyline(rotaCoords, {
+        color:   '#10b981',
+        weight:  5,
+        opacity: 0.9,
+      }).addTo(mapRef.current)
+    })
+  }, [rotaCoords])
+
+  // ── Marcador azul da posição atual do motoboy ────────────────────
+  useEffect(() => {
+    if (!mapRef.current || !locAtual) return
+    import('leaflet').then(L => {
+      if (!mapRef.current) return
+      const icon = L.divIcon({
+        html: `<div style="
+          width:20px;height:20px;border-radius:50%;
+          background:#3b82f6;border:3px solid white;
+          box-shadow:0 0 0 5px rgba(59,130,246,0.25);
+        "></div>`,
+        className:  '',
+        iconSize:   [20, 20],
+        iconAnchor: [10, 10],
+      })
+      if (gpsMarkerRef.current) {
+        gpsMarkerRef.current.setLatLng([locAtual.lat, locAtual.lng])
+      } else {
+        gpsMarkerRef.current = L.marker([locAtual.lat, locAtual.lng], { icon, zIndexOffset: 1000 })
+          .addTo(mapRef.current)
+          .bindTooltip('Você está aqui', { permanent: false, direction: 'top' })
+      }
+    })
+  }, [locAtual])
 
   return (
     <>
