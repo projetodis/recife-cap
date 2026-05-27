@@ -3,10 +3,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
   Layout, Save, Plus, Trash2, Camera, Eye, EyeOff,
-  Upload, ChevronUp, ChevronDown, Star,
+  Upload, ChevronUp, ChevronDown, Star, Image as ImageIcon,
 } from 'lucide-react'
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Depoimento {
   id: string
@@ -20,8 +20,6 @@ interface Depoimento {
   ordem: number
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
 type Section =
   | 'hero'
   | 'sorteio'
@@ -32,16 +30,16 @@ type Section =
   | 'rodape'
 
 const SECTIONS: { id: Section; label: string; desc: string }[] = [
-  { id: 'hero',        label: 'Hero',                desc: 'Título, subtítulo e botão principal' },
-  { id: 'sorteio',     label: 'Sorteio da Semana',   desc: 'Data, hora e informações do próximo sorteio' },
-  { id: 'como',        label: 'Como Participar',      desc: 'Passos explicativos para novos participantes' },
-  { id: 'premios',     label: 'Prêmios da Edição',   desc: 'Gerenciado via Edições → Prêmios' },
-  { id: 'historico',   label: 'Histórico de Sorteios', desc: 'Textos da seção de resultados anteriores' },
-  { id: 'depoimentos', label: 'Depoimentos',          desc: 'Ganhadores que aparecem no carrossel' },
-  { id: 'rodape',      label: 'Rodapé',               desc: 'Contato, redes sociais e endereço' },
+  { id: 'hero',        label: 'Hero',                 desc: 'Imagens, título e botões' },
+  { id: 'sorteio',     label: 'Sorteio da Semana',    desc: 'Textos do sorteio' },
+  { id: 'como',        label: 'Como Participar',       desc: '4 passos explicativos' },
+  { id: 'premios',     label: 'Prêmios da Edição',    desc: 'Via Edições → Prêmios' },
+  { id: 'historico',   label: 'Histórico',             desc: 'Textos dos resultados' },
+  { id: 'depoimentos', label: 'Depoimentos',           desc: 'Carrossel de ganhadores' },
+  { id: 'rodape',      label: 'Rodapé',                desc: 'Contato e redes sociais' },
 ]
 
-// ─── Sub-components ──────────────────────────────────────────────────────────
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
 function Field({
   label, value, onChange, multiline = false, placeholder,
@@ -52,25 +50,16 @@ function Field({
   multiline?: boolean
   placeholder?: string
 }) {
-  const cls = 'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-400 bg-white'
+  const cls = 'w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-emerald-400 bg-white'
   return (
     <div>
-      <label className="text-xs font-medium text-gray-500 block mb-1">{label}</label>
+      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">{label}</label>
       {multiline ? (
-        <textarea
-          rows={3}
-          value={value}
-          onChange={e => onChange(e.target.value)}
-          placeholder={placeholder}
-          className={cls + ' resize-none'}
-        />
+        <textarea rows={3} value={value} onChange={e => onChange(e.target.value)}
+          placeholder={placeholder} className={cls + ' resize-none'} />
       ) : (
-        <input
-          value={value}
-          onChange={e => onChange(e.target.value)}
-          placeholder={placeholder}
-          className={cls}
-        />
+        <input value={value} onChange={e => onChange(e.target.value)}
+          placeholder={placeholder} className={cls} />
       )}
     </div>
   )
@@ -78,39 +67,78 @@ function Field({
 
 function SaveBtn({ saving, onClick }: { saving: boolean; onClick: () => void }) {
   return (
-    <button
-      onClick={onClick}
-      disabled={saving}
-      className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition"
-    >
+    <button onClick={onClick} disabled={saving}
+      className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition">
       <Save size={14} />
       {saving ? 'Salvando…' : 'Salvar alterações'}
     </button>
   )
 }
 
-// ─── Section: Hero ───────────────────────────────────────────────────────────
+// ─── Section: Hero ────────────────────────────────────────────────────────────
 
-function SectionHero({ configs, onChange, onSave, saving }: {
-  configs: Record<string, string>
+function SectionHero({ localConfigs, onChange, uploadingKey, uploadMidia }: {
+  localConfigs: Record<string, string>
   onChange: (chave: string, valor: string) => void
-  onSave: () => void
-  saving: boolean
+  uploadingKey: string | null
+  uploadMidia: (chave: string, e: React.ChangeEvent<HTMLInputElement>) => Promise<void>
 }) {
+  const mediaFields = [
+    { chave: 'logo_url',              label: 'Logo principal',         hint: 'PNG transparente, 400×400px' },
+    { chave: 'fundo_hero_url',        label: 'Fundo hero — Desktop',   hint: 'JPG/PNG, 1920×1080px landscape' },
+    { chave: 'fundo_hero_mobile_url', label: 'Fundo hero — Mobile',    hint: 'JPG/PNG, 800×1600px portrait' },
+  ]
+  const textFields = [
+    { chave: 'nome_sistema',         label: 'Nome do sistema',   placeholder: 'RECIFE CAP' },
+    { chave: 'slogan',               label: 'Slogan',             placeholder: 'FILANTROPIA PREMIÁVEL' },
+    { chave: 'texto_btn_principal',  label: 'Botão principal',    placeholder: 'Quero participar →' },
+    { chave: 'texto_btn_secundario', label: 'Botão secundário',   placeholder: 'Ver sorteio' },
+  ]
+
   return (
-    <div className="space-y-4">
-      <Field label="Título principal" value={configs['hero_titulo'] ?? ''} onChange={v => onChange('hero_titulo', v)} placeholder="RECIFE CAP" />
-      <Field label="Subtítulo / slogan" value={configs['hero_subtitulo'] ?? ''} onChange={v => onChange('hero_subtitulo', v)} placeholder="Seu sonho pode ser o próximo!" />
-      <Field label="Texto do botão CTA" value={configs['hero_botao'] ?? ''} onChange={v => onChange('hero_botao', v)} placeholder="Comprar minha cartela" />
-      <Field label="Texto de apoio abaixo do botão" value={configs['hero_apoio'] ?? ''} onChange={v => onChange('hero_apoio', v)} placeholder="Mais de 5.000 ganhadores" />
-      <div className="pt-2 flex justify-end">
-        <SaveBtn saving={saving} onClick={onSave} />
-      </div>
+    <div className="space-y-5">
+      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Imagens</p>
+      {mediaFields.map(({ chave, label, hint }) => (
+        <div key={chave} className="border-2 border-dashed border-gray-200 rounded-2xl p-5 hover:border-emerald-300 transition-colors">
+          <div className="flex items-center gap-4">
+            <div className="w-20 h-16 rounded-xl overflow-hidden bg-gray-900 flex items-center justify-center flex-shrink-0">
+              {localConfigs[chave] ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={localConfigs[chave]} alt={label} className="w-full h-full object-contain" />
+              ) : (
+                <ImageIcon size={20} className="text-gray-500" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-gray-800 text-sm">{label}</p>
+              <p className="text-xs text-gray-400 mt-0.5">{hint}</p>
+              <label className="mt-2 inline-flex items-center gap-1.5 cursor-pointer bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-emerald-800 transition-colors">
+                <Upload size={12} />
+                {uploadingKey === chave ? 'Enviando…' : 'Alterar'}
+                <input type="file" accept="image/*" className="hidden"
+                  disabled={uploadingKey === chave}
+                  onChange={e => uploadMidia(chave, e)} />
+              </label>
+            </div>
+          </div>
+        </div>
+      ))}
+
+      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide pt-1">Textos</p>
+      {textFields.map(({ chave, label, placeholder }) => (
+        <Field key={chave} label={label}
+          value={localConfigs[chave] ?? ''}
+          onChange={v => onChange(chave, v)}
+          placeholder={placeholder} />
+      ))}
+      <p className="text-xs text-gray-400">
+        As alterações ficam visíveis no preview ao lado. Clique em <strong>Publicar</strong> para salvar.
+      </p>
     </div>
   )
 }
 
-// ─── Section: Sorteio da Semana ──────────────────────────────────────────────
+// ─── Section: Sorteio da Semana ───────────────────────────────────────────────
 
 function SectionSorteio({ configs, onChange, onSave, saving }: {
   configs: Record<string, string>
@@ -124,7 +152,7 @@ function SectionSorteio({ configs, onChange, onSave, saving }: {
       <Field label="Subtítulo / chamada" value={configs['sorteio_subtitulo'] ?? ''} onChange={v => onChange('sorteio_subtitulo', v)} placeholder="Prêmio acumulado desta edição" />
       <Field label="Texto de chamada para ação" value={configs['sorteio_cta'] ?? ''} onChange={v => onChange('sorteio_cta', v)} placeholder="Garanta já sua cartela!" />
       <p className="text-xs text-gray-400">
-        A data, hora e valor do sorteio são puxados automaticamente da edição ativa em <strong>Edições</strong>.
+        A data, hora e valor são puxados automaticamente da edição ativa em <strong>Edições</strong>.
       </p>
       <div className="pt-2 flex justify-end">
         <SaveBtn saving={saving} onClick={onSave} />
@@ -133,7 +161,7 @@ function SectionSorteio({ configs, onChange, onSave, saving }: {
   )
 }
 
-// ─── Section: Como Participar ────────────────────────────────────────────────
+// ─── Section: Como Participar ─────────────────────────────────────────────────
 
 function SectionComo({ configs, onChange, onSave, saving }: {
   configs: Record<string, string>
@@ -141,14 +169,13 @@ function SectionComo({ configs, onChange, onSave, saving }: {
   onSave: () => void
   saving: boolean
 }) {
-  const steps = [1, 2, 3, 4]
   return (
     <div className="space-y-5">
       <Field label="Título da seção" value={configs['como_titulo'] ?? ''} onChange={v => onChange('como_titulo', v)} placeholder="Como Participar" />
-      {steps.map(n => (
+      {[1, 2, 3, 4].map(n => (
         <div key={n} className="border border-gray-100 rounded-xl p-4 space-y-3">
           <p className="text-xs font-semibold text-emerald-700">Passo {n}</p>
-          <Field label="Título do passo" value={configs[`como_passo${n}_titulo`] ?? ''} onChange={v => onChange(`como_passo${n}_titulo`, v)} placeholder={`Passo ${n}`} />
+          <Field label="Título" value={configs[`como_passo${n}_titulo`] ?? ''} onChange={v => onChange(`como_passo${n}_titulo`, v)} placeholder={`Passo ${n}`} />
           <Field label="Descrição" value={configs[`como_passo${n}_desc`] ?? ''} onChange={v => onChange(`como_passo${n}_desc`, v)} multiline placeholder="Descreva este passo…" />
         </div>
       ))}
@@ -169,14 +196,13 @@ function SectionPremios() {
       </div>
       <h3 className="font-semibold text-amber-800 mb-1">Prêmios gerenciados por edição</h3>
       <p className="text-sm text-amber-700 max-w-md mx-auto">
-        Os prêmios são configurados individualmente em cada edição.
         Acesse <strong>Edições → selecione a edição → Prêmios</strong> para adicionar, editar e reordenar prêmios.
       </p>
     </div>
   )
 }
 
-// ─── Section: Histórico ──────────────────────────────────────────────────────
+// ─── Section: Histórico ───────────────────────────────────────────────────────
 
 function SectionHistorico({ configs, onChange, onSave, saving }: {
   configs: Record<string, string>
@@ -198,7 +224,7 @@ function SectionHistorico({ configs, onChange, onSave, saving }: {
   )
 }
 
-// ─── Section: Depoimentos ────────────────────────────────────────────────────
+// ─── Section: Depoimentos ─────────────────────────────────────────────────────
 
 function SectionDepoimentos() {
   const [depoimentos, setDepoimentos] = useState<Depoimento[]>([])
@@ -307,7 +333,6 @@ function SectionDepoimentos() {
       {depoimentos.map((dep, idx) => (
         <div key={dep.id} className="bg-white border border-gray-100 rounded-2xl p-4 hover:border-gray-200 transition-colors">
           <div className="flex items-start gap-4">
-            {/* Reordenar */}
             <div className="flex flex-col gap-1 pt-1 flex-shrink-0">
               <button onClick={() => mover(dep.id, 'up')} disabled={idx === 0}
                 className="text-gray-300 hover:text-gray-500 disabled:opacity-20 transition-colors">
@@ -318,15 +343,13 @@ function SectionDepoimentos() {
                 <ChevronDown size={14} />
               </button>
             </div>
-
-            {/* Foto */}
             <div className="relative flex-shrink-0">
               <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200">
                 {dep.foto_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={dep.foto_url} alt={dep.nome} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-xl font-bold bg-emerald-50 text-emerald-600">
+                  <div className="w-full h-full flex items-center justify-center text-xl font-bold bg-emerald-50 text-emerald-600">
                     {dep.nome.charAt(0).toUpperCase()}
                   </div>
                 )}
@@ -341,8 +364,6 @@ function SectionDepoimentos() {
                   onChange={e => uploadFoto(dep.id, e)} />
               </label>
             </div>
-
-            {/* Campos */}
             <div className="flex-1 grid grid-cols-2 gap-3 min-w-0">
               <div>
                 <label className="text-xs text-gray-400 font-medium block mb-1">Nome</label>
@@ -370,22 +391,16 @@ function SectionDepoimentos() {
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-400 resize-none" />
               </div>
             </div>
-
-            {/* Ações */}
             <div className="flex flex-col gap-2 flex-shrink-0">
-              <button
-                onClick={() => atualizar(dep.id, { ativo: !dep.ativo })}
-                title={dep.ativo ? 'Ocultar' : 'Exibir'}
+              <button onClick={() => atualizar(dep.id, { ativo: !dep.ativo })} title={dep.ativo ? 'Ocultar' : 'Exibir'}
                 className={`p-2 rounded-lg transition-colors ${dep.ativo ? 'text-emerald-600 hover:bg-emerald-50' : 'text-gray-400 hover:bg-gray-100'}`}>
                 {dep.ativo ? <Eye size={15} /> : <EyeOff size={15} />}
               </button>
-              <button onClick={() => salvar(dep)} disabled={saving === dep.id}
-                title="Salvar"
+              <button onClick={() => salvar(dep)} disabled={saving === dep.id} title="Salvar"
                 className="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 disabled:opacity-40 transition-colors">
                 <Save size={15} />
               </button>
-              <button onClick={() => deletar(dep.id)}
-                title="Remover"
+              <button onClick={() => deletar(dep.id)} title="Remover"
                 className="p-2 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors">
                 <Trash2 size={15} />
               </button>
@@ -393,23 +408,16 @@ function SectionDepoimentos() {
           </div>
         </div>
       ))}
-
       <button onClick={adicionar}
         className="w-full py-4 border-2 border-dashed border-gray-200 rounded-2xl text-gray-400 hover:border-emerald-400 hover:text-emerald-600 transition-all flex items-center justify-center gap-2 font-medium text-sm">
         <Plus size={18} />
         Adicionar depoimento
       </button>
-
-      {depoimentos.length > 0 && (
-        <p className="text-xs text-gray-400 text-center">
-          Use ▲▼ para reordenar · <Eye size={10} className="inline" /> para ocultar · clique em Salvar para persistir
-        </p>
-      )}
     </div>
   )
 }
 
-// ─── Section: Rodapé ─────────────────────────────────────────────────────────
+// ─── Section: Rodapé ──────────────────────────────────────────────────────────
 
 function SectionRodape({ configs, onChange, onSave, saving }: {
   configs: Record<string, string>
@@ -423,16 +431,13 @@ function SectionRodape({ configs, onChange, onSave, saving }: {
       <Field label="WhatsApp" value={configs['rodape_whatsapp'] ?? ''} onChange={v => onChange('rodape_whatsapp', v)} placeholder="+55 (81) 99999-9999" />
       <Field label="E-mail" value={configs['rodape_email'] ?? ''} onChange={v => onChange('rodape_email', v)} placeholder="contato@recifecap.com.br" />
       <Field label="Endereço" value={configs['rodape_endereco'] ?? ''} onChange={v => onChange('rodape_endereco', v)} placeholder="Recife, Pernambuco" />
-
       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide pt-2">Redes sociais</p>
       <Field label="Instagram (URL)" value={configs['rodape_instagram'] ?? ''} onChange={v => onChange('rodape_instagram', v)} placeholder="https://instagram.com/recifecap" />
       <Field label="Facebook (URL)" value={configs['rodape_facebook'] ?? ''} onChange={v => onChange('rodape_facebook', v)} placeholder="https://facebook.com/recifecap" />
       <Field label="YouTube (URL)" value={configs['rodape_youtube'] ?? ''} onChange={v => onChange('rodape_youtube', v)} placeholder="https://youtube.com/@recifecap" />
-
       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide pt-2">Textos legais</p>
       <Field label="Texto de copyright" value={configs['rodape_copyright'] ?? ''} onChange={v => onChange('rodape_copyright', v)} placeholder="© 2025 Recife Cap. Todos os direitos reservados." />
-      <Field label="Texto regulamento" value={configs['rodape_regulamento'] ?? ''} onChange={v => onChange('rodape_regulamento', v)} multiline placeholder="Participação sujeita a regulamento…" />
-
+      <Field label="Regulamento" value={configs['rodape_regulamento'] ?? ''} onChange={v => onChange('rodape_regulamento', v)} multiline placeholder="Participação sujeita a regulamento…" />
       <div className="pt-2 flex justify-end">
         <SaveBtn saving={saving} onClick={onSave} />
       </div>
@@ -444,98 +449,238 @@ function SectionRodape({ configs, onChange, onSave, saving }: {
 
 export default function AdminLandingPage() {
   const [activeSection, setActiveSection] = useState<Section>('hero')
-  const [configs, setConfigs] = useState<Record<string, string>>({})
+  const [localConfigs, setLocalConfigs]   = useState<Record<string, string>>({})
   const [loadingConfigs, setLoadingConfigs] = useState(true)
-  const [saving, setSaving] = useState(false)
+  const [salvando, setSalvando]           = useState(false)
+  const [previewMode, setPreviewMode]     = useState<'mobile' | 'desktop'>('mobile')
+  const [uploadingKey, setUploadingKey]   = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/config')
       .then(r => r.json())
       .then((data: Record<string, string>) => {
-        setConfigs(data)
+        setLocalConfigs(data)
         setLoadingConfigs(false)
       })
       .catch(() => setLoadingConfigs(false))
   }, [])
 
   function onChange(chave: string, valor: string) {
-    setConfigs(prev => ({ ...prev, [chave]: valor }))
+    setLocalConfigs(prev => ({ ...prev, [chave]: valor }))
   }
 
-  async function onSave() {
-    setSaving(true)
-    const updates = Object.entries(configs).map(([chave, valor]) => ({ chave, valor }))
+  async function uploadMidia(chave: string, e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingKey(chave)
+    const form = new FormData()
+    form.append('file', file)
+    form.append('chave', chave)
+    const res = await fetch('/api/admin/upload', { method: 'POST', body: form })
+    const data = await res.json()
+    if (data.url) {
+      onChange(chave, data.url)
+      await fetch('/api/admin/config', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify([{ chave, valor: data.url }]),
+      })
+    }
+    setUploadingKey(null)
+    e.target.value = ''
+  }
+
+  async function publicarAlteracoes() {
+    setSalvando(true)
+    const updates = Object.entries(localConfigs).map(([chave, valor]) => ({ chave, valor }))
     await fetch('/api/admin/config', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
     })
-    setSaving(false)
+    setSalvando(false)
   }
 
-  const sharedProps = { configs, onChange, onSave, saving }
+  const sharedProps = {
+    configs: localConfigs,
+    onChange,
+    onSave: publicarAlteracoes,
+    saving: salvando,
+  }
+
+  const activeLabel = SECTIONS.find(s => s.id === activeSection)
 
   return (
-    <div className="max-w-5xl mx-auto">
-      {/* Cabeçalho */}
-      <div className="flex items-center gap-3 mb-8">
-        <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-          <Layout size={20} className="text-emerald-600" />
+    // Quebra o padding do layout admin para preencher a tela inteira
+    <div className="-mx-4 -mt-16 lg:-mx-8 lg:-mt-8 -mb-4 lg:-mb-8 flex overflow-hidden"
+      style={{ height: '100svh' }}>
+
+      {/* ── Menu lateral ── */}
+      <div className="w-48 flex-shrink-0 border-r border-gray-100 bg-gray-50 overflow-y-auto">
+        <div className="px-4 py-4 border-b border-gray-100 flex items-center gap-2">
+          <Layout size={16} className="text-emerald-600 flex-shrink-0" />
+          <span className="text-sm font-bold text-gray-800">Landing Page</span>
         </div>
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900">Editor da Landing Page</h1>
-          <p className="text-sm text-gray-400 mt-0.5">Edite os textos e conteúdos do site sem precisar de programador</p>
-        </div>
+        <nav className="p-2 space-y-0.5">
+          {SECTIONS.map(s => (
+            <button key={s.id} onClick={() => setActiveSection(s.id)}
+              className={`w-full text-left px-3 py-2.5 rounded-xl text-xs transition-colors ${
+                activeSection === s.id
+                  ? 'bg-emerald-50 text-emerald-700 font-semibold border border-emerald-100'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}>
+              <p className="font-medium leading-snug">{s.label}</p>
+              <p className="text-gray-400 mt-0.5 leading-tight">{s.desc}</p>
+            </button>
+          ))}
+        </nav>
       </div>
 
-      <div className="flex gap-6">
-        {/* Menu lateral de seções */}
-        <aside className="w-52 flex-shrink-0">
-          <nav className="space-y-1">
-            {SECTIONS.map(s => (
-              <button
-                key={s.id}
-                onClick={() => setActiveSection(s.id)}
-                className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition-colors ${
-                  activeSection === s.id
-                    ? 'bg-emerald-50 text-emerald-700 font-medium border border-emerald-100'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <p className="font-medium leading-snug">{s.label}</p>
-                <p className="text-xs text-gray-400 mt-0.5 leading-tight">{s.desc}</p>
-              </button>
-            ))}
-          </nav>
-        </aside>
+      {/* ── Formulário ── */}
+      <div className="flex-1 overflow-y-auto p-6 bg-white">
+        {loadingConfigs ? (
+          <div className="space-y-4">
+            {[1, 2, 3].map(i => <div key={i} className="bg-gray-100 rounded-lg h-10 animate-pulse" />)}
+          </div>
+        ) : (
+          <>
+            <div className="mb-6">
+              <h2 className="text-base font-semibold text-gray-900">{activeLabel?.label}</h2>
+              <p className="text-xs text-gray-400 mt-0.5">{activeLabel?.desc}</p>
+            </div>
 
-        {/* Conteúdo da seção ativa */}
-        <main className="flex-1 bg-white rounded-2xl border border-gray-100 p-6 min-h-[500px]">
-          {loadingConfigs ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map(i => <div key={i} className="bg-gray-100 rounded-lg h-10 animate-pulse" />)}
+            {activeSection === 'hero' && (
+              <SectionHero
+                localConfigs={localConfigs}
+                onChange={onChange}
+                uploadingKey={uploadingKey}
+                uploadMidia={uploadMidia}
+              />
+            )}
+            {activeSection === 'sorteio'     && <SectionSorteio     {...sharedProps} />}
+            {activeSection === 'como'        && <SectionComo        {...sharedProps} />}
+            {activeSection === 'premios'     && <SectionPremios />}
+            {activeSection === 'historico'   && <SectionHistorico   {...sharedProps} />}
+            {activeSection === 'depoimentos' && <SectionDepoimentos />}
+            {activeSection === 'rodape'      && <SectionRodape      {...sharedProps} />}
+          </>
+        )}
+      </div>
+
+      {/* ── Preview ao vivo ── */}
+      <div className="w-96 flex-shrink-0 border-l border-gray-100 bg-gray-100 flex flex-col">
+
+        {/* Cabeçalho do preview */}
+        <div className="px-4 py-3 border-b border-gray-200 bg-white flex items-center justify-between flex-shrink-0">
+          <span className="text-sm font-bold text-gray-700">Preview</span>
+          <div className="flex gap-1.5">
+            <button onClick={() => setPreviewMode('mobile')}
+              className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                previewMode === 'mobile' ? 'bg-emerald-700 text-white' : 'text-gray-500 hover:bg-gray-100'
+              }`}>
+              Mobile
+            </button>
+            <button onClick={() => setPreviewMode('desktop')}
+              className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                previewMode === 'desktop' ? 'bg-emerald-700 text-white' : 'text-gray-500 hover:bg-gray-100'
+              }`}>
+              Desktop
+            </button>
+          </div>
+        </div>
+
+        {/* Frame do preview */}
+        <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
+          {previewMode === 'mobile' ? (
+            <div className="relative flex-shrink-0" style={{ width: '280px', height: '560px' }}>
+              {/* Moldura do celular */}
+              <div className="absolute inset-0 rounded-[40px] border-[6px] border-gray-800 bg-gray-800 shadow-2xl overflow-hidden">
+                {/* Notch */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-5 bg-gray-800 rounded-b-2xl z-10" />
+                {/* Conteúdo */}
+                <div className="w-full h-full overflow-hidden rounded-[34px]"
+                  style={{
+                    backgroundImage: `url('${localConfigs.fundo_hero_mobile_url || localConfigs.fundo_hero_url || '/fundo-mobile.png'}')`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center top',
+                  }}>
+                  <div className="w-full h-full flex flex-col items-center justify-center px-5 text-center"
+                    style={{ background: 'rgba(0,0,0,0.1)' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={localConfigs.logo_url || '/logo.png'} alt=""
+                      className="w-14 h-14 object-contain mb-2"
+                      onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
+                    <h1 className="text-white font-black text-2xl leading-tight"
+                      style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
+                      {localConfigs.nome_sistema || 'RECIFE CAP'}
+                    </h1>
+                    <p className="font-bold text-xs tracking-widest mt-1" style={{ color: '#FFC107' }}>
+                      {(localConfigs.slogan || 'FILANTROPIA PREMIÁVEL').toUpperCase()}
+                    </p>
+                    <div className="border border-white/30 rounded-full px-3 py-1.5 mt-3 mb-4"
+                      style={{ background: 'rgba(0,0,0,0.2)' }}>
+                      <span className="text-white font-bold" style={{ fontSize: '9px' }}>
+                        PRÓXIMO SORTEIO: 31/05 ÀS 09H00
+                      </span>
+                    </div>
+                    <div className="w-full space-y-2">
+                      <div className="w-full py-2.5 rounded-full text-xs font-black text-center"
+                        style={{ background: '#FFC107', color: '#1B5E20' }}>
+                        {localConfigs.texto_btn_principal || 'Quero participar →'}
+                      </div>
+                      <div className="w-full py-2.5 rounded-full text-xs font-bold text-white text-center border border-white/40">
+                        {localConfigs.texto_btn_secundario || 'Ver sorteio'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           ) : (
-            <>
-              <div className="mb-6">
-                <h2 className="text-base font-semibold text-gray-900">
-                  {SECTIONS.find(s => s.id === activeSection)?.label}
-                </h2>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  {SECTIONS.find(s => s.id === activeSection)?.desc}
+            <div className="w-full rounded-2xl overflow-hidden relative shadow-lg"
+              style={{
+                height: '200px',
+                backgroundImage: `url('${localConfigs.fundo_hero_url || '/fundo.png'}')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}>
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4"
+                style={{ background: 'rgba(0,0,0,0.2)' }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={localConfigs.logo_url || '/logo.png'} alt=""
+                  className="w-10 h-10 object-contain mb-1"
+                  onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
+                <h1 className="text-white font-black text-xl" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>
+                  {localConfigs.nome_sistema || 'RECIFE CAP'}
+                </h1>
+                <p className="font-bold text-xs tracking-widest mt-0.5" style={{ color: '#FFC107' }}>
+                  {(localConfigs.slogan || 'FILANTROPIA PREMIÁVEL').toUpperCase()}
                 </p>
+                <div className="flex gap-2 mt-3">
+                  <span className="px-4 py-1.5 rounded-full text-xs font-black"
+                    style={{ background: '#FFC107', color: '#1B5E20' }}>
+                    {localConfigs.texto_btn_principal || 'Quero participar →'}
+                  </span>
+                  <span className="px-4 py-1.5 rounded-full text-xs font-bold text-white border border-white/50">
+                    {localConfigs.texto_btn_secundario || 'Ver sorteio'}
+                  </span>
+                </div>
               </div>
-
-              {activeSection === 'hero'        && <SectionHero {...sharedProps} />}
-              {activeSection === 'sorteio'     && <SectionSorteio {...sharedProps} />}
-              {activeSection === 'como'        && <SectionComo {...sharedProps} />}
-              {activeSection === 'premios'     && <SectionPremios />}
-              {activeSection === 'historico'   && <SectionHistorico {...sharedProps} />}
-              {activeSection === 'depoimentos' && <SectionDepoimentos />}
-              {activeSection === 'rodape'      && <SectionRodape {...sharedProps} />}
-            </>
+            </div>
           )}
-        </main>
+        </div>
+
+        {/* Botão publicar */}
+        <div className="p-4 border-t border-gray-200 bg-white flex-shrink-0">
+          <button onClick={publicarAlteracoes} disabled={salvando}
+            className="w-full py-3 rounded-xl font-black text-white text-sm transition-all hover:opacity-90 disabled:opacity-60"
+            style={{ background: 'linear-gradient(135deg, #2E7D32, #43A047)' }}>
+            {salvando ? 'Publicando…' : '🚀 Publicar alterações'}
+          </button>
+          <p className="text-xs text-gray-400 text-center mt-2">
+            As alterações ficam visíveis imediatamente
+          </p>
+        </div>
       </div>
     </div>
   )

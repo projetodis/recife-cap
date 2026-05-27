@@ -305,8 +305,6 @@ export default function ClienteHome() {
   const [menuOpen,    setMenuOpen]    = useState(false)
   const [proximaData, setProximaData] = useState<string | null>(null)
   const [edicaoNum,   setEdicaoNum]   = useState<number | null>(null)
-  const [edicaoId,    setEdicaoId]    = useState<string | null>(null)
-  const [premios,     setPremios]     = useState<any[]>([])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -323,18 +321,9 @@ export default function ClienteHome() {
           setProximaData(dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }))
         }
         if (d.edicao?.numero) setEdicaoNum(d.edicao.numero)
-        if (d.edicao?.id)     setEdicaoId(d.edicao.id)
       })
       .catch(() => {})
   }, [])
-
-  useEffect(() => {
-    if (!edicaoId) return
-    fetch(`/api/cliente/premios?edicao_id=${edicaoId}`)
-      .then(r => r.json())
-      .then(data => { if (Array.isArray(data)) setPremios(data) })
-      .catch(() => {})
-  }, [edicaoId])
 
   function scrollTo(id: string) {
     setMenuOpen(false)
@@ -348,12 +337,6 @@ export default function ClienteHome() {
   const c1 = useCounter(120000, revealSobre.visible)
   const c2 = useCounter(100000, revealSobre.visible)
   const c3 = useCounter(100,    revealSobre.visible)
-
-  function brl(str: string | undefined, fallback: string) {
-    if (!str) return fallback
-    const n = parseFloat(str.replace(/\./g, '').replace(',', '.'))
-    return isNaN(n) ? fallback : `R$ ${n.toLocaleString('pt-BR')}`
-  }
 
   return (
     <>
@@ -450,10 +433,10 @@ export default function ClienteHome() {
         <section id="início" className="relative flex flex-col items-center justify-center text-center px-6 overflow-hidden"
           style={{ minHeight: '100svh' }}>
 
-          {/* Mobile: fundo-mobile.png (vertical/portrait) */}
+          {/* Mobile: usa fundo_hero_mobile_url da config, fallback para fundo-mobile.png */}
           <div className="md:hidden absolute inset-0"
             style={{
-              backgroundImage: "url('/fundo-mobile.png')",
+              backgroundImage: `url('${configs.fundo_hero_mobile_url || configs.fundo_hero_url || '/fundo-mobile.png'}')`,
               backgroundSize: 'cover',
               backgroundPosition: 'center top',
             }} />
@@ -519,12 +502,12 @@ export default function ClienteHome() {
                   color: '#1B5E20',
                   boxShadow: '0 8px 30px rgba(255,193,7,0.5)',
                 }}>
-                Quero participar →
+                {configs.texto_btn_principal || 'Quero participar →'}
               </Link>
               <button onClick={() => scrollTo('sorteio')}
                 className="w-full md:w-auto px-10 py-4 rounded-full font-bold text-white text-lg border-2 text-center transition-all hover:bg-white/10"
                 style={{ borderColor: 'rgba(255,255,255,0.4)' }}>
-                Ver sorteio
+                {configs.texto_btn_secundario || 'Ver sorteio'}
               </button>
             </div>
 
@@ -562,124 +545,48 @@ export default function ClienteHome() {
         </section>
 
         {/* ══════════════════════════════════════════════════════ SORTEIO */}
-        <section id="sorteio" className="py-20 bg-white">
+        <section id="sorteio" className="py-16 bg-white">
           <div ref={revealSorteio.ref}
-            className={`max-w-6xl mx-auto px-4 reveal ${revealSorteio.visible ? 'visible' : ''}`}>
+            className={`max-w-4xl mx-auto px-4 text-center reveal ${revealSorteio.visible ? 'visible' : ''}`}>
 
-            <div className="text-center mb-12">
-              {edicaoNum && (
-                <span className="text-[#FFC107] text-xs font-black uppercase tracking-widest">
-                  Edição {edicaoNum}
-                </span>
+            {edicaoNum && (
+              <span className="text-[#FFC107] text-xs font-black uppercase tracking-widest">
+                Edição {edicaoNum}
+              </span>
+            )}
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mt-2 mb-8">
+              Sorteio desta semana
+            </h2>
+
+            {/* Banner centralizado */}
+            <div className="relative inline-block w-full max-w-2xl">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={configs.banner_sorteio_url || configs.banner_compra_url || '/banner.png'}
+                alt="Cartela Recife Cap"
+                className="w-full rounded-3xl shadow-2xl"
+                onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+              />
+              {configs.valor_titulo && (
+                <div className="absolute bottom-4 right-4 px-4 py-2 rounded-full font-black text-sm shadow-lg"
+                  style={{ background: '#FFC107', color: '#1B5E20' }}>
+                  R$ {configs.valor_titulo} / título
+                </div>
               )}
-              <h2 className="text-3xl md:text-4xl font-black text-gray-900 mt-1">Sorteio desta semana</h2>
             </div>
 
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              {/* Banner */}
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl bg-gray-100 min-h-64">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={configs.banner_sorteio_url || configs.banner_home_url || '/banner.png'}
-                  alt="Banner do sorteio"
-                  className="w-full object-cover"
-                  onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
-                />
-                {configs.valor_titulo && (
-                  <div className="absolute -bottom-0 right-4 bottom-4 bg-[#FFC107] text-[#1B5E20] px-5 py-2.5 rounded-2xl font-black text-base shadow-lg">
-                    R$ {parseFloat(configs.valor_titulo).toFixed(2).replace('.', ',')} / título
-                  </div>
-                )}
-              </div>
-
-              {/* Prêmios */}
-              <div className="space-y-3">
-                {premios.length > 0 ? (
-                  premios.map(p => (
-                    <div key={p.id}
-                      className={`flex items-center gap-4 p-4 rounded-2xl border transition-all hover:shadow-md ${
-                        p.destaque
-                          ? 'border-[#FFC107] text-white'
-                          : 'border-gray-100 hover:border-[#2E7D32]/30 hover:bg-green-50'
-                      }`}
-                      style={p.destaque ? { background: 'linear-gradient(135deg, #1B5E20, #2E7D32)' } : undefined}>
-
-                      {/* Foto do prêmio */}
-                      <div className="w-20 h-16 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center"
-                        style={{ background: '#000' }}>
-                        {p.foto_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={p.foto_url}
-                            alt={p.nome}
-                            className="w-full h-full object-contain p-1"
-                            onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
-                          />
-                        ) : (
-                          <Trophy size={28} style={{ color: p.destaque ? '#FFC107' : '#2E7D32' }} />
-                        )}
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-xs font-medium truncate ${p.destaque ? 'text-green-300' : 'text-gray-500'}`}>
-                          {p.nome}{p.quantidade > 1 ? ` · ${p.quantidade}x` : ''}
-                        </p>
-                        <p className={`font-black text-xl leading-tight ${p.destaque ? 'text-white' : 'text-gray-900'}`}>
-                          R$ {p.valor}
-                        </p>
-                      </div>
-
-                      {p.destaque && <Trophy size={32} style={{ color: '#FFC107', flexShrink: 0 }} />}
-                    </div>
-                  ))
-                ) : (
-                  /* Fallback estático enquanto não há prêmios cadastrados */
-                  <>
-                    {([1, 2, 3, 4] as const).map(n => (
-                      <div key={n} className="flex items-center gap-4 p-4 rounded-2xl border border-gray-100 hover:border-[#2E7D32]/25 hover:bg-green-50/50 transition-all">
-                        <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-                          style={{ background: '#E8F5E9' }}>
-                          <Trophy size={18} style={{ color: '#2E7D32' }} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-gray-400 font-medium">{n}º Prêmio</p>
-                          <p className="font-semibold text-gray-700 text-sm truncate">
-                            {configs[`premio_${n}_nome`] || 'Prêmio em dinheiro'}
-                          </p>
-                        </div>
-                        <span className="font-black text-base flex-shrink-0" style={{ color: '#2E7D32' }}>
-                          {brl(configs[`premio_${n}_valor`], 'R$ 5.000')}
-                        </span>
-                      </div>
-                    ))}
-                    <div className="p-5 rounded-2xl text-white"
-                      style={{ background: 'linear-gradient(135deg, #1B5E20, #2E7D32)' }}>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-green-300 text-xs font-black uppercase tracking-wider mb-1">Prêmio Principal</p>
-                          <p className="text-2xl md:text-3xl font-black">
-                            {brl(configs.premio_principal_valor, 'R$ 120.000')}
-                          </p>
-                          {configs.premio_principal_nome && (
-                            <p className="text-green-200 text-sm mt-0.5">{configs.premio_principal_nome}</p>
-                          )}
-                        </div>
-                        <Trophy size={44} style={{ color: '#FFC107', opacity: 0.9 }} />
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                <Link href="/cliente/compra"
-                  className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl font-black text-[#1B5E20] text-base transition-all hover:scale-[1.02] active:scale-[0.98]"
-                  style={{
-                    background: 'linear-gradient(135deg, #FFC107, #FFD54F)',
-                    boxShadow: '0 6px 20px rgba(255,193,7,0.35)',
-                  }}>
-                  <ShoppingCart size={18} />
-                  Garantir meu título agora →
-                </Link>
-              </div>
+            {/* Botão CTA */}
+            <div className="mt-8">
+              <Link href="/cliente/compra"
+                className="inline-flex items-center gap-2 px-10 py-4 rounded-full font-black text-lg transition-all hover:scale-105 active:scale-95"
+                style={{
+                  background: 'linear-gradient(135deg, #FFC107, #FFD54F)',
+                  color: '#1B5E20',
+                  boxShadow: '0 8px 30px rgba(255,193,7,0.4)',
+                }}>
+                <ShoppingCart size={20} />
+                Garantir meu título agora →
+              </Link>
             </div>
           </div>
         </section>
