@@ -158,75 +158,77 @@ export default function ClienteHome() {
 
         {/* ══════════════════════════════════════════════════════ HEADER */}
         <header
-          className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
+          className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'shadow-lg' : ''}`}
           style={{
-            background:    scrolled ? 'rgba(27,94,32,0.97)' : 'transparent',
-            backdropFilter: scrolled ? 'blur(12px)' : 'none',
-            borderBottom:  scrolled ? '1px solid rgba(255,193,7,0.25)' : 'none',
+            background:    scrolled ? 'rgba(27,94,32,0.98)' : 'rgba(27,94,32,0.85)',
+            backdropFilter: 'blur(12px)',
+            borderBottom:  '1px solid rgba(255,193,7,0.2)',
           }}
         >
-          <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between relative">
+          <div className="max-w-7xl mx-auto px-4 h-16 relative flex items-center justify-between">
 
             {/* Menu esquerdo — desktop */}
-            <nav className="hidden lg:flex items-center gap-8 w-1/3">
-              {['início', 'sorteio', 'sobre'].map(id => (
+            <nav className="hidden lg:flex items-center gap-8 flex-1">
+              {[['Início', 'início'], ['Sorteio', 'sorteio'], ['Sobre', 'sobre']].map(([label, id]) => (
                 <button key={id} onClick={() => scrollTo(id)}
-                  className="text-white/75 hover:text-[#FFC107] text-sm font-semibold tracking-wide capitalize transition-colors">
-                  {id.charAt(0).toUpperCase() + id.slice(1)}
+                  className="text-white/80 hover:text-[#FFC107] text-sm font-semibold tracking-wide transition-colors">
+                  {label}
                 </button>
               ))}
             </nav>
 
-            {/* Logo central */}
+            {/* Logo central — absoluta para ficar sempre no meio */}
             <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2.5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={logoUrl} alt={nomeSist} className="w-9 h-9 object-contain drop-shadow-lg"
+              <img src={logoUrl} alt={nomeSist} className="w-10 h-10 object-contain drop-shadow-lg"
                 onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
-              <span className="text-white font-black text-base tracking-[0.2em] hidden sm:block"
-                style={{ textShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>
+              <span className="text-white font-black text-base tracking-widest hidden sm:block">
                 RECIFE CAP
               </span>
             </div>
 
             {/* Menu direito — desktop */}
-            <nav className="hidden lg:flex items-center gap-6 w-1/3 justify-end">
+            <nav className="hidden lg:flex items-center gap-8 flex-1 justify-end">
               <button onClick={() => scrollTo('contato')}
-                className="text-white/75 hover:text-[#FFC107] text-sm font-semibold tracking-wide transition-colors">
+                className="text-white/80 hover:text-[#FFC107] text-sm font-semibold tracking-wide transition-colors">
                 Contato
               </button>
               <Link href="/cliente/sorteio"
-                className="text-white/75 hover:text-[#FFC107] text-sm font-semibold tracking-wide transition-colors">
+                className="text-white/80 hover:text-[#FFC107] text-sm font-semibold tracking-wide transition-colors">
                 Resultados
               </Link>
               <Link href="/cliente/compra"
-                className="bg-[#FFC107] text-[#1B5E20] px-5 py-2 rounded-full text-sm font-black hover:bg-[#FFD54F] transition-all hover:scale-105 whitespace-nowrap"
-                style={{ boxShadow: '0 4px 15px rgba(255,193,7,0.35)' }}>
+                className="px-5 py-2 rounded-full text-sm font-black transition-all hover:scale-105 hover:shadow-lg whitespace-nowrap"
+                style={{ background: '#FFC107', color: '#1B5E20', boxShadow: '0 4px 15px rgba(255,193,7,0.35)' }}>
                 Comprar títulos →
               </Link>
             </nav>
 
             {/* Mobile: hamburger + CTA */}
-            <button onClick={() => setMenuOpen(v => !v)} className="lg:hidden text-white p-1" aria-label="Menu">
+            <button onClick={() => setMenuOpen(v => !v)} className="lg:hidden text-white p-2" aria-label="Menu">
               {menuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
             <Link href="/cliente/compra"
-              className="lg:hidden bg-[#FFC107] text-[#1B5E20] px-4 py-1.5 rounded-full text-sm font-black">
+              className="lg:hidden px-4 py-1.5 rounded-full text-sm font-black"
+              style={{ background: '#FFC107', color: '#1B5E20' }}>
               Comprar →
             </Link>
           </div>
 
           {/* Mobile dropdown */}
           {menuOpen && (
-            <div className="lg:hidden border-t py-3 px-4 space-y-1"
+            <div className="lg:hidden border-t py-4 px-6 space-y-1"
               style={{ background: 'rgba(27,94,32,0.98)', borderColor: 'rgba(255,193,7,0.2)' }}>
-              {['início', 'sorteio', 'sobre', 'contato'].map(id => (
+              {[['Início', 'início'], ['Sorteio', 'sorteio'], ['Sobre', 'sobre'], ['Contato', 'contato']].map(([label, id]) => (
                 <button key={id} onClick={() => scrollTo(id)}
-                  className="w-full text-left px-3 py-3 text-white/80 hover:text-[#FFC107] font-semibold capitalize border-b border-white/10 transition-colors text-sm">
-                  {id.charAt(0).toUpperCase() + id.slice(1)}
+                  className="w-full text-left py-3 text-white/80 hover:text-[#FFC107] font-medium border-b transition-colors text-sm"
+                  style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+                  {label}
                 </button>
               ))}
               <Link href="/cliente/sorteio" onClick={() => setMenuOpen(false)}
-                className="block px-3 py-3 text-white/80 hover:text-[#FFC107] font-semibold border-b border-white/10 text-sm">
+                className="block py-3 text-white/80 hover:text-[#FFC107] font-medium text-sm"
+                style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
                 Resultados
               </Link>
             </div>
@@ -787,27 +789,29 @@ export default function ClienteHome() {
         </footer>
 
         {/* ══════════════════════════════════════════════════════ BARRA MOBILE FIXA */}
-        <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
-          style={{
-            background: 'rgba(255,255,255,0.96)',
-            backdropFilter: 'blur(20px)',
-            borderTop: '1px solid rgba(0,0,0,0.07)',
-            paddingBottom: 'env(safe-area-inset-bottom)',
-          }}>
-          <div className="flex items-center justify-around py-2">
-            <Link href="/cliente" className="flex flex-col items-center gap-1 py-2 px-4 text-gray-400 hover:text-[#2E7D32] transition-colors">
-              <Ticket size={22} />
-              <span className="text-xs font-semibold">Meus Títulos</span>
+        <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden px-4"
+          style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}>
+          <div className="flex items-center justify-around rounded-full px-6 py-3 shadow-2xl"
+            style={{
+              background: 'rgba(255,255,255,0.95)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(0,0,0,0.06)',
+            }}>
+            <Link href="/cliente"
+              className="flex flex-col items-center gap-1 px-4 py-1 text-gray-500 hover:text-[#2E7D32] transition-colors">
+              <Ticket size={20} />
+              <span className="font-semibold" style={{ fontSize: '10px' }}>Meus Títulos</span>
             </Link>
             <Link href="/cliente/compra"
-              className="flex flex-col items-center gap-1 -mt-5 text-white px-6 py-3 rounded-2xl shadow-lg hover:bg-[#1B5E20] transition-all active:scale-95"
-              style={{ background: '#2E7D32', boxShadow: '0 4px 20px rgba(46,125,50,0.45)' }}>
-              <ShoppingCart size={22} />
-              <span className="text-xs font-black">Comprar</span>
+              className="flex flex-col items-center gap-1 px-6 py-3 rounded-full -mt-8 shadow-xl transition-all hover:scale-105 active:scale-95"
+              style={{ background: '#2E7D32', boxShadow: '0 6px 20px rgba(46,125,50,0.5)' }}>
+              <ShoppingCart size={22} className="text-white" />
+              <span className="font-black text-white" style={{ fontSize: '10px' }}>Comprar</span>
             </Link>
-            <Link href="/cliente/sorteio" className="flex flex-col items-center gap-1 py-2 px-4 text-gray-400 hover:text-[#2E7D32] transition-colors">
-              <BarChart2 size={22} />
-              <span className="text-xs font-semibold">Resultados</span>
+            <Link href="/cliente/sorteio"
+              className="flex flex-col items-center gap-1 px-4 py-1 text-gray-500 hover:text-[#2E7D32] transition-colors">
+              <BarChart2 size={20} />
+              <span className="font-semibold" style={{ fontSize: '10px' }}>Resultados</span>
             </Link>
           </div>
         </div>
