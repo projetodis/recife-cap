@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
+import { MapPin, Map, List, Package, CheckCircle, Phone, Loader2, Bike } from 'lucide-react'
 
 const MapaLeaflet = dynamic(() => import('@/components/maps/MapaLeaflet'), {
   ssr: false,
@@ -79,9 +80,9 @@ function calcularDistancia(lat1: number, lng1: number, lat2: number, lng2: numbe
 }
 
 function otimizarPontos(pts: Ponto[], startLat: number, startLng: number): Ponto[] {
-  const pendentes     = pts.filter(p => !p.visitado && p.lat != null && p.lng != null)
-  const semGeo        = pts.filter(p => !p.visitado && (p.lat == null || p.lng == null))
-  const jaVisitados   = pts.filter(p => p.visitado)
+  const pendentes   = pts.filter(p => !p.visitado && p.lat != null && p.lng != null)
+  const semGeo      = pts.filter(p => !p.visitado && (p.lat == null || p.lng == null))
+  const jaVisitados = pts.filter(p => p.visitado)
 
   const restantes  = [...pendentes]
   const ordenados: Ponto[] = []
@@ -106,6 +107,17 @@ function otimizarPontos(pts: Ponto[], startLat: number, startLng: number): Ponto
 }
 
 export default function RotaClienteWrapper({ nomeMotoboy, nomeRota, rotaId, pontos }: Props) {
+  // === DEBUG TEMPORÁRIO ===
+  console.log('=== MOTOBOY DEBUG ===')
+  console.log('pontos recebidos:', JSON.stringify(pontos, null, 2))
+  console.log('primeiro ponto:', pontos?.[0])
+  console.log('nome:', pontos?.[0]?.nome)
+  console.log('endereco:', pontos?.[0]?.endereco)
+  console.log('cartelas:', pontos?.[0]?.cartelas)
+  console.log('lat/lng:', pontos?.[0]?.lat, pontos?.[0]?.lng)
+  console.log('=== FIM DEBUG ===')
+  // === FIM DEBUG ===
+
   const [pontosState, setPontosState] = useState<Ponto[]>(pontos)
   const [paradaAtual, setParadaAtual] = useState<Ponto | null>(
     pontos.find(p => !p.visitado) ?? null
@@ -125,8 +137,8 @@ export default function RotaClienteWrapper({ nomeMotoboy, nomeRota, rotaId, pont
 
   const primeiroComGeo = pontosState.find(p => !p.visitado && p.lat && p.lng)
     ?? pontosState.find(p => p.lat && p.lng)
-  const centroLat = primeiroComGeo?.lat ?? -5.7945
-  const centroLng = primeiroComGeo?.lng ?? -35.2110
+  const centroLat = primeiroComGeo?.lat ?? -8.0539
+  const centroLng = primeiroComGeo?.lng ?? -34.8811
 
   const pontosDoMapa = pontosState
     .filter(p => p.lat !== null && p.lng !== null)
@@ -217,7 +229,7 @@ export default function RotaClienteWrapper({ nomeMotoboy, nomeRota, rotaId, pont
             pt.parada_id === p.parada_id ? { ...pt, lat: coords.lat, lng: coords.lng } : pt
           ))
         }
-        await new Promise(r => setTimeout(r, 1100)) // respeita limite Nominatim 1 req/s
+        await new Promise(r => setTimeout(r, 1100))
       }
     }
 
@@ -298,7 +310,9 @@ export default function RotaClienteWrapper({ nomeMotoboy, nomeRota, rotaId, pont
   if (!rotaId) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen text-center px-6">
-        <p className="text-6xl mb-5">🛵</p>
+        <div className="w-16 h-16 rounded-2xl bg-gray-800 flex items-center justify-center mb-5">
+          <Bike size={32} className="text-gray-400" />
+        </div>
         <p className="text-xl font-semibold text-gray-200 mb-2">Sem rota para hoje</p>
         <p className="text-gray-500 text-sm">Aguarde seu distribuidor criar uma rota.</p>
       </div>
@@ -309,7 +323,9 @@ export default function RotaClienteWrapper({ nomeMotoboy, nomeRota, rotaId, pont
   if (concluida) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen text-center px-6">
-        <p className="text-6xl mb-4">🎉</p>
+        <div className="w-16 h-16 rounded-2xl bg-emerald-900/40 flex items-center justify-center mb-4">
+          <CheckCircle size={40} className="text-emerald-400" />
+        </div>
         <p className="text-2xl font-bold text-emerald-400 mb-2">Rota concluída!</p>
         <p className="text-gray-400 text-sm">
           {total} parada{total !== 1 ? 's' : ''} entregue{total !== 1 ? 's' : ''} hoje
@@ -334,15 +350,15 @@ export default function RotaClienteWrapper({ nomeMotoboy, nomeRota, rotaId, pont
                 onClick={() => navegarWaze(paradaAtual)}
                 className="text-xs px-2.5 py-1 bg-blue-900/60 hover:bg-blue-800 text-blue-300 rounded-full transition"
               >
-                🔵 Waze
+                Waze
               </button>
             )}
             {pontosState.some(p => !p.visitado && p.lat) && (
               <button
                 onClick={navegarRotaCompleta}
-                className="text-xs px-2.5 py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-full transition"
+                className="text-xs px-2.5 py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-full transition flex items-center gap-1"
               >
-                🗺️ Rota completa
+                <Map size={12} /> Rota completa
               </button>
             )}
           </div>
@@ -370,19 +386,19 @@ export default function RotaClienteWrapper({ nomeMotoboy, nomeRota, rotaId, pont
           <div className="flex gap-1">
             <button
               onClick={() => setVistaLista(false)}
-              className={`text-xs px-3 py-1.5 rounded-full transition ${
+              className={`text-xs px-3 py-1.5 rounded-full transition flex items-center gap-1 ${
                 !vistaLista ? 'bg-emerald-600 text-white' : 'text-gray-400 hover:text-gray-200'
               }`}
             >
-              🗺️ Mapa
+              <Map size={12} /> Mapa
             </button>
             <button
               onClick={() => setVistaLista(true)}
-              className={`text-xs px-3 py-1.5 rounded-full transition ${
+              className={`text-xs px-3 py-1.5 rounded-full transition flex items-center gap-1 ${
                 vistaLista ? 'bg-emerald-600 text-white' : 'text-gray-400 hover:text-gray-200'
               }`}
             >
-              📋 Lista
+              <List size={12} /> Lista
             </button>
           </div>
         </div>
@@ -435,12 +451,12 @@ export default function RotaClienteWrapper({ nomeMotoboy, nomeRota, rotaId, pont
                       <p className="text-xs text-gray-500 truncate mt-0.5">{montarEndereco(p)}</p>
                     </div>
                     {isVisitada ? (
-                      <span className="text-xs bg-emerald-900/50 text-emerald-400 px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0">
-                        ✅ {formatarHora(p.visitado_em)}
+                      <span className="text-xs bg-emerald-900/50 text-emerald-400 px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0 flex items-center gap-1">
+                        <CheckCircle size={10} /> {formatarHora(p.visitado_em)}
                       </span>
                     ) : (
-                      <span className="text-xs bg-gray-800 text-gray-400 px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0">
-                        📦 {p.cartelas}
+                      <span className="text-xs bg-gray-800 text-gray-400 px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0 flex items-center gap-1">
+                        <Package size={10} /> {p.cartelas}
                       </span>
                     )}
                   </div>
@@ -449,16 +465,19 @@ export default function RotaClienteWrapper({ nomeMotoboy, nomeRota, rotaId, pont
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         onClick={() => navegarParaParada(p)}
-                        className="py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition active:scale-95"
+                        className="py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition active:scale-95 flex items-center justify-center gap-1.5"
                       >
-                        📍 Esta parada
+                        <MapPin size={14} /> Esta parada
                       </button>
                       <button
                         onClick={() => marcarEntregue(p)}
                         disabled={carregando}
-                        className="py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-semibold rounded-xl transition active:scale-95"
+                        className="py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-semibold rounded-xl transition active:scale-95 flex items-center justify-center gap-1.5"
                       >
-                        {carregando && isAtual ? '⏳' : '✅'} Entregue
+                        {carregando && isAtual
+                          ? <Loader2 size={14} className="animate-spin" />
+                          : <CheckCircle size={14} />
+                        } Entregue
                       </button>
                     </div>
                   )}
@@ -493,7 +512,7 @@ export default function RotaClienteWrapper({ nomeMotoboy, nomeRota, rotaId, pont
               onClick={() => navegarParaParada(paradaAtual)}
               className="flex flex-col items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-2xl transition active:scale-95"
             >
-              <span className="text-2xl">📍</span>
+              <MapPin size={20} />
               <span className="text-xs font-semibold">Esta parada</span>
             </button>
 
@@ -501,7 +520,7 @@ export default function RotaClienteWrapper({ nomeMotoboy, nomeRota, rotaId, pont
               onClick={navegarRotaCompleta}
               className="flex flex-col items-center gap-1.5 bg-blue-800 hover:bg-blue-900 text-white py-3.5 rounded-2xl transition active:scale-95"
             >
-              <span className="text-2xl">🗺️</span>
+              <Map size={20} />
               <span className="text-xs font-semibold">Rota completa</span>
             </button>
 
@@ -510,7 +529,7 @@ export default function RotaClienteWrapper({ nomeMotoboy, nomeRota, rotaId, pont
                 onClick={() => window.open(`tel:${paradaAtual.telefone!.replace(/\D/g, '')}`)}
                 className="flex flex-col items-center gap-1.5 bg-gray-700 hover:bg-gray-600 text-white py-3.5 rounded-2xl transition active:scale-95"
               >
-                <span className="text-2xl">📞</span>
+                <Phone size={20} />
                 <span className="text-xs font-semibold">Ligar</span>
               </button>
             )}
@@ -522,7 +541,10 @@ export default function RotaClienteWrapper({ nomeMotoboy, nomeRota, rotaId, pont
                 paradaAtual.telefone ? '' : 'col-span-2'
               }`}
             >
-              <span className="text-2xl">{carregando ? '⏳' : '✅'}</span>
+              {carregando
+                ? <Loader2 size={20} className="animate-spin" />
+                : <CheckCircle size={20} />
+              }
               <span className="text-xs font-semibold">Entregue</span>
             </button>
           </div>

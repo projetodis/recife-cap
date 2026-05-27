@@ -42,7 +42,7 @@ export default async function MotoboyRotasPage() {
 
   const rotasComParadas = rotasList ? await Promise.all(
     rotasList.map(async (r) => {
-      const { data: paradasRota } = await supabase
+      const { data: paradasRota, error: paradasError } = await supabase
         .from('paradas_rota')
         .select(`
           id,
@@ -59,6 +59,9 @@ export default async function MotoboyRotasPage() {
         `)
         .eq('rota_id', r.id)
         .order('ordem', { ascending: true })
+      // DEBUG TEMPORÁRIO — ver no terminal/Vercel logs
+      console.log('[DEBUG] paradasError:', paradasError)
+      console.log('[DEBUG] paradasRota[0] raw:', JSON.stringify(paradasRota?.[0], null, 2))
       return { ...r, paradas: paradasRota ?? [] }
     })
   ) : []
