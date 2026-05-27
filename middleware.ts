@@ -24,7 +24,7 @@ const ROLE_PREFIXES: Record<string, string[]> = {
   suporte:          ['/admin'],
 }
 
-const PUBLIC_ROUTES = ['/', '/login', '/auth/callback', '/cliente', '/api/cliente', '/api/config']
+const PUBLIC_ROUTES = ['/', '/login', '/auth/callback', '/cliente', '/api/cliente', '/api/config', '/api/public']
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })

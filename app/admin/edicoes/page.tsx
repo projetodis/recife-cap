@@ -74,6 +74,10 @@ export default async function EdicoesPage() {
                         className="text-emerald-600 hover:text-emerald-700 font-medium">
                         Cartelas
                       </Link>
+                      <Link href={`/admin/edicoes/${e.id}/premios`}
+                        className="text-amber-600 hover:text-amber-700 font-medium">
+                        Prêmios
+                      </Link>
                       <Link href={`/admin/edicoes/${e.id}`}
                         className="text-gray-500 hover:text-gray-700 font-medium">
                         Detalhes

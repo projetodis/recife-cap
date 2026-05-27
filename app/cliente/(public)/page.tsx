@@ -90,6 +90,8 @@ export default function ClienteHome() {
   const [menuOpen,    setMenuOpen]    = useState(false)
   const [proximaData, setProximaData] = useState<string | null>(null)
   const [edicaoNum,   setEdicaoNum]   = useState<number | null>(null)
+  const [edicaoId,    setEdicaoId]    = useState<string | null>(null)
+  const [premios,     setPremios]     = useState<any[]>([])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -106,9 +108,18 @@ export default function ClienteHome() {
           setProximaData(dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }))
         }
         if (d.edicao?.numero) setEdicaoNum(d.edicao.numero)
+        if (d.edicao?.id)     setEdicaoId(d.edicao.id)
       })
       .catch(() => {})
   }, [])
+
+  useEffect(() => {
+    if (!edicaoId) return
+    fetch(`/api/cliente/premios?edicao_id=${edicaoId}`)
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data) && data.length > 0) setPremios(data) })
+      .catch(() => {})
+  }, [edicaoId])
 
   function scrollTo(id: string) {
     setMenuOpen(false)
@@ -312,40 +323,75 @@ export default function ClienteHome() {
 
               {/* Prêmios */}
               <div className="space-y-3">
-                {([1, 2, 3, 4] as const).map(n => (
-                  <div key={n} className="flex items-center gap-4 p-4 rounded-2xl border border-gray-100 hover:border-[#2E7D32]/25 hover:bg-green-50/50 transition-all">
-                    <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{ background: '#E8F5E9' }}>
-                      <Trophy size={18} style={{ color: '#2E7D32' }} />
+                {premios.length > 0 ? (
+                  <>
+                    {/* Grid de prêmios dinâmicos */}
+                    <div className="grid grid-cols-2 gap-3">
+                      {premios.map(p => (
+                        <div key={p.id}
+                          className={`rounded-2xl overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-md ${p.destaque ? 'col-span-2' : ''}`}
+                          style={{ background: '#0d0d0d' }}>
+                          {/* Foto */}
+                          <div className="flex items-center justify-center p-3" style={{ aspectRatio: p.destaque ? '3/1' : '16/9' }}>
+                            {p.foto_url ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={p.foto_url} alt={p.nome}
+                                className="max-w-full max-h-full object-contain" />
+                            ) : (
+                              <Trophy size={p.destaque ? 40 : 28} style={{ color: '#FFC107' }} />
+                            )}
+                          </div>
+                          {/* Info */}
+                          <div className="px-3 pb-3 border-t border-white/10">
+                            <p className="text-white/50 text-xs font-medium mt-2 truncate">{p.nome}</p>
+                            <p className="text-white font-black text-base leading-tight">R$ {p.valor}</p>
+                            {p.quantidade > 1 && (
+                              <p className="text-xs font-semibold mt-0.5" style={{ color: '#FFC107' }}>
+                                {p.quantidade} ganhadores
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-gray-400 font-medium">{n}º Prêmio</p>
-                      <p className="font-semibold text-gray-700 text-sm truncate">
-                        {configs[`premio_${n}_nome`] || 'Prêmio em dinheiro'}
-                      </p>
+                  </>
+                ) : (
+                  /* Fallback estático enquanto não há prêmios cadastrados */
+                  <>
+                    {([1, 2, 3, 4] as const).map(n => (
+                      <div key={n} className="flex items-center gap-4 p-4 rounded-2xl border border-gray-100 hover:border-[#2E7D32]/25 hover:bg-green-50/50 transition-all">
+                        <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                          style={{ background: '#E8F5E9' }}>
+                          <Trophy size={18} style={{ color: '#2E7D32' }} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-gray-400 font-medium">{n}º Prêmio</p>
+                          <p className="font-semibold text-gray-700 text-sm truncate">
+                            {configs[`premio_${n}_nome`] || 'Prêmio em dinheiro'}
+                          </p>
+                        </div>
+                        <span className="font-black text-base flex-shrink-0" style={{ color: '#2E7D32' }}>
+                          {brl(configs[`premio_${n}_valor`], 'R$ 5.000')}
+                        </span>
+                      </div>
+                    ))}
+                    <div className="p-5 rounded-2xl text-white"
+                      style={{ background: 'linear-gradient(135deg, #1B5E20, #2E7D32)' }}>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-green-300 text-xs font-black uppercase tracking-wider mb-1">Prêmio Principal</p>
+                          <p className="text-2xl md:text-3xl font-black">
+                            {brl(configs.premio_principal_valor, 'R$ 120.000')}
+                          </p>
+                          {configs.premio_principal_nome && (
+                            <p className="text-green-200 text-sm mt-0.5">{configs.premio_principal_nome}</p>
+                          )}
+                        </div>
+                        <Trophy size={44} style={{ color: '#FFC107', opacity: 0.9 }} />
+                      </div>
                     </div>
-                    <span className="font-black text-base flex-shrink-0" style={{ color: '#2E7D32' }}>
-                      {brl(configs[`premio_${n}_valor`], 'R$ 5.000')}
-                    </span>
-                  </div>
-                ))}
-
-                {/* Prêmio principal */}
-                <div className="p-5 rounded-2xl text-white"
-                  style={{ background: 'linear-gradient(135deg, #1B5E20, #2E7D32)' }}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-green-300 text-xs font-black uppercase tracking-wider mb-1">Prêmio Principal</p>
-                      <p className="text-2xl md:text-3xl font-black">
-                        {brl(configs.premio_principal_valor, 'R$ 120.000')}
-                      </p>
-                      {configs.premio_principal_nome && (
-                        <p className="text-green-200 text-sm mt-0.5">{configs.premio_principal_nome}</p>
-                      )}
-                    </div>
-                    <Trophy size={44} style={{ color: '#FFC107', opacity: 0.9 }} />
-                  </div>
-                </div>
+                  </>
+                )}
 
                 <Link href="/cliente/compra"
                   className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl font-black text-[#1B5E20] text-base transition-all hover:scale-[1.02] active:scale-[0.98]"
