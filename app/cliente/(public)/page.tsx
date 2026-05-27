@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useConfig } from '@/lib/config-client'
 import {
-  Trophy, Ticket, QrCode, Tv, ChevronDown, Menu, X,
+  Trophy, Ticket, QrCode, Tv, ChevronDown, ChevronRight, Menu, X,
   CheckCircle, ShoppingCart, BarChart2, MessageCircle,
   Shield, MapPin, Radio,
 } from 'lucide-react'
@@ -408,40 +408,139 @@ export default function ClienteHome() {
         </section>
 
         {/* ══════════════════════════════════════════════════════ COMO FUNCIONA */}
-        <section className="py-20" style={{ background: '#1B5E20' }}>
-          <div ref={revealComo.ref}
-            className={`max-w-5xl mx-auto px-4 reveal ${revealComo.visible ? 'visible' : ''}`}>
+        <section className="py-20 relative overflow-hidden"
+          style={{ background: 'linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #1B5E20 100%)' }}>
 
-            <div className="text-center mb-14">
-              <h2 className="text-3xl md:text-4xl font-black text-white">Como participar</h2>
-              <p className="mt-2 text-sm" style={{ color: 'rgba(187,247,208,0.8)' }}>Simples, seguro e 100% online</p>
+          {/* Pontos de fundo */}
+          <div className="absolute inset-0 opacity-20"
+            style={{
+              backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.15) 1px, transparent 1px)',
+              backgroundSize: '24px 24px',
+            }} />
+
+          {/* Arco decorativo */}
+          <div className="absolute left-1/2 -translate-x-1/2 rounded-full pointer-events-none"
+            style={{
+              top: '-300px',
+              width: '800px',
+              height: '800px',
+              border: '2px solid rgba(255,193,7,0.15)',
+            }} />
+
+          <div ref={revealComo.ref}
+            className={`relative z-10 max-w-6xl mx-auto px-4 reveal ${revealComo.visible ? 'visible' : ''}`}>
+
+            {/* Título */}
+            <div className="text-center mb-16">
+              <div className="flex items-center justify-center gap-4 mb-3">
+                <div className="h-px w-16" style={{ background: 'rgba(255,193,7,0.4)' }} />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={logoUrl} alt="" className="w-8 h-8 object-contain opacity-50"
+                  onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
+                <div className="h-px w-16" style={{ background: 'rgba(255,193,7,0.4)' }} />
+              </div>
+              <h2 className="font-black leading-tight text-white"
+                style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)' }}>
+                Como <span style={{ color: '#AAFF00' }}>participar</span>
+              </h2>
+              <p className="mt-2 text-white/70">
+                Simples, seguro e <span className="font-bold" style={{ color: '#AAFF00' }}>100% online</span>
+              </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-6">
-              {[
-                { num: '01', titulo: 'Escolha seu título',  desc: 'Selecione a quantidade de títulos e confirme seus dados pessoais.',            icon: <Ticket size={26} /> },
-                { num: '02', titulo: 'Pague via PIX',       desc: 'Pagamento instantâneo e seguro. QR Code gerado automaticamente.',              icon: <QrCode  size={26} /> },
-                { num: '03', titulo: 'Acompanhe o sorteio', desc: 'Todo domingo ao vivo na TV. Veja seus números sorteados em tempo real.',       icon: <Tv      size={26} /> },
-              ].map(step => (
-                <div key={step.num} className="relative p-8 rounded-3xl text-center overflow-hidden"
-                  style={{
-                    background: 'rgba(255,255,255,0.07)',
-                    border: '1px solid rgba(255,193,7,0.2)',
-                    backdropFilter: 'blur(10px)',
-                  }}>
-                  <span className="absolute top-4 right-5 font-black text-6xl leading-none select-none"
-                    style={{ color: 'rgba(255,193,7,0.15)' }}>
-                    {step.num}
-                  </span>
-                  <div className="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center mb-5"
-                    style={{ background: 'rgba(255,193,7,0.18)', color: '#FFC107' }}>
-                    {step.icon}
+            {/* Desktop — 3 cards + setas */}
+            <div className="hidden md:flex items-center justify-center gap-0">
+              {([
+                { num: '01', titulo: 'Escolha seu título',   desc: 'Selecione a quantidade de títulos e confirme seus dados pessoais.',     icon: 'Ticket'  },
+                { num: '02', titulo: 'Pague via PIX',         desc: 'Pagamento instantâneo e seguro. QR Code gerado automaticamente.',       icon: 'QrCode'  },
+                { num: '03', titulo: 'Acompanhe o sorteio',   desc: 'Todo domingo ao vivo na TV. Veja seus números sorteados em tempo real.', icon: 'Tv'      },
+              ] as const).map((step, i) => (
+                <div key={step.num} className="flex items-center">
+                  {/* Card */}
+                  <div className="flex flex-col items-center text-center p-8 rounded-3xl w-72"
+                    style={{
+                      background: 'linear-gradient(145deg, rgba(46,125,50,0.8), rgba(27,94,32,0.9))',
+                      border: '1px solid rgba(255,193,7,0.3)',
+                      backdropFilter: 'blur(10px)',
+                    }}>
+                    {/* Ícone com anel dourado */}
+                    <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4"
+                      style={{
+                        background: 'linear-gradient(145deg, #2E7D32, #1B5E20)',
+                        border: '2px solid #FFC107',
+                        boxShadow: '0 0 20px rgba(255,193,7,0.3)',
+                      }}>
+                      {step.icon === 'Ticket' && <Ticket size={32} style={{ color: '#AAFF00' }} />}
+                      {step.icon === 'QrCode' && <QrCode size={32} style={{ color: '#AAFF00' }} />}
+                      {step.icon === 'Tv'     && <Tv     size={32} style={{ color: '#AAFF00' }} />}
+                    </div>
+                    {/* Número */}
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="h-px w-8" style={{ background: 'rgba(255,193,7,0.4)' }} />
+                      <span className="font-black text-3xl" style={{ color: '#AAFF00' }}>{step.num}</span>
+                      <div className="h-px w-8" style={{ background: 'rgba(255,193,7,0.4)' }} />
+                    </div>
+                    <h3 className="text-white font-black text-xl mb-3">{step.titulo}</h3>
+                    <p className="text-white/70 text-sm leading-relaxed">{step.desc}</p>
                   </div>
-                  <h3 className="text-white font-black text-lg mb-2">{step.titulo}</h3>
-                  <p className="text-sm leading-relaxed" style={{ color: 'rgba(187,247,208,0.75)' }}>{step.desc}</p>
+
+                  {/* Seta entre cards */}
+                  {i < 2 && (
+                    <div className="w-12 flex items-center justify-center flex-shrink-0">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center"
+                        style={{ background: '#2E7D32', border: '2px solid #FFC107' }}>
+                        <ChevronRight size={18} style={{ color: '#FFC107' }} />
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
+
+            {/* Mobile — cards empilhados */}
+            <div className="md:hidden space-y-0">
+              {([
+                { num: '01', titulo: 'Escolha seu título',   desc: 'Selecione a quantidade de títulos e confirme seus dados pessoais.',     icon: 'Ticket'  },
+                { num: '02', titulo: 'Pague via PIX',         desc: 'Pagamento instantâneo e seguro. QR Code gerado automaticamente.',       icon: 'QrCode'  },
+                { num: '03', titulo: 'Acompanhe o sorteio',   desc: 'Todo domingo ao vivo na TV. Veja seus números sorteados em tempo real.', icon: 'Tv'      },
+              ] as const).map((step, i) => (
+                <div key={step.num}>
+                  <div className="flex items-center gap-5 p-5 rounded-3xl"
+                    style={{
+                      background: 'linear-gradient(145deg, rgba(46,125,50,0.8), rgba(27,94,32,0.9))',
+                      border: '1px solid rgba(255,193,7,0.3)',
+                    }}>
+                    {/* Ícone */}
+                    <div className="w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{
+                        background: 'linear-gradient(145deg, #2E7D32, #1B5E20)',
+                        border: '2px solid #FFC107',
+                        boxShadow: '0 0 15px rgba(255,193,7,0.3)',
+                      }}>
+                      {step.icon === 'Ticket' && <Ticket size={24} style={{ color: '#AAFF00' }} />}
+                      {step.icon === 'QrCode' && <QrCode size={24} style={{ color: '#AAFF00' }} />}
+                      {step.icon === 'Tv'     && <Tv     size={24} style={{ color: '#AAFF00' }} />}
+                    </div>
+                    {/* Texto */}
+                    <div className="flex-1">
+                      <span className="font-black text-2xl block" style={{ color: '#AAFF00' }}>{step.num}</span>
+                      <h3 className="text-white font-black text-lg leading-tight">{step.titulo}</h3>
+                      <p className="text-white/70 text-sm mt-1 leading-relaxed">{step.desc}</p>
+                    </div>
+                  </div>
+                  {/* Chevron entre cards */}
+                  {i < 2 && (
+                    <div className="flex justify-center py-2">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center"
+                        style={{ background: '#2E7D32', border: '2px solid #FFC107' }}>
+                        <ChevronDown size={16} style={{ color: '#FFC107' }} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
           </div>
         </section>
 
