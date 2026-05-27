@@ -1,0 +1,97 @@
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import RotaClienteWrapper from './RotaClienteWrapper'
+
+export default async function MotoboyRotasPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('nome')
+    .eq('id', user.id)
+    .single()
+
+  const { data: motoboy } = await supabase
+    .from('motoboys')
+    .select('id, nome, distribuidor_id')
+    .eq('user_id', user.id)
+    .single()
+
+  if (!motoboy) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen text-center p-8">
+        <p className="text-4xl mb-4">🛵</p>
+        <p className="text-gray-300 font-medium mb-2">Perfil de motoboy não encontrado</p>
+        <p className="text-gray-500 text-sm">Fale com seu distribuidor.</p>
+      </div>
+    )
+  }
+
+  const hoje = new Date().toISOString().split('T')[0]
+
+  const { data: rota } = await supabase
+    .from('rotas_entrega')
+    .select('*')
+    .eq('motoboy_id', motoboy.id)
+    .eq('data_rota', hoje)
+    .in('status', ['pendente', 'em_andamento'])
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  let paradas: any[] = []
+  if (rota) {
+    const { data } = await supabase
+      .from('paradas_rota')
+      .select(`
+        id,
+        ordem,
+        quantidade_cartelas,
+        status,
+        visitado_em,
+        pdv_id,
+        pontos_de_venda (
+          id, nome, responsavel_nome, telefone,
+          endereco, numero, bairro, cidade, uf,
+          latitude, longitude
+        )
+      `)
+      .eq('rota_id', rota.id)
+      .order('ordem', { ascending: true })
+
+    paradas = data ?? []
+  }
+
+  const pontos = paradas.map((p: any) => {
+    const pdv = Array.isArray(p.pontos_de_venda) ? p.pontos_de_venda[0] : p.pontos_de_venda
+    return {
+      parada_id:   p.id,
+      pdv_id:      pdv?.id ?? '',
+      nome:        pdv?.nome ?? 'PDV',
+      lat:         pdv?.latitude  != null ? parseFloat(pdv.latitude)  : null,
+      lng:         pdv?.longitude != null ? parseFloat(pdv.longitude) : null,
+      status:      p.status,
+      responsavel: pdv?.responsavel_nome ?? undefined,
+      telefone:    pdv?.telefone ?? undefined,
+      endereco:    [pdv?.endereco, pdv?.numero, pdv?.bairro].filter(Boolean).join(', ') || undefined,
+      bairro:      pdv?.bairro ?? undefined,
+      cidade:      pdv?.cidade ?? undefined,
+      cartelas:    p.quantidade_cartelas,
+      visitado:    p.status === 'visitado',
+      visitado_em: p.visitado_em ?? undefined,
+      ordem:       p.ordem,
+    }
+  })
+
+  return (
+    <RotaClienteWrapper
+      nomeMotoboy={profile?.nome ?? motoboy.nome}
+      nomeRota={rota?.nome ?? 'Sem rota hoje'}
+      rotaId={rota?.id ?? null}
+      rotaStatus={rota?.status ?? null}
+      pontos={pontos}
+    />
+  )
+}

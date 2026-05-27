@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Remove-Item \"c:\\\\Users\\\\pc-residencia\\\\Downloads\\\\sorteio-cap\\\\middleware.ts\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\Users\\\\pc-residencia\\\\Downloads\\\\sorteio-cap\\\\app\\\\pdv\\\\venda\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\Users\\\\pc-residencia\\\\Downloads\\\\sorteio-cap\\\\app\\\\pdv\\\\cartelas\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\pc-residencia\\\\Downloads\\\\sorteio-cap\\\\app\\\\distribuidor\\\\\" -Recurse -File | Select-Object -ExpandProperty FullName)",
+      "Bash(npm install *)",
+      "Bash(npx tsc *)",
+      "Bash(npm list *)",
+      "Bash(xargs grep -l \"from.*sorteios\")",
+      "Bash(xargs grep -l \"from.*premios\\\\|from.*vendas\\\\|from.*movimentacoes\")",
+      "Bash(New-Item -ItemType Directory -Force \"c:\\\\Users\\\\pc-residencia\\\\Downloads\\\\sorteio-cap\\\\app\\\\api\\\\cartelas\\\\pdf-puppeteer\")",
+      "Bash(Out-Null)",
+      "Bash(Write-Host \"ok\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); deps={**d.get\\('dependencies',{}\\),**d.get\\('devDependencies',{}\\)}; [print\\(k,v\\) for k,v in sorted\\(deps.items\\(\\)\\)]\")",
+      "Bash(Remove-Item \"c:\\\\Users\\\\pc-residencia\\\\Downloads\\\\sorteio-cap\\\\app\\\\cliente\\\\page.tsx\" -Force)",
+      "Bash(Remove-Item \"c:\\\\Users\\\\pc-residencia\\\\Downloads\\\\sorteio-cap\\\\app\\\\cliente\\\\compra\\\\page.tsx\" -Force)",
+      "Bash(Remove-Item \"c:\\\\Users\\\\pc-residencia\\\\Downloads\\\\sorteio-cap\\\\app\\\\cliente\\\\sorteio\\\\page.tsx\" -Force)",
+      "Bash(Remove-Item \"c:\\\\Users\\\\pc-residencia\\\\Downloads\\\\sorteio-cap\\\\app\\\\cliente\\\\consulta\\\\[cpf]\\\\page.tsx\" -Force)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\pc-residencia\\\\Downloads\\\\sorteio-cap\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\pc-residencia\\\\Downloads\\\\sorteio-cap\" -Recurse -Directory)",
+      "Bash(Select-Object -First 20)",
+      "Bash(cp \"/mnt/user-data/uploads/Logo.png\" \"c:/Users/pc-residencia/Downloads/sorteio-cap/public/logo.png\")",
+      "Bash(cp \"/mnt/user-data/uploads/Logo.png\" \"c:/Users/pc-residencia/Downloads/sorteio-cap/public/favicon.ico\")",
+      "Bash(cp \"/tmp/3142c478-b0a8-400e-9b0b-230649c63cbf.tmp.png\" \"c:/Users/pc-residencia/Downloads/sorteio-cap/public/logo.png\")",
+      "Bash(cp \"/tmp/3142c478-b0a8-400e-9b0b-230649c63cbf.tmp.png\" \"c:/Users/pc-residencia/Downloads/sorteio-cap/public/favicon.ico\")",
+      "Bash(findstr /s /m \"lucide-react\" \"c:\\\\Users\\\\pc-residencia\\\\Downloads\\\\sorteio-cap\\\\package.json\")",
+      "Bash(node -e \"const l = require\\('lucide-react'\\); const names = Object.keys\\(l\\).filter\\(k => /instagram|facebook|youtube|twitter/i.test\\(k\\)\\); console.log\\(names\\)\")",
+      "Bash(node -e \"const l = require\\('lucide-react'\\); console.log\\(Object.keys\\(l\\).slice\\(0,20\\)\\); console.log\\('total:', Object.keys\\(l\\).length\\)\")",
+      "Bash(node -e \"const l = require\\('lucide-react'\\); const names = Object.keys\\(l\\).filter\\(k => /^[A-Z]/.test\\(k\\) && !/Icon$/.test\\(k\\)\\).filter\\(k => /share|link|external|globe|at|hash/i.test\\(k\\)\\); console.log\\(names\\)\")",
+      "Bash(node -e \"const l = require\\('lucide-react'\\); const names = Object.keys\\(l\\).filter\\(k => /^[A-Z]/.test\\(k\\) && !/Icon$/.test\\(k\\)\\).filter\\(k => /share|play|video|camera|photo|image|film/i.test\\(k\\)\\); console.log\\(names.slice\\(0,20\\)\\)\")"
+    ]
+  }
+}

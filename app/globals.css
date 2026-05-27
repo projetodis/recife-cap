@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+
+  /* Tema dinâmico — sobrescritos pelo ThemeProvider */
+  --color-primary:       #2E7D32;
+  --color-primary-dark:  #1B5E20;
+  --color-primary-light: #4CAF50;
+  --color-secondary:     #FFC107;
+}
+
+/* Classes utilitárias que consomem as variáveis */
+.btn-primary              { background: var(--color-primary); color: #fff; }
+.btn-primary:hover        { background: var(--color-primary-dark); }
+.text-primary             { color: var(--color-primary); }
+.bg-primary               { background: var(--color-primary); }
+.border-primary           { border-color: var(--color-primary); }
+.text-secondary           { color: var(--color-secondary); }
+.bg-secondary             { background: var(--color-secondary); }
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* Recife Cap brand colors */
+  --color-brand:        #2E7D32;
+  --color-brand-dark:   #1B5E20;
+  --color-brand-light:  #4CAF50;
+  --color-gold:         #FFC107;
+  --color-gold-dark:    #F57F17;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
