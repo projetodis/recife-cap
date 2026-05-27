@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { motion, AnimatePresence, type PanInfo } from 'framer-motion'
 import { useConfig } from '@/lib/config-client'
 import {
-  Trophy, Ticket, QrCode, Tv, ChevronDown, ChevronRight, Menu, X,
-  CheckCircle, ShoppingCart, BarChart2, MessageCircle,
-  Shield, MapPin, Radio,
+  Trophy, Ticket, QrCode, Tv, ChevronDown, ChevronRight, ChevronLeft, Menu, X,
+  ShoppingCart, BarChart2, MessageCircle, Star,
+  Shield, Radio,
 } from 'lucide-react'
 
 // ── SVG brand icons ────────────────────────────────────────────────────────────
@@ -34,13 +35,191 @@ function IconYoutube({ size = 16 }: { size?: number }) {
 
 // ── Ganhadores fictícios ───────────────────────────────────────────────────────
 const GANHADORES = [
-  { nome: 'Maria S.',  cidade: 'Recife, PE',   pdv: 'PDV Centro',  premio: 'R$ 5.000',   sorteio: '1º Prêmio',       iniciais: 'MS', cor: '#2E7D32' },
-  { nome: 'João C.',   cidade: 'Olinda, PE',   pdv: 'Web/App',     premio: 'R$ 120.000', sorteio: 'Prêmio Principal', iniciais: 'JC', cor: '#1B5E20' },
-  { nome: 'Ana R.',    cidade: 'Caruaru, PE',  pdv: 'PDV Norte',   premio: 'R$ 5.000',   sorteio: '2º Prêmio',       iniciais: 'AR', cor: '#388E3C' },
-  { nome: 'Pedro M.',  cidade: 'Recife, PE',   pdv: 'Web/App',     premio: 'R$ 5.000',   sorteio: '3º Prêmio',       iniciais: 'PM', cor: '#2E7D32' },
-  { nome: 'Lucia B.',  cidade: 'Paulista, PE', pdv: 'PDV Sul',     premio: 'R$ 1.000',   sorteio: 'Giro da Sorte',   iniciais: 'LB', cor: '#1B5E20' },
-  { nome: 'Carlos N.', cidade: 'Recife, PE',   pdv: 'Web/App',     premio: 'R$ 120.000', sorteio: 'Prêmio Principal', iniciais: 'CN', cor: '#388E3C' },
+  { id: 1, nome: 'Maria S.',  cidade: 'Recife, PE',   premio: 'R$ 120.000', sorteio: 'Prêmio Principal', depoimento: 'Não acreditei quando recebi a ligação! Que sorte incrível, obrigada Recife Cap!',                      foto: 'https://randomuser.me/api/portraits/women/44.jpg' },
+  { id: 2, nome: 'João C.',   cidade: 'Olinda, PE',   premio: 'R$ 5.000',   sorteio: '1º Prêmio',       depoimento: 'Comprei um título na semana passada e já ganhei. Inacreditável!',                                       foto: 'https://randomuser.me/api/portraits/men/32.jpg'   },
+  { id: 3, nome: 'Ana R.',    cidade: 'Caruaru, PE',  premio: 'R$ 10.000',  sorteio: '2º Prêmio',       depoimento: 'Sempre acreditei. Todo domingo acompanho ao vivo e finalmente meu número saiu!',                        foto: 'https://randomuser.me/api/portraits/women/68.jpg' },
+  { id: 4, nome: 'Pedro M.',  cidade: 'Paulista, PE', premio: 'R$ 15.000',  sorteio: '3º Prêmio',       depoimento: 'Melhor investimento de R$ 10 que já fiz na vida. Super recomendo!',                                     foto: 'https://randomuser.me/api/portraits/men/75.jpg'   },
+  { id: 5, nome: 'Lucia B.',  cidade: 'Recife, PE',   premio: 'R$ 1.000',   sorteio: 'Giro da Sorte',   depoimento: 'Participo há 3 meses e finalmente ganhei. O sorteio é transparente e ao vivo!',                         foto: 'https://randomuser.me/api/portraits/women/26.jpg' },
+  { id: 6, nome: 'Carlos N.', cidade: 'Jaboatão, PE', premio: 'R$ 120.000', sorteio: 'Prêmio Principal', depoimento: 'Minha vida mudou completamente. Obrigado Recife Cap e Hospital Varela Santiago!',                     foto: 'https://randomuser.me/api/portraits/men/52.jpg'   },
 ]
+
+const cardVariants = {
+  enter: (dir: number) => ({ x: dir > 0 ? 300 : -300, opacity: 0, scale: 0.9 }),
+  center: { x: 0, opacity: 1, scale: 1 },
+  exit:  (dir: number) => ({ x: dir > 0 ? -300 : 300, opacity: 0, scale: 0.9 }),
+}
+
+// ── Carrossel de depoimentos ───────────────────────────────────────────────────
+function CarrosselDepoimentos() {
+  const [atual,     setAtual]     = useState(0)
+  const [direction, setDirection] = useState(0)
+
+  const anterior = () => {
+    setDirection(-1)
+    setAtual(prev => (prev === 0 ? GANHADORES.length - 1 : prev - 1))
+  }
+  const proximo = () => {
+    setDirection(1)
+    setAtual(prev => (prev + 1) % GANHADORES.length)
+  }
+  const irPara = (i: number) => { setDirection(i > atual ? 1 : -1); setAtual(i) }
+
+  useEffect(() => {
+    const t = setInterval(proximo, 5000)
+    return () => clearInterval(t)
+  }, [])
+
+  const g     = GANHADORES[atual]
+  const prev1 = GANHADORES[(atual - 1 + GANHADORES.length) % GANHADORES.length]
+  const next1 = GANHADORES[(atual + 1) % GANHADORES.length]
+
+  const CardPrincipal = ({ item }: { item: typeof GANHADORES[0] }) => (
+    <>
+      {/* Foto com anel gradiente */}
+      <div className="relative mb-4">
+        <div className="w-20 h-20 rounded-full p-0.5 mx-auto"
+          style={{ background: 'linear-gradient(135deg, #FFC107, #2E7D32)' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={item.foto} alt={item.nome}
+            className="w-full h-full rounded-full object-cover border-2 border-white" />
+        </div>
+        <div className="absolute bottom-0 right-1/2 translate-x-8 w-6 h-6 rounded-full flex items-center justify-center"
+          style={{ background: '#2E7D32' }}>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+      </div>
+      {/* Estrelas */}
+      <div className="flex gap-1 justify-center mb-3">
+        {[1,2,3,4,5].map(i => <Star key={i} size={14} fill="#FFC107" color="#FFC107" />)}
+      </div>
+      {/* Depoimento */}
+      <p className="text-gray-600 text-sm leading-relaxed mb-4 italic">"{item.depoimento}"</p>
+      {/* Info */}
+      <p className="font-black text-gray-900">{item.nome}</p>
+      <p className="text-gray-400 text-xs">{item.cidade}</p>
+      <div className="mt-3 px-4 py-1.5 rounded-full text-xs font-black inline-block"
+        style={{ background: 'rgba(255,193,7,0.15)', color: '#1B5E20' }}>
+        {item.sorteio} · {item.premio}
+      </div>
+    </>
+  )
+
+  return (
+    <section className="py-20 overflow-hidden" style={{ background: '#f8faf8' }}>
+      <div className="max-w-6xl mx-auto px-4">
+
+        {/* Título */}
+        <div className="text-center mb-16">
+          <span className="text-xs font-black uppercase tracking-widest" style={{ color: '#2E7D32' }}>
+            Ganhadores verificados
+          </span>
+          <h2 className="text-3xl md:text-4xl font-black text-gray-900 mt-2">Quem já ganhou</h2>
+          <p className="text-gray-500 mt-2 text-sm">Histórias reais de ganhadores do Recife Cap</p>
+        </div>
+
+        {/* Desktop — 3 cards: prev | main | next */}
+        <div className="hidden md:flex items-center justify-center gap-6 h-80">
+
+          {/* Card anterior */}
+          <div className="w-64 h-64 rounded-3xl p-6 flex flex-col items-center text-center opacity-40 scale-90 transition-all cursor-pointer flex-shrink-0"
+            style={{ background: 'white', border: '1px solid #e5e7eb', filter: 'blur(1px)' }}
+            onClick={anterior}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={prev1.foto} alt={prev1.nome} className="w-14 h-14 rounded-full object-cover mb-3 border-2 border-[#2E7D32]" />
+            <p className="font-black text-gray-900 text-sm">{prev1.nome}</p>
+            <p className="text-xs text-gray-500">{prev1.cidade}</p>
+          </div>
+
+          {/* Card principal animado */}
+          <AnimatePresence mode="wait" custom={direction}>
+            <motion.div
+              key={atual}
+              custom={direction}
+              variants={cardVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="w-80 rounded-3xl p-8 flex flex-col items-center text-center z-10 flex-shrink-0"
+              style={{
+                background: 'white',
+                border: '2px solid rgba(46,125,50,0.2)',
+                boxShadow: '0 20px 60px rgba(46,125,50,0.15)',
+              }}>
+              <CardPrincipal item={g} />
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Card seguinte */}
+          <div className="w-64 h-64 rounded-3xl p-6 flex flex-col items-center text-center opacity-40 scale-90 transition-all cursor-pointer flex-shrink-0"
+            style={{ background: 'white', border: '1px solid #e5e7eb', filter: 'blur(1px)' }}
+            onClick={proximo}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={next1.foto} alt={next1.nome} className="w-14 h-14 rounded-full object-cover mb-3 border-2 border-[#2E7D32]" />
+            <p className="font-black text-gray-900 text-sm">{next1.nome}</p>
+            <p className="text-xs text-gray-500">{next1.cidade}</p>
+          </div>
+        </div>
+
+        {/* Mobile — swipe */}
+        <div className="md:hidden relative">
+          <AnimatePresence mode="wait" custom={direction}>
+            <motion.div
+              key={atual}
+              custom={direction}
+              variants={cardVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.7}
+              onDragEnd={(_e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+                if (info.offset.x < -80) proximo()
+                if (info.offset.x > 80)  anterior()
+              }}
+              className="rounded-3xl p-8 flex flex-col items-center text-center mx-2"
+              style={{
+                background: 'white',
+                border: '2px solid rgba(46,125,50,0.2)',
+                boxShadow: '0 20px 60px rgba(46,125,50,0.15)',
+              }}>
+              <CardPrincipal item={g} />
+              <p className="text-gray-300 text-xs mt-4">← arraste para navegar →</p>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Controles */}
+        <div className="flex items-center justify-center gap-4 mt-10">
+          <button onClick={anterior}
+            className="w-10 h-10 rounded-full flex items-center justify-center border-2 border-gray-200 hover:border-[#2E7D32] hover:text-[#2E7D32] transition-all text-gray-400">
+            <ChevronLeft size={18} />
+          </button>
+          <div className="flex gap-2">
+            {GANHADORES.map((_, i) => (
+              <button key={i} onClick={() => irPara(i)}
+                className="transition-all duration-300 rounded-full"
+                style={{
+                  width:      i === atual ? '24px' : '8px',
+                  height:     '8px',
+                  background: i === atual ? '#2E7D32' : '#d1d5db',
+                }} />
+            ))}
+          </div>
+          <button onClick={proximo}
+            className="w-10 h-10 rounded-full flex items-center justify-center border-2 border-gray-200 hover:border-[#2E7D32] hover:text-[#2E7D32] transition-all text-gray-400">
+            <ChevronRight size={18} />
+          </button>
+        </div>
+
+      </div>
+    </section>
+  )
+}
 
 // ── Hook: contador animado ─────────────────────────────────────────────────────
 function useCounter(target: number, active: boolean, duration = 1500) {
@@ -128,7 +307,6 @@ export default function ClienteHome() {
 
   const revealSorteio = useReveal()
   const revealComo    = useReveal()
-  const revealDepos   = useReveal()
   const revealSobre   = useReveal()
 
   const c1 = useCounter(120000, revealSobre.visible)
@@ -553,51 +731,7 @@ export default function ClienteHome() {
         </section>
 
         {/* ══════════════════════════════════════════════════════ DEPOIMENTOS */}
-        <section className="py-20" style={{ background: '#f8f9fa' }}>
-          <div ref={revealDepos.ref}
-            className={`max-w-6xl mx-auto px-4 reveal ${revealDepos.visible ? 'visible' : ''}`}>
-
-            <div className="text-center mb-12">
-              <span className="text-xs font-black uppercase tracking-widest px-3 py-1.5 rounded-full inline-block mb-3"
-                style={{ background: '#E8F5E9', color: '#2E7D32' }}>
-                Ganhadores
-              </span>
-              <h2 className="text-3xl md:text-4xl font-black text-gray-900">Quem já ganhou</h2>
-            </div>
-
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {GANHADORES.map((g, i) => (
-                <div key={i}
-                  className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black text-base flex-shrink-0"
-                      style={{ background: g.cor }}>
-                      {g.iniciais}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-black text-gray-900">{g.nome}</p>
-                      <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5">
-                        <MapPin size={10} />
-                        <span>{g.cidade} · {g.pdv}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black px-3 py-1.5 rounded-full"
-                      style={{ background: 'rgba(255,193,7,0.15)', color: '#1B5E20' }}>
-                      {g.sorteio}
-                    </span>
-                    <span className="font-black text-lg" style={{ color: '#2E7D32' }}>{g.premio}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-gray-50">
-                    <CheckCircle size={13} style={{ color: '#2E7D32' }} />
-                    <span className="text-xs font-medium text-gray-400">Ganhador verificado</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        <CarrosselDepoimentos />
 
         {/* ══════════════════════════════════════════════════════ SOBRE NÓS */}
         <section id="sobre" className="py-20 bg-white">
