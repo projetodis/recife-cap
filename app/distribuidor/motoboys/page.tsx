@@ -10,18 +10,30 @@ export default async function MotoboyListPage() {
   const { data: dist } = await supabase
     .from('distribuidores').select('id').eq('user_id', user.id).single()
 
-  const { data: motoboys, error: motoboyError } = await supabase
+  const distribuidorId = dist?.id
+
+  const { data: motoboys, error } = await supabase
     .from('motoboys')
-    .select('*, profiles(email)')
-    .eq('distribuidor_id', dist?.id)
+    .select(`
+      id,
+      nome,
+      telefone,
+      veiculo,
+      placa,
+      status,
+      user_id,
+      distribuidor_id,
+      profiles (
+        id,
+        role,
+        nome,
+        telefone
+      )
+    `)
+    .eq('distribuidor_id', distribuidorId)
     .order('created_at', { ascending: false })
 
-  console.log('[motoboys-debug]', {
-    userId:  user.id,
-    distId:  dist?.id ?? null,
-    total:   motoboys?.length ?? 0,
-    erro:    motoboyError?.message ?? null,
-  })
+  if (error) console.error('Erro motoboys:', error)
 
   // Rotas de hoje por motoboy
   const hoje = new Date().toISOString().split('T')[0]
@@ -60,7 +72,7 @@ export default async function MotoboyListPage() {
                     <span className="text-2xl">{veiculoIcon[m.veiculo] ?? '🛵'}</span>
                     <div>
                       <h3 className="font-medium text-gray-900">{m.nome}</h3>
-                      <p className="text-xs text-gray-400">{m.profiles?.email}</p>
+                      {m.telefone && <p className="text-xs text-gray-400">{m.telefone}</p>}
                     </div>
                   </div>
                   <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
