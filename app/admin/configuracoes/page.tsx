@@ -35,6 +35,7 @@ const DESCRICOES: Record<string, string> = {
   banner_home_url:     'Banner da Home',
   banner_compra_url:   'Banner de Compra',
   banner_sorteio_url:  'Banner do Sorteio',
+  cartela_imagem_url:  'Cartela — Seção Quem Somos',
 }
 
 export default function AdminConfiguracoesPage() {
@@ -447,11 +448,12 @@ export default function AdminConfiguracoesPage() {
           {/* ── BANNERS ──────────────────────────────────────────────── */}
           {secao === 'banners' && (
             <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-6">
-              <h2 className="font-bold text-gray-800 text-lg">Banners</h2>
+              <h2 className="font-bold text-gray-800 text-lg">Banners & Mídias</h2>
               <div className="grid grid-cols-2 gap-5">
                 <UploadCard chave="banner_home_url"    label="Banner da Home"    dimensao="Recomendado: 1200×400px" />
                 <UploadCard chave="banner_compra_url"  label="Banner de Compra"  dimensao="Recomendado: 600×800px" />
                 <UploadCard chave="banner_sorteio_url" label="Banner do Sorteio" dimensao="Recomendado: 1200×400px" />
+                <UploadCard chave="cartela_imagem_url" label="Cartela — Seção Quem Somos" dimensao="PNG/JPG, ideal 900×500px" />
               </div>
             </div>
           )}

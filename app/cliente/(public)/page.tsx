@@ -332,11 +332,6 @@ export default function ClienteHome() {
 
   const revealSorteio = useReveal()
   const revealComo    = useReveal()
-  const revealSobre   = useReveal()
-
-  const c1 = useCounter(120000, revealSobre.visible)
-  const c2 = useCounter(100000, revealSobre.visible)
-  const c3 = useCounter(100,    revealSobre.visible)
 
   return (
     <>
@@ -732,58 +727,133 @@ export default function ClienteHome() {
         <CarrosselDepoimentos />
 
         {/* ══════════════════════════════════════════════════════ SOBRE NÓS */}
-        <section id="sobre" className="py-20 bg-white">
-          <div ref={revealSobre.ref}
-            className={`max-w-6xl mx-auto px-4 reveal ${revealSobre.visible ? 'visible' : ''}`}>
+        <section id="sobre" className="py-24 bg-white relative overflow-hidden">
 
-            <div className="grid lg:grid-cols-2 gap-16 items-center">
-              <div>
-                <span className="text-xs font-black uppercase tracking-widest px-3 py-1.5 rounded-full inline-block mb-5"
-                  style={{ background: '#E8F5E9', color: '#2E7D32' }}>
-                  Quem somos
+          {/* Círculos decorativos de fundo */}
+          <div className="absolute top-10 left-10 w-32 h-32 rounded-full opacity-5 pointer-events-none"
+            style={{ background: '#2E7D32' }} />
+          <div className="absolute bottom-10 right-10 w-48 h-48 rounded-full opacity-5 pointer-events-none"
+            style={{ background: '#FFC107' }} />
+
+          <div className="max-w-6xl mx-auto px-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+
+              {/* ── Coluna esquerda ── */}
+              <div className="space-y-6">
+                <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold"
+                  style={{ background: 'rgba(46,125,50,0.1)', color: '#2E7D32' }}>
+                  QUEM SOMOS
                 </span>
-                <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-6">
-                  Sorteios que transformam vidas
+
+                <h2 className="text-4xl lg:text-5xl font-black leading-tight" style={{ color: '#1B5E20' }}>
+                  Sorteios que{' '}
+                  <span style={{ color: '#2E7D32' }}>transformam</span>
+                  <br />
+                  <span className="italic" style={{ color: '#2E7D32', fontFamily: 'Georgia, serif' }}>
+                    vidas 🍀
+                  </span>
                 </h2>
-                <p className="text-gray-600 leading-relaxed mb-4">
-                  O <strong>RECIFE CAP</strong> é um título de capitalização filantrópico.
+
+                <p className="text-gray-600 leading-relaxed text-lg">
+                  O <strong style={{ color: '#1B5E20' }}>RECIFE CAP</strong> é um título de capitalização filantrópico.
                   Ao adquirir um título, você concorre a prêmios e contribui diretamente com o{' '}
-                  <strong>Hospital Infantil Varela Santiago</strong>, cedendo o direito de resgate.
-                </p>
-                <p className="text-gray-600 leading-relaxed mb-8">
+                  <strong style={{ color: '#1B5E20' }}>Hospital Infantil Varela Santiago</strong>, cedendo o direito de resgate.
                   Regulamentado pela SUSEP, nossos sorteios são transmitidos ao vivo toda semana,
                   com total transparência e segurança.
                 </p>
-                <div className="flex items-center gap-2 px-4 py-2.5 rounded-full font-bold text-sm w-fit"
-                  style={{ background: '#E8F5E9', color: '#2E7D32' }}>
-                  <Shield size={14} />
+
+                {/* Stats */}
+                <div className="grid grid-cols-3 gap-4">
+                  {[
+                    { valor: 'R$ 120.000', label: 'Prêmio principal por edição' },
+                    { valor: '100.000',    label: 'Títulos por edição' },
+                    { valor: '100%',       label: 'Pago via PIX instantâneo' },
+                  ].map(({ valor, label }) => (
+                    <div key={label} className="text-center p-4 rounded-2xl"
+                      style={{ background: 'rgba(46,125,50,0.05)', border: '1px solid rgba(46,125,50,0.15)' }}>
+                      <p className="font-black text-lg" style={{ color: '#2E7D32' }}>{valor}</p>
+                      <p className="text-xs text-gray-500 mt-1">{label}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Badge SUSEP */}
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium text-gray-600"
+                  style={{ borderColor: 'rgba(46,125,50,0.3)' }}>
+                  <Shield size={16} style={{ color: '#2E7D32' }} />
                   Filantropia Premiável · Regulamentado SUSEP
+                </div>
+
+                {/* CTA */}
+                <Link href="/cliente/compra"
+                  className="inline-flex items-center gap-2 px-8 py-4 rounded-full font-black text-lg text-white transition-all hover:scale-105 hover:shadow-xl"
+                  style={{
+                    background: 'linear-gradient(135deg, #1B5E20, #2E7D32)',
+                    boxShadow: '0 8px 30px rgba(46,125,50,0.35)',
+                  }}>
+                  <Ticket size={20} />
+                  Quero meu título
+                </Link>
+              </div>
+
+              {/* ── Coluna direita — Cartela 3D ── */}
+              <div className="relative flex items-center justify-center min-h-[420px]">
+
+                {/* Confetes */}
+                {([
+                  { top: '5%',  left: '10%',  w: 8,  h: 24, rotate: 12,  color: '#FFC107' },
+                  { top: '15%', right: '5%',  w: 10, h: 20, rotate: -20, color: '#2E7D32' },
+                  { top: '60%', left: '5%',   w: 6,  h: 18, rotate: 45,  color: '#FFC107' },
+                  { top: '75%', right: '10%', w: 8,  h: 22, rotate: -35, color: '#FFC107' },
+                  { top: '30%', right: '15%', w: 10, h: 16, rotate: 20,  color: '#2E7D32' },
+                  { top: '45%', left: '2%',   w: 6,  h: 20, rotate: -15, color: '#FFC107' },
+                  { top: '85%', left: '25%',  w: 8,  h: 14, rotate: 60,  color: '#2E7D32' },
+                  { top: '10%', left: '40%',  w: 6,  h: 18, rotate: -45, color: '#FFC107' },
+                ] as const).map((c, i) => (
+                  <div key={i} className="absolute pointer-events-none rounded-sm"
+                    style={{
+                      top: c.top, left: (c as any).left, right: (c as any).right,
+                      width: c.w, height: c.h,
+                      background: c.color,
+                      transform: `rotate(${c.rotate}deg)`,
+                      opacity: 0.75,
+                    }} />
+                ))}
+
+                {/* Trevos decorativos */}
+                <div className="absolute top-0 right-0 text-8xl opacity-10 select-none pointer-events-none">🍀</div>
+                <div className="absolute bottom-0 left-0 text-6xl opacity-10 select-none pointer-events-none">🍀</div>
+
+                {/* Glow dourado */}
+                <div className="absolute inset-0 rounded-3xl pointer-events-none"
+                  style={{ background: 'radial-gradient(ellipse at center, rgba(255,193,7,0.15) 0%, transparent 70%)' }} />
+
+                {/* Cartela com efeito 3D */}
+                <div className="relative z-10 cursor-pointer"
+                  style={{
+                    transform: 'perspective(1200px) rotateY(-14deg) rotateX(4deg) rotate(-3deg)',
+                    filter: 'drop-shadow(0 35px 70px rgba(0,0,0,0.3)) drop-shadow(0 0 30px rgba(255,193,7,0.2))',
+                    transition: 'transform 0.4s ease, filter 0.4s ease',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.transform = 'perspective(1200px) rotateY(-5deg) rotateX(1deg) rotate(-1deg) scale(1.03)'
+                    e.currentTarget.style.filter    = 'drop-shadow(0 40px 80px rgba(0,0,0,0.35)) drop-shadow(0 0 40px rgba(255,193,7,0.3))'
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.transform = 'perspective(1200px) rotateY(-14deg) rotateX(4deg) rotate(-3deg)'
+                    e.currentTarget.style.filter    = 'drop-shadow(0 35px 70px rgba(0,0,0,0.3)) drop-shadow(0 0 30px rgba(255,193,7,0.2))'
+                  }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={configs.cartela_imagem_url || '/banner.png'}
+                    alt="Cartela Recife Cap"
+                    className="w-full max-w-lg rounded-2xl"
+                    onError={e => { (e.currentTarget as HTMLImageElement).src = '/banner.png' }}
+                  />
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <div className="p-7 rounded-3xl shadow-xl"
-                  style={{ background: 'linear-gradient(135deg, #FFC107, #FFD54F)' }}>
-                  <p className="font-black text-4xl md:text-5xl" style={{ color: '#1B5E20' }}>
-                    R$ {c1.toLocaleString('pt-BR')}
-                  </p>
-                  <p className="font-semibold text-sm mt-1" style={{ color: '#1B5E20', opacity: 0.75 }}>
-                    Prêmio principal por edição
-                  </p>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-6 rounded-3xl bg-gray-50">
-                    <p className="font-black text-3xl" style={{ color: '#2E7D32' }}>
-                      {c2.toLocaleString('pt-BR')}
-                    </p>
-                    <p className="text-gray-500 text-sm mt-1">Títulos por edição</p>
-                  </div>
-                  <div className="p-6 rounded-3xl bg-gray-50">
-                    <p className="font-black text-3xl" style={{ color: '#2E7D32' }}>{c3}%</p>
-                    <p className="text-gray-500 text-sm mt-1">Pago via PIX instantâneo</p>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </section>
