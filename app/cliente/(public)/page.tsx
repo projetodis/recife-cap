@@ -117,8 +117,11 @@ export default function ClienteHome() {
     if (!edicaoId) return
     fetch(`/api/cliente/premios?edicao_id=${edicaoId}`)
       .then(r => r.json())
-      .then(data => { if (Array.isArray(data) && data.length > 0) setPremios(data) })
-      .catch(() => {})
+      .then(data => {
+        console.log('Prêmios recebidos:', data)
+        if (Array.isArray(data)) setPremios(data)
+      })
+      .catch(err => console.error('Erro ao buscar prêmios:', err))
   }, [edicaoId])
 
   function scrollTo(id: string) {
@@ -324,37 +327,43 @@ export default function ClienteHome() {
               {/* Prêmios */}
               <div className="space-y-3">
                 {premios.length > 0 ? (
-                  <>
-                    {/* Grid de prêmios dinâmicos */}
-                    <div className="grid grid-cols-2 gap-3">
-                      {premios.map(p => (
-                        <div key={p.id}
-                          className={`rounded-2xl overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-md ${p.destaque ? 'col-span-2' : ''}`}
-                          style={{ background: '#0d0d0d' }}>
-                          {/* Foto */}
-                          <div className="flex items-center justify-center p-3" style={{ aspectRatio: p.destaque ? '3/1' : '16/9' }}>
-                            {p.foto_url ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={p.foto_url} alt={p.nome}
-                                className="max-w-full max-h-full object-contain" />
-                            ) : (
-                              <Trophy size={p.destaque ? 40 : 28} style={{ color: '#FFC107' }} />
-                            )}
-                          </div>
-                          {/* Info */}
-                          <div className="px-3 pb-3 border-t border-white/10">
-                            <p className="text-white/50 text-xs font-medium mt-2 truncate">{p.nome}</p>
-                            <p className="text-white font-black text-base leading-tight">R$ {p.valor}</p>
-                            {p.quantidade > 1 && (
-                              <p className="text-xs font-semibold mt-0.5" style={{ color: '#FFC107' }}>
-                                {p.quantidade} ganhadores
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                  premios.map(p => (
+                    <div key={p.id}
+                      className={`flex items-center gap-4 p-4 rounded-2xl border transition-all hover:shadow-md ${
+                        p.destaque
+                          ? 'border-[#FFC107] text-white'
+                          : 'border-gray-100 hover:border-[#2E7D32]/30 hover:bg-green-50'
+                      }`}
+                      style={p.destaque ? { background: 'linear-gradient(135deg, #1B5E20, #2E7D32)' } : undefined}>
+
+                      {/* Foto do prêmio */}
+                      <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center"
+                        style={{ background: '#000' }}>
+                        {p.foto_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={p.foto_url}
+                            alt={p.nome}
+                            className="w-full h-full object-contain"
+                            onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+                          />
+                        ) : (
+                          <Trophy size={28} style={{ color: p.destaque ? '#FFC107' : '#2E7D32' }} />
+                        )}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-xs font-medium truncate ${p.destaque ? 'text-green-300' : 'text-gray-500'}`}>
+                          {p.nome}{p.quantidade > 1 ? ` · ${p.quantidade}x` : ''}
+                        </p>
+                        <p className={`font-black text-xl leading-tight ${p.destaque ? 'text-white' : 'text-gray-900'}`}>
+                          R$ {p.valor}
+                        </p>
+                      </div>
+
+                      {p.destaque && <Trophy size={32} style={{ color: '#FFC107', flexShrink: 0 }} />}
                     </div>
-                  </>
+                  ))
                 ) : (
                   /* Fallback estático enquanto não há prêmios cadastrados */
                   <>
