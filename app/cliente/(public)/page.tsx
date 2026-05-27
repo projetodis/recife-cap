@@ -7,7 +7,7 @@ import { useConfig } from '@/lib/config-client'
 import {
   Trophy, Ticket, QrCode, Tv, ChevronDown, ChevronRight, ChevronLeft, Menu, X,
   ShoppingCart, BarChart2, MessageCircle, Star,
-  Shield, Radio,
+  Shield, Radio, Calendar,
 } from 'lucide-react'
 
 // ── SVG brand icons ────────────────────────────────────────────────────────────
@@ -447,62 +447,117 @@ export default function ClienteHome() {
         </header>
 
         {/* ══════════════════════════════════════════════════════ HERO */}
-        <section id="início" className="relative flex flex-col items-center justify-center text-center px-4"
-          style={{
-            minHeight: '100dvh',
-            backgroundImage: `url('${fundoUrl}')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center top',
-          }}
-        >
-          <div className="absolute inset-0"
-            style={{ background: 'linear-gradient(to bottom, rgba(27,94,32,0.88) 0%, rgba(27,94,32,0.72) 50%, rgba(27,94,32,0.92) 100%)' }} />
+        <section id="início" className="relative flex flex-col items-center justify-center text-center px-6 overflow-hidden"
+          style={{ minHeight: '100svh' }}>
 
-          <div className="relative z-10 flex flex-col items-center max-w-3xl pt-16">
+          {/* Mobile: fundo-mobile.png (vertical/portrait) */}
+          <div className="md:hidden absolute inset-0"
+            style={{
+              backgroundImage: "url('/fundo-mobile.png')",
+              backgroundSize: 'cover',
+              backgroundPosition: 'center top',
+            }} />
+
+          {/* Desktop: fundo.png (horizontal/landscape) */}
+          <div className="hidden md:block absolute inset-0"
+            style={{
+              backgroundImage: `url('${fundoUrl}')`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }} />
+
+          {/* Overlay leve */}
+          <div className="absolute inset-0 bg-black/10" />
+
+          {/* Conteúdo */}
+          <div className="relative z-10 flex flex-col items-center w-full max-w-sm mx-auto md:max-w-3xl pt-16">
+
+            {/* Logo */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={logoUrl} alt={nomeSist}
-              className="w-28 h-28 md:w-36 md:h-36 object-contain drop-shadow-2xl mb-6"
+              className="w-28 h-28 md:w-32 md:h-32 object-contain drop-shadow-2xl mb-4"
+              style={{ filter: 'drop-shadow(0 4px 20px rgba(0,0,0,0.4))' }}
               onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
 
-            <h1 className="text-white font-black leading-none tracking-tighter mb-3"
-              style={{ fontSize: 'clamp(3.2rem, 9vw, 7.5rem)', textShadow: '0 6px 40px rgba(0,0,0,0.6)' }}>
+            {/* Título */}
+            <h1 className="font-black text-white leading-none tracking-tight mb-2"
+              style={{
+                fontSize: 'clamp(3.5rem, 15vw, 7rem)',
+                textShadow: '0 2px 0 rgba(0,0,0,0.3), 0 4px 20px rgba(0,0,0,0.5)',
+                WebkitTextStroke: '1px rgba(255,255,255,0.3)',
+              }}>
               RECIFE CAP
             </h1>
-            <p className="font-bold tracking-[0.35em] text-sm md:text-base mb-8"
-              style={{ color: '#FFC107', textShadow: '0 2px 12px rgba(0,0,0,0.5)' }}>
-              {slogan.toUpperCase()}
+
+            {/* Slogan */}
+            <p className="font-bold tracking-[0.25em] text-sm md:text-base mb-6"
+              style={{ color: '#FFC107', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
+              {(slogan || 'FILANTROPIA PREMIÁVEL').toUpperCase()}
             </p>
 
-            {/* Badge sorteio pulsando */}
-            <div className="inline-flex items-center gap-2.5 border rounded-full px-6 py-2.5 mb-10"
-              style={{ background: 'rgba(255,193,7,0.12)', borderColor: 'rgba(255,193,7,0.5)' }}>
-              <span className="w-2 h-2 rounded-full bg-[#FFC107] animate-pulse flex-shrink-0" />
-              <span className="text-[#FFC107] text-sm font-bold tracking-wider">
+            {/* Badge sorteio */}
+            <div className="flex items-center gap-2 border rounded-full px-5 py-2.5 mb-8"
+              style={{
+                borderColor: 'rgba(255,255,255,0.3)',
+                background: 'rgba(0,0,0,0.2)',
+                backdropFilter: 'blur(10px)',
+              }}>
+              <Calendar size={14} className="text-white/70" />
+              <span className="text-white text-xs md:text-sm font-bold tracking-wider">
                 {proximaData
                   ? `PRÓXIMO SORTEIO: ${proximaData} ÀS 09H00`
                   : 'SORTEIO TODO DOMINGO ÀS 09H00'}
               </span>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            {/* Botões */}
+            <div className="flex flex-col w-full gap-3 md:flex-row md:justify-center">
               <Link href="/cliente/compra"
-                className="px-10 py-4 rounded-full font-black text-[#1B5E20] text-lg transition-all hover:scale-105 active:scale-95"
+                className="w-full md:w-auto px-10 py-4 rounded-full font-black text-lg transition-all hover:scale-105 active:scale-95 text-center"
                 style={{
                   background: 'linear-gradient(135deg, #FFC107, #FFD54F)',
-                  boxShadow: '0 8px 30px rgba(255,193,7,0.45)',
+                  color: '#1B5E20',
+                  boxShadow: '0 8px 30px rgba(255,193,7,0.5)',
                 }}>
                 Quero participar →
               </Link>
               <button onClick={() => scrollTo('sorteio')}
-                className="px-10 py-4 rounded-full font-bold text-white text-lg border-2 hover:bg-white/10 transition-all"
-                style={{ borderColor: 'rgba(255,255,255,0.45)' }}>
+                className="w-full md:w-auto px-10 py-4 rounded-full font-bold text-white text-lg border-2 text-center transition-all hover:bg-white/10"
+                style={{ borderColor: 'rgba(255,255,255,0.4)' }}>
                 Ver sorteio
               </button>
             </div>
+
+            {/* Badges de confiança — mobile only */}
+            <div className="flex items-center justify-center gap-6 mt-8 md:hidden">
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center"
+                  style={{ background: 'rgba(46,125,50,0.8)', border: '2px solid rgba(255,255,255,0.3)' }}>
+                  <Shield size={18} className="text-white" />
+                </div>
+                <span className="text-white text-xs font-medium text-center leading-tight">100%<br/>Seguro</span>
+              </div>
+              <div className="w-px h-12 bg-white/20" />
+              <div className="flex flex-col items-center gap-1">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={logoUrl} alt="" className="w-10 h-10 object-contain"
+                  onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
+                <span className="text-white text-xs font-medium text-center leading-tight">Filantropia<br/>Premiável</span>
+              </div>
+              <div className="w-px h-12 bg-white/20" />
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center"
+                  style={{ background: 'rgba(255,193,7,0.8)', border: '2px solid rgba(255,255,255,0.3)' }}>
+                  <Trophy size={18} style={{ color: '#1B5E20' }} />
+                </div>
+                <span className="text-white text-xs font-medium text-center leading-tight">Prêmios que<br/>transformam</span>
+              </div>
+            </div>
           </div>
 
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-            <ChevronDown size={28} style={{ color: 'rgba(255,255,255,0.5)' }} />
+          {/* Scroll indicator — desktop */}
+          <div className="hidden md:flex absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+            <ChevronDown size={24} className="text-white/60" />
           </div>
         </section>
 
