@@ -221,7 +221,7 @@ export default function CompraPage() {
                   Voltar
                 </button>
                 <Link
-                  href="/cliente"
+                  href="/cliente/consulta-cpf"
                   className="border text-sm font-medium px-4 py-1.5 rounded-full transition-colors"
                   style={{ borderColor: '#2E7D32', color: '#2E7D32' }}
                 >
@@ -329,7 +329,7 @@ export default function CompraPage() {
                 </div>
 
                 <Link
-                  href="/cliente"
+                  href="/cliente/consulta-cpf"
                   className="text-sm font-medium transition-colors"
                   style={{ color: '#2E7D32' }}
                 >
