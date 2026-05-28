@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useConfig } from '@/lib/config-client'
 import {
-  Download, Calendar, ChevronDown, ChevronLeft, Trophy, MapPin, Clock,
+  Download, Calendar, ChevronDown, ChevronLeft, Trophy, MapPin, Clock, Store,
 } from 'lucide-react'
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
@@ -34,13 +34,16 @@ interface SorteioRow {
   premios_edicao: PremioEdicao | null
 }
 interface Ganhador {
+  id: string
+  sorteio_id: string
   sorteio_numero: number
-  cartela: {
-    numero: string
-    nome_comprador: string | null
-    status: string | null
-    pdv_nome: string | null
-  } | null
+  nome_ganhador: string | null
+  numero_titulo: string | null
+  cidade: string | null
+  pdv_nome: string | null
+  premio_nome: string | null
+  premio_valor: number | null
+  confirmado: boolean | null
 }
 interface Premio {
   id: string
@@ -149,9 +152,11 @@ export default function HistoricoPage() {
     return p?.nome ?? ABAS_FALLBACK[i] ?? `${i + 1}º Prêmio`
   })
 
-  const dezenasAba    = sorteiosData.find(s => s.numero_sorteio === abaAtiva + 1)?.dezenas_sorteadas ?? []
-  const ganhadoresAba = ganhadores.filter(g => g.sorteio_numero === abaAtiva + 1)
-  const premioAba     = sorteiosData.find(s => s.numero_sorteio === abaAtiva + 1)?.valor_premio ?? 0
+  const sorteioAtual        = sorteiosData.find(s => s.numero_sorteio === abaAtiva + 1)
+  const dezenasAba          = sorteioAtual?.dezenas_sorteadas ?? []
+  const ganhadoresDoSorteio = ganhadores.filter(g => g.sorteio_numero === abaAtiva + 1)
+  const premioAba           = sorteioAtual?.valor_premio ?? 0
+  const bannerSorteioUrl    = sorteioAtual?.arte_url || sorteioAtual?.banner_url || configs.banner_sorteio_url || null
 
   const fotosPremios: Record<number, string> = {
     0: snapshot?.premio_1_foto_url         || sorteiosData.find(s => s.numero_sorteio === 1)?.premios_edicao?.foto_url || premios.find(p => p.ordem === 1)?.foto_url || logoUrl,
@@ -371,63 +376,61 @@ export default function HistoricoPage() {
             {/* ── COLUNA DIREITA ──────────────────────────────────────────── */}
             <div className="lg:col-span-3 space-y-4">
 
+              {/* Banner do sorteio */}
+              {bannerSorteioUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={bannerSorteioUrl}
+                  alt="Arte do sorteio"
+                  className="w-full rounded-2xl shadow-sm"
+                  onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+                />
+              )}
+
               {/* Contemplados */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-                <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                  <h3 className="font-bold text-gray-800">Contemplados</h3>
-                  {ganhadoresAba.length > 0 && (
-                    <span
-                      className="text-xs font-bold px-3 py-1 rounded-full"
-                      style={{ background: '#FFC107', color: '#1B5E20' }}
-                    >
-                      {ganhadoresAba.length} ganhador{ganhadoresAba.length !== 1 ? 'es' : ''}
-                    </span>
-                  )}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+                <div className="flex items-center gap-3 mb-4">
+                  <h3 className="font-bold text-gray-800 text-lg">Contemplados</h3>
+                  <span
+                    className="px-3 py-1 rounded-full text-xs font-bold text-white"
+                    style={{ background: '#2E7D32' }}
+                  >
+                    {ganhadoresDoSorteio.length} ganhador(es)
+                  </span>
                 </div>
 
-                {ganhadoresAba.length === 0 ? (
-                  <div className="p-8 text-center text-gray-400">
+                {ganhadoresDoSorteio.length === 0 ? (
+                  <div className="py-8 text-center text-gray-400">
                     <Trophy size={40} className="mx-auto mb-3 opacity-25" />
                     <p className="font-medium text-gray-500">Sem contemplados registrados.</p>
                   </div>
                 ) : (
-                  <div className="divide-y divide-gray-50">
-                    {ganhadoresAba.map((g, i) => (
-                      <div key={i} className="px-5 py-4 hover:bg-gray-50 transition-colors">
-                        <div className="flex items-start justify-between gap-4">
-                          <div>
-                            <p className="text-xs text-gray-400 uppercase tracking-wider mb-0.5">
-                              Título Nº
-                            </p>
-                            <p className="font-black text-gray-800 text-lg font-mono">
-                              {g.cartela?.numero ?? '---'}
-                            </p>
-                            <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                              <span className="flex items-center gap-1.5 text-xs text-gray-500">
-                                <span
-                                  className="w-2 h-2 rounded-full inline-block"
-                                  style={{ background: '#2E7D32' }}
-                                />
-                                {g.cartela?.status === 'vendida' ? 'Presencial' : 'Online'}
-                              </span>
-                              {g.cartela?.pdv_nome && (
-                                <span className="flex items-center gap-1 text-xs text-gray-500">
-                                  <MapPin size={11} />
-                                  {g.cartela.pdv_nome}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="text-right flex-shrink-0">
-                            <p className="font-bold text-gray-900">
-                              {g.cartela?.nome_comprador ?? 'Ganhador'}
-                            </p>
-                            {premioAba > 0 && (
-                              <p className="text-xs font-semibold mt-1" style={{ color: '#2E7D32' }}>
-                                {brl(premioAba)}
-                              </p>
-                            )}
-                          </div>
+                  <div>
+                    {ganhadoresDoSorteio.map(g => (
+                      <div
+                        key={g.id}
+                        className="pl-4 py-3 mb-3 rounded-r-xl"
+                        style={{
+                          background: 'rgba(46,125,50,0.03)',
+                          border:     '1px solid #E5E7EB',
+                          borderLeft: '4px solid #2E7D32',
+                        }}
+                      >
+                        <p className="text-xs text-gray-400 font-mono mb-1 tracking-wider">
+                          TÍTULO Nº {g.numero_titulo || '---'}
+                        </p>
+                        <p className="font-black text-gray-800 text-base">
+                          {g.nome_ganhador || 'Nome não informado'}
+                        </p>
+                        <div className="flex items-center gap-4 mt-2 flex-wrap">
+                          <span className="text-xs text-gray-500 flex items-center gap-1">
+                            <MapPin size={11} style={{ color: '#2E7D32' }} />
+                            {g.cidade || 'Cidade não informada'}
+                          </span>
+                          <span className="text-xs text-gray-500 flex items-center gap-1">
+                            <Store size={11} style={{ color: '#2E7D32' }} />
+                            PDV: {g.pdv_nome || 'APLICATIVO'}
+                          </span>
                         </div>
                       </div>
                     ))}
