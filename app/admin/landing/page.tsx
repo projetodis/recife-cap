@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
   Layout, Save, Plus, Trash2, Camera, Eye, EyeOff,
-  Upload, ChevronUp, ChevronDown, Star, Image as ImageIcon, RefreshCw,
+  Upload, ChevronUp, ChevronDown, Star, Image as ImageIcon,
 } from 'lucide-react'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -527,7 +527,6 @@ export default function AdminLandingPage() {
   const [salvando, setSalvando]           = useState(false)
   const [previewMode, setPreviewMode]     = useState<'mobile' | 'desktop'>('mobile')
   const [uploadingKey, setUploadingKey]   = useState<string | null>(null)
-  const [iframeKey, setIframeKey]         = useState(0)
 
   useEffect(() => {
     fetch('/api/config')
@@ -573,7 +572,6 @@ export default function AdminLandingPage() {
       body: JSON.stringify(updates),
     })
     setSalvando(false)
-    setIframeKey(k => k + 1)
   }
 
   const sharedProps = {
@@ -650,29 +648,21 @@ export default function AdminLandingPage() {
         )}
       </div>
 
-      {/* ── Preview via iframe ── */}
+      {/* ── Preview inline ── */}
       <div className="w-96 flex-shrink-0 sticky top-0 h-screen flex flex-col border-l bg-gray-100">
 
         {/* Cabeçalho */}
         <div className="flex items-center justify-between px-4 py-3 border-b bg-white flex-shrink-0">
           <span className="text-sm font-bold text-gray-600">Preview</span>
-          <div className="flex items-center gap-2">
-            <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
-              <button onClick={() => setPreviewMode('mobile')}
-                className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${
-                  previewMode === 'mobile' ? 'bg-white shadow text-gray-800' : 'text-gray-500'
-                }`}>Mobile</button>
-              <button onClick={() => setPreviewMode('desktop')}
-                className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${
-                  previewMode === 'desktop' ? 'bg-white shadow text-gray-800' : 'text-gray-500'
-                }`}>Desktop</button>
-            </div>
-            <button
-              onClick={() => setIframeKey(k => k + 1)}
-              className="p-1.5 rounded-lg hover:bg-gray-100 transition-all"
-              title="Recarregar preview">
-              <RefreshCw size={14} className="text-gray-500" />
-            </button>
+          <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+            <button onClick={() => setPreviewMode('mobile')}
+              className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${
+                previewMode === 'mobile' ? 'bg-white shadow text-gray-800' : 'text-gray-500'
+              }`}>Mobile</button>
+            <button onClick={() => setPreviewMode('desktop')}
+              className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${
+                previewMode === 'desktop' ? 'bg-white shadow text-gray-800' : 'text-gray-500'
+              }`}>Desktop</button>
           </div>
         </div>
 
@@ -688,31 +678,286 @@ export default function AdminLandingPage() {
               <div className="absolute top-2 left-1/2 -translate-x-1/2 w-20 h-4 bg-gray-800 rounded-full z-20 pointer-events-none" />
               {/* Barra home */}
               <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-16 h-1 bg-gray-600 rounded-full z-20 pointer-events-none" />
-              <iframe
-                key={iframeKey}
-                src={`/?preview=mobile&t=${iframeKey}`}
-                className="absolute inset-0 w-full h-full rounded-[2rem] border-0"
-                title="Preview mobile"
-              />
+              {/* Conteúdo */}
+              <div className="absolute inset-0 rounded-[2rem] overflow-auto"
+                style={{ background: localConfigs['cor_site_bg'] || '#F5F7FA' }}>
+                {/* Navbar */}
+                <div className="flex items-center justify-between px-3 pt-8 pb-2 sticky top-0 z-10"
+                  style={{ background: localConfigs['cor_primaria'] || '#2E7D32' }}>
+                  {localConfigs['logo_url'] ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={localConfigs['logo_url']} alt="logo" className="h-6 object-contain" />
+                  ) : (
+                    <span className="text-white font-bold text-sm">{localConfigs['nome_sistema'] || 'RECIFE CAP'}</span>
+                  )}
+                  <div className="flex flex-col gap-1 justify-center w-5">
+                    <div className="h-0.5 bg-white rounded" />
+                    <div className="h-0.5 bg-white rounded" />
+                    <div className="h-0.5 bg-white rounded" />
+                  </div>
+                </div>
+
+                {/* Hero */}
+                {activeSection === 'hero' && (
+                  <div className="relative overflow-hidden flex flex-col items-center text-center px-4 pt-6 pb-8 gap-2"
+                    style={{ background: localConfigs['cor_hero_bg'] || '#1B5E20', minHeight: 460 }}>
+                    {localConfigs['fundo_hero_mobile_url'] && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={localConfigs['fundo_hero_mobile_url']} alt=""
+                        className="absolute inset-0 w-full h-full object-cover opacity-40 pointer-events-none" />
+                    )}
+                    <div className="relative z-10 flex flex-col items-center gap-2">
+                      {localConfigs['hero_badge'] && (
+                        <span className="text-xs px-2 py-0.5 rounded-full font-bold uppercase"
+                          style={{ background: localConfigs['cor_secundaria'] || '#FFC107', color: '#1B5E20' }}>
+                          {localConfigs['hero_badge']}
+                        </span>
+                      )}
+                      <h1 className="text-xl font-black leading-tight mt-1"
+                        style={{ color: localConfigs['cor_hero_text'] || '#FFFFFF' }}>
+                        {localConfigs['hero_titulo'] || 'RECIFE CAP'}
+                      </h1>
+                      <p className="text-xs leading-snug max-w-[220px]"
+                        style={{ color: localConfigs['cor_hero_text'] || '#FFFFFF', opacity: 0.85 }}>
+                        {localConfigs['hero_subtitulo'] || 'Participe e concorra a prêmios incríveis'}
+                      </p>
+                      <button className="mt-3 px-5 py-2 rounded-full text-xs font-bold"
+                        style={{ background: localConfigs['cor_secundaria'] || '#FFC107', color: '#1B5E20' }}>
+                        {localConfigs['texto_btn_principal'] || 'Quero participar →'}
+                      </button>
+                      {localConfigs['texto_btn_secundario'] && (
+                        <button className="px-5 py-1.5 rounded-full text-xs font-medium border border-white/40 text-white">
+                          {localConfigs['texto_btn_secundario']}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Sorteio */}
+                {activeSection === 'sorteio' && (
+                  <div className="px-4 pt-5 pb-6">
+                    <h2 className="text-sm font-bold text-center mb-3"
+                      style={{ color: localConfigs['cor_primaria'] || '#2E7D32' }}>
+                      {localConfigs['sorteio_titulo'] || 'Sorteio da Semana'}
+                    </h2>
+                    <div className="rounded-2xl p-4 text-center mb-3"
+                      style={{ background: localConfigs['cor_primaria'] || '#2E7D32' }}>
+                      <p className="text-white text-xs opacity-80 mb-1">{localConfigs['sorteio_subtitulo'] || 'Prêmio acumulado desta edição'}</p>
+                      <p className="font-black text-2xl" style={{ color: localConfigs['cor_secundaria'] || '#FFC107' }}>R$ 0,00</p>
+                      <p className="text-white text-xs opacity-60 mt-1">
+                        {localConfigs['sorteio_dia_semana'] || 'Sábado'} às {localConfigs['sorteio_horario'] || '09h'}
+                      </p>
+                    </div>
+                    <button className="w-full py-2.5 rounded-xl text-sm font-bold text-center"
+                      style={{ background: localConfigs['cor_secundaria'] || '#FFC107', color: '#1B5E20' }}>
+                      {localConfigs['sorteio_cta'] || 'Garanta já sua cartela!'}
+                    </button>
+                  </div>
+                )}
+
+                {/* Quem Somos */}
+                {activeSection === 'sobre' && (
+                  <div className="px-4 pt-5 pb-6">
+                    <h2 className="text-sm font-bold text-center mb-3"
+                      style={{ color: localConfigs['cor_primaria'] || '#2E7D32' }}>
+                      {localConfigs['sobre_titulo'] || 'Quem Somos'}
+                    </h2>
+                    {localConfigs['cartela_imagem_url'] && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={localConfigs['cartela_imagem_url']} alt=""
+                        className="w-full h-28 object-contain rounded-xl mb-3 bg-gray-100" />
+                    )}
+                    <p className="text-xs text-gray-600 leading-relaxed line-clamp-6">
+                      {localConfigs['sobre_texto'] || 'Somos uma organização filantrópica comprometida com a saúde infantil.'}
+                    </p>
+                    {localConfigs['sobre_hospital'] && (
+                      <div className="mt-3 p-2 rounded-lg text-xs font-semibold text-center"
+                        style={{ background: (localConfigs['cor_primaria'] || '#2E7D32') + '18', color: localConfigs['cor_primaria'] || '#2E7D32' }}>
+                        {localConfigs['sobre_hospital']}
+                      </div>
+                    )}
+                    {localConfigs['sobre_titulos_edicao'] && (
+                      <p className="text-xs text-gray-400 text-center mt-2">{localConfigs['sobre_titulos_edicao']}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Como Participar */}
+                {activeSection === 'como' && (
+                  <div className="px-4 pt-5 pb-6">
+                    <h2 className="text-sm font-bold text-center mb-4"
+                      style={{ color: localConfigs['cor_primaria'] || '#2E7D32' }}>
+                      {localConfigs['como_titulo'] || 'Como Participar'}
+                    </h2>
+                    <div className="space-y-3">
+                      {[1, 2, 3, 4].map(n => (
+                        <div key={n} className="flex items-start gap-3">
+                          <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-black text-white"
+                            style={{ background: localConfigs['cor_primaria'] || '#2E7D32' }}>
+                            {n}
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold text-gray-800">{localConfigs[`como_passo${n}_titulo`] || `Passo ${n}`}</p>
+                            {localConfigs[`como_passo${n}_desc`] && (
+                              <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{localConfigs[`como_passo${n}_desc`]}</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Prêmios */}
+                {activeSection === 'premios' && (
+                  <div className="px-4 pt-5 pb-6">
+                    <h2 className="text-sm font-bold text-center mb-3"
+                      style={{ color: localConfigs['cor_primaria'] || '#2E7D32' }}>
+                      Prêmios da Edição
+                    </h2>
+                    <div className="space-y-2">
+                      {[1, 2, 3].map(n => (
+                        <div key={n} className="flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-100 shadow-sm">
+                          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0"
+                            style={{ background: localConfigs['cor_secundaria'] || '#FFC107', color: '#1B5E20' }}>
+                            {n}°
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold text-gray-700">{n}° Prêmio</p>
+                            <p className="text-xs text-gray-400">Gerenciado em Edições</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Histórico */}
+                {activeSection === 'historico' && (
+                  <div className="px-4 pt-5 pb-6">
+                    <h2 className="text-sm font-bold text-center mb-1"
+                      style={{ color: localConfigs['cor_primaria'] || '#2E7D32' }}>
+                      {localConfigs['historico_titulo'] || 'Histórico de Sorteios'}
+                    </h2>
+                    <p className="text-xs text-gray-400 text-center mb-3">
+                      {localConfigs['historico_subtitulo'] || 'Confira os ganhadores das últimas edições'}
+                    </p>
+                    <div className="space-y-2">
+                      {[1, 2, 3].map(n => (
+                        <div key={n} className="flex items-center justify-between p-3 rounded-xl bg-white border border-gray-100">
+                          <div>
+                            <p className="text-xs font-semibold text-gray-700">Edição #{n}</p>
+                            <p className="text-xs text-gray-400">Resultado publicado</p>
+                          </div>
+                          <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+                            style={{ background: (localConfigs['cor_primaria'] || '#2E7D32') + '18', color: localConfigs['cor_primaria'] || '#2E7D32' }}>
+                            Ver
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Depoimentos */}
+                {activeSection === 'depoimentos' && (
+                  <div className="px-4 pt-5 pb-6">
+                    <h2 className="text-sm font-bold text-center mb-3"
+                      style={{ color: localConfigs['cor_primaria'] || '#2E7D32' }}>
+                      Depoimentos
+                    </h2>
+                    <div className="rounded-2xl p-4 bg-white border border-gray-100 shadow-sm">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-white text-sm flex-shrink-0"
+                          style={{ background: localConfigs['cor_primaria'] || '#2E7D32' }}>G</div>
+                        <div>
+                          <p className="text-xs font-semibold text-gray-800">Ganhador Exemplo</p>
+                          <p className="text-xs text-gray-400">Recife, PE</p>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-600 italic">&ldquo;Ganhei com apenas uma cartela! Incrível!&rdquo;</p>
+                      <p className="text-xs mt-1.5" style={{ color: localConfigs['cor_secundaria'] || '#FFC107' }}>★★★★★</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Rodapé */}
+                {activeSection === 'rodape' && (
+                  <div className="pt-5 pb-4" style={{ background: localConfigs['cor_primaria'] || '#2E7D32' }}>
+                    <div className="flex justify-center mb-3">
+                      {localConfigs['logo_url'] ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={localConfigs['logo_url']} alt="logo" className="h-9 object-contain" />
+                      ) : (
+                        <p className="text-white font-black text-sm">{localConfigs['nome_sistema'] || 'RECIFE CAP'}</p>
+                      )}
+                    </div>
+                    <div className="px-5 space-y-1.5 pb-4">
+                      {localConfigs['rodape_whatsapp'] && (
+                        <p className="text-white text-xs opacity-80 text-center">{localConfigs['rodape_whatsapp']}</p>
+                      )}
+                      {localConfigs['rodape_email'] && (
+                        <p className="text-white text-xs opacity-80 text-center">{localConfigs['rodape_email']}</p>
+                      )}
+                      {localConfigs['rodape_endereco'] && (
+                        <p className="text-white text-xs opacity-60 text-center">{localConfigs['rodape_endereco']}</p>
+                      )}
+                      {localConfigs['rodape_cnpj'] && (
+                        <p className="text-white text-xs opacity-50 text-center">{localConfigs['rodape_cnpj']}</p>
+                      )}
+                      <p className="text-white text-xs opacity-40 text-center pt-2 border-t border-white/10">
+                        {localConfigs['rodape_copyright'] || '© 2025 Recife Cap. Todos os direitos reservados.'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
           {/* ── Desktop ── */}
           {previewMode === 'desktop' && (
-            <div className="relative w-full overflow-hidden rounded-xl border shadow-md bg-white flex-shrink-0"
-              style={{ height: 500 }}>
-              <iframe
-                key={iframeKey}
-                src={`/?preview=desktop&t=${iframeKey}`}
-                className="absolute top-0 left-0 border-0"
-                style={{
-                  width: '1440px',
-                  height: '900px',
-                  transform: 'scale(0.25)',
-                  transformOrigin: 'top left',
-                }}
-                title="Preview desktop"
-              />
+            <div className="w-full rounded-xl overflow-hidden border shadow-md flex-shrink-0">
+              {/* Navbar desktop */}
+              <div className="flex items-center justify-between px-4 py-2.5"
+                style={{ background: localConfigs['cor_primaria'] || '#2E7D32' }}>
+                {localConfigs['logo_url'] ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={localConfigs['logo_url']} alt="logo" className="h-5 object-contain" />
+                ) : (
+                  <span className="text-white font-bold text-xs">{localConfigs['nome_sistema'] || 'RECIFE CAP'}</span>
+                )}
+                <div className="flex gap-3">
+                  {['Sorteio', 'Cartelas', 'Contato'].map(l => (
+                    <span key={l} className="text-white text-xs opacity-70">{l}</span>
+                  ))}
+                </div>
+              </div>
+              {/* Conteúdo */}
+              <div className="px-6 py-5 text-center"
+                style={{ background: localConfigs['cor_site_bg'] || '#F5F7FA', minHeight: 130 }}>
+                <p className="text-xs text-gray-400 uppercase tracking-widest mb-1.5">{activeLabel?.label}</p>
+                <p className="text-base font-bold"
+                  style={{ color: localConfigs['cor_primaria'] || '#2E7D32' }}>
+                  {activeSection === 'hero'        && (localConfigs['hero_titulo']       || 'RECIFE CAP')}
+                  {activeSection === 'sorteio'     && (localConfigs['sorteio_titulo']    || 'Sorteio da Semana')}
+                  {activeSection === 'sobre'       && (localConfigs['sobre_titulo']      || 'Quem Somos')}
+                  {activeSection === 'como'        && (localConfigs['como_titulo']       || 'Como Participar')}
+                  {activeSection === 'premios'     && 'Prêmios da Edição'}
+                  {activeSection === 'historico'   && (localConfigs['historico_titulo']  || 'Histórico de Sorteios')}
+                  {activeSection === 'depoimentos' && 'Depoimentos'}
+                  {activeSection === 'rodape'      && 'Rodapé'}
+                </p>
+                {(activeSection === 'hero' || activeSection === 'sorteio' || activeSection === 'sobre' || activeSection === 'historico') && (
+                  <p className="text-xs text-gray-500 mt-1 max-w-xs mx-auto">
+                    {activeSection === 'hero'      && (localConfigs['hero_subtitulo']      || '')}
+                    {activeSection === 'sorteio'   && (localConfigs['sorteio_subtitulo']   || '')}
+                    {activeSection === 'sobre'     && ((localConfigs['sobre_texto'] || '').slice(0, 90) || '')}
+                    {activeSection === 'historico' && (localConfigs['historico_subtitulo'] || '')}
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
