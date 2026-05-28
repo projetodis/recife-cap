@@ -30,10 +30,9 @@ export default function ConsultaCPFPage() {
 
       {/* Hero */}
       <section
-        className="relative overflow-hidden"
+        className="relative overflow-hidden py-16 text-center"
         style={{
           background: 'radial-gradient(ellipse at 30% 50%, #2E7D32 0%, #1B5E20 40%, #0D3B16 100%)',
-          minHeight: '320px',
         }}
       >
         {/* Pontos dourados — superior direito */}
@@ -52,32 +51,17 @@ export default function ConsultaCPFPage() {
             backgroundSize:  '14px 14px',
           }}
         />
-        {/* Curva decorativa direita */}
-        <div
-          className="absolute right-0 top-0 bottom-0 w-64 opacity-10 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse at right, #4CAF50, transparent)' }}
-        />
 
-        <div className="relative z-10 flex flex-col items-center justify-center text-center px-6 py-16">
-          <div
-            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-6"
-            style={{
-              background: 'rgba(255,193,7,0.15)',
-              border:     '1px solid rgba(255,193,7,0.3)',
-            }}
-          >
-            <Ticket size={32} style={{ color: '#FFC107' }} />
-          </div>
-
+        <div className="relative z-10 px-6">
           <h1
-            className="font-black text-white leading-tight mb-4"
+            className="font-black text-white leading-tight mb-3"
             style={{ fontSize: 'clamp(36px, 6vw, 64px)' }}
           >
-            Bem-vindo ao<br />
+            Bem-vindo ao{' '}
             <span style={{ color: '#FFC107' }}>Recife Cap</span>
           </h1>
 
-          <div className="w-16 h-1 rounded-full mb-4" style={{ background: '#FFC107' }} />
+          <div className="w-16 h-1 rounded-full mx-auto mb-4" style={{ background: '#FFC107' }} />
 
           <p className="text-green-200 text-lg">
             Compre seus títulos ou consulte suas compras anteriores
@@ -86,7 +70,7 @@ export default function ConsultaCPFPage() {
       </section>
 
       {/* Card principal */}
-      <div className="max-w-3xl mx-auto px-4 -mt-8 pb-16">
+      <div className="max-w-3xl mx-auto px-4 py-12 pb-16">
         <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
 
           <div className="grid grid-cols-1 md:grid-cols-2">
