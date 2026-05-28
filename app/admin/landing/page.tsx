@@ -648,112 +648,293 @@ export default function AdminLandingPage() {
         )}
       </div>
 
-      {/* ── Preview ao vivo ── */}
+      {/* ── Preview dinâmico por seção ── */}
       <div className="w-96 flex-shrink-0 border-l border-gray-100 bg-gray-100 flex flex-col">
 
-        {/* Cabeçalho do preview */}
+        {/* Cabeçalho */}
         <div className="px-4 py-3 border-b border-gray-200 bg-white flex items-center justify-between flex-shrink-0">
           <span className="text-sm font-bold text-gray-700">Preview</span>
-          <div className="flex gap-1.5">
+          <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
             <button onClick={() => setPreviewMode('mobile')}
-              className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
-                previewMode === 'mobile' ? 'bg-emerald-700 text-white' : 'text-gray-500 hover:bg-gray-100'
-              }`}>
-              Mobile
-            </button>
+              className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${
+                previewMode === 'mobile' ? 'bg-white shadow text-gray-800' : 'text-gray-500'
+              }`}>Mobile</button>
             <button onClick={() => setPreviewMode('desktop')}
-              className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
-                previewMode === 'desktop' ? 'bg-emerald-700 text-white' : 'text-gray-500 hover:bg-gray-100'
-              }`}>
-              Desktop
-            </button>
+              className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${
+                previewMode === 'desktop' ? 'bg-white shadow text-gray-800' : 'text-gray-500'
+              }`}>Desktop</button>
           </div>
         </div>
 
-        {/* Frame do preview */}
-        <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
-          {previewMode === 'mobile' ? (
-            <div className="relative flex-shrink-0" style={{ width: '280px', height: '560px' }}>
-              {/* Moldura do celular */}
-              <div className="absolute inset-0 rounded-[40px] border-[6px] border-gray-800 bg-gray-800 shadow-2xl overflow-hidden">
-                {/* Notch */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-5 bg-gray-800 rounded-b-2xl z-10" />
-                {/* Conteúdo */}
-                <div className="w-full h-full overflow-hidden rounded-[34px]"
-                  style={{
-                    backgroundImage: `url('${localConfigs.fundo_hero_mobile_url || localConfigs.fundo_hero_url || '/fundo-mobile.png'}')`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center top',
-                  }}>
-                  <div className="w-full h-full flex flex-col items-center justify-center px-5 text-center"
-                    style={{ background: 'rgba(0,0,0,0.1)' }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={localConfigs.logo_url || '/logo.png'} alt=""
-                      className="w-14 h-14 object-contain mb-2"
-                      onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
-                    <h1 className="text-white font-black text-2xl leading-tight"
-                      style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
-                      {localConfigs.hero_titulo || localConfigs.nome_sistema || 'RECIFE CAP'}
+        {/* Frame */}
+        <div className="flex-1 overflow-auto flex items-start justify-center p-4">
+
+          {/* ── Mobile ── */}
+          {previewMode === 'mobile' && (
+            <div className="relative w-72 rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-gray-800 bg-white flex-shrink-0"
+              style={{ minHeight: 580 }}>
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-5 bg-gray-800 rounded-b-2xl z-10" />
+              <div className="overflow-y-auto" style={{ maxHeight: 580 }}>
+
+                {activeSection === 'hero' && (
+                  <div className="relative flex flex-col items-center justify-center text-center px-4 pt-10 pb-6"
+                    style={{
+                      minHeight: 280,
+                      background: localConfigs.fundo_hero_mobile_url
+                        ? `url(${localConfigs.fundo_hero_mobile_url}) center/cover`
+                        : `linear-gradient(135deg, ${localConfigs.cor_primaria || '#2E7D32'}, #1B5E20)`,
+                    }}>
+                    {localConfigs.logo_url && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={localConfigs.logo_url} alt="Logo" className="w-16 h-16 object-contain mb-3"
+                        onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
+                    )}
+                    <h1 className="text-xl font-black text-white mb-1">
+                      {localConfigs.hero_titulo || localConfigs.nome_sistema || 'Recife Cap'}
                     </h1>
-                    <p className="font-bold text-xs tracking-widest mt-1" style={{ color: localConfigs.cor_secundaria || '#FFC107' }}>
-                      {(localConfigs.hero_badge || localConfigs.slogan || 'FILANTROPIA PREMIÁVEL').toUpperCase()}
+                    <p className="text-xs font-bold mb-2" style={{ color: localConfigs.cor_secundaria || '#FFC107' }}>
+                      {localConfigs.hero_badge || 'SORTEIO TODA SEMANA'}
                     </p>
                     {localConfigs.hero_subtitulo && (
-                      <p className="text-white/80 text-xs mt-1 max-w-[180px] leading-tight">
-                        {localConfigs.hero_subtitulo}
-                      </p>
+                      <p className="text-xs text-white/80 mb-3">{localConfigs.hero_subtitulo}</p>
                     )}
-                    <div className="border border-white/30 rounded-full px-3 py-1.5 mt-3 mb-4"
-                      style={{ background: 'rgba(0,0,0,0.2)' }}>
-                      <span className="text-white font-bold" style={{ fontSize: '9px' }}>
-                        PRÓXIMO SORTEIO: {localConfigs.sorteio_dia_semana?.toUpperCase() || 'SÁBADO'} ÀS {localConfigs.sorteio_horario?.toUpperCase() || '09H00'}
+                    <div className="text-xs px-3 py-1 rounded-full mb-3"
+                      style={{ background: 'rgba(255,255,255,0.2)', color: 'white' }}>
+                      PRÓXIMO SORTEIO: {(localConfigs.sorteio_dia_semana || 'SÁBADO').toUpperCase()} ÀS {(localConfigs.sorteio_horario || '09H00').toUpperCase()}
+                    </div>
+                    <button className="w-full py-2 rounded-full text-sm font-black mb-2"
+                      style={{ background: localConfigs.cor_secundaria || '#FFC107', color: localConfigs.cor_primaria || '#1B5E20' }}>
+                      {localConfigs.texto_btn_principal || 'Quero participar →'}
+                    </button>
+                    <button className="w-full py-2 rounded-full text-sm font-bold border border-white text-white">
+                      {localConfigs.texto_btn_secundario || 'Ver sorteio'}
+                    </button>
+                  </div>
+                )}
+
+                {activeSection === 'sobre' && (
+                  <div className="p-4 bg-white">
+                    <div className="text-center mb-3">
+                      <span className="text-xs px-3 py-1 rounded-full font-bold"
+                        style={{ background: 'rgba(46,125,50,0.1)', color: '#2E7D32' }}>
+                        QUEM SOMOS
                       </span>
                     </div>
-                    <div className="w-full space-y-2">
-                      <div className="w-full py-2.5 rounded-full text-xs font-black text-center"
-                        style={{ background: localConfigs.cor_secundaria || '#FFC107', color: localConfigs.cor_primaria || '#1B5E20' }}>
-                        {localConfigs.texto_btn_principal || 'Quero participar →'}
-                      </div>
-                      <div className="w-full py-2.5 rounded-full text-xs font-bold text-white text-center border border-white/40">
-                        {localConfigs.texto_btn_secundario || 'Ver sorteio'}
-                      </div>
+                    <h2 className="text-base font-black text-center mb-2" style={{ color: '#1B5E20' }}>
+                      {localConfigs.sobre_titulo || 'Sorteios que transformam vidas'}
+                    </h2>
+                    <p className="text-xs text-gray-600 text-center mb-3">
+                      {localConfigs.sobre_texto || 'O RECIFE CAP é um título de capitalização filantrópico.'}
+                    </p>
+                    {localConfigs.cartela_imagem_url && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={localConfigs.cartela_imagem_url} alt="Cartela"
+                        className="w-full rounded-xl mb-3"
+                        style={{ transform: 'perspective(800px) rotateY(-8deg) rotate(-2deg)' }}
+                        onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
+                    )}
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { v: localConfigs.sobre_titulos_edicao || '100.000', l: 'Títulos' },
+                        { v: localConfigs.sobre_hospital ? '100%' : '100%', l: 'Via PIX' },
+                        { v: localConfigs.sobre_hospital?.split(' ')[0] || 'HULP', l: 'Hospital' },
+                      ].map(({ v, l }) => (
+                        <div key={l} className="text-center p-2 rounded-xl"
+                          style={{ background: 'rgba(46,125,50,0.06)' }}>
+                          <p className="font-black text-xs" style={{ color: '#2E7D32' }}>{v}</p>
+                          <p className="text-xs text-gray-400">{l}</p>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="w-full rounded-2xl overflow-hidden relative shadow-lg"
-              style={{
-                height: '200px',
-                backgroundImage: `url('${localConfigs.fundo_hero_url || '/fundo.png'}')`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-              }}>
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4"
-                style={{ background: 'rgba(0,0,0,0.2)' }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={localConfigs.logo_url || '/logo.png'} alt=""
-                  className="w-10 h-10 object-contain mb-1"
-                  onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
-                <h1 className="text-white font-black text-xl" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>
-                  {localConfigs.hero_titulo || localConfigs.nome_sistema || 'RECIFE CAP'}
-                </h1>
-                <p className="font-bold text-xs tracking-widest mt-0.5" style={{ color: localConfigs.cor_secundaria || '#FFC107' }}>
-                  {(localConfigs.hero_badge || localConfigs.slogan || 'FILANTROPIA PREMIÁVEL').toUpperCase()}
-                </p>
-                <div className="flex gap-2 mt-3">
-                  <span className="px-4 py-1.5 rounded-full text-xs font-black"
-                    style={{ background: localConfigs.cor_secundaria || '#FFC107', color: localConfigs.cor_primaria || '#1B5E20' }}>
-                    {localConfigs.texto_btn_principal || 'Quero participar →'}
-                  </span>
-                  <span className="px-4 py-1.5 rounded-full text-xs font-bold text-white border border-white/50">
-                    {localConfigs.texto_btn_secundario || 'Ver sorteio'}
-                  </span>
-                </div>
+                )}
+
+                {activeSection === 'como' && (
+                  <div className="p-4 bg-gray-50">
+                    <h2 className="text-base font-black text-center mb-4" style={{ color: '#1B5E20' }}>
+                      {localConfigs.como_titulo || 'Como Participar'}
+                    </h2>
+                    <div className="space-y-3">
+                      {[1, 2, 3, 4].map(n => (
+                        <div key={n} className="flex items-start gap-3 bg-white rounded-xl p-3">
+                          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white flex-shrink-0"
+                            style={{ background: localConfigs.cor_primaria || '#2E7D32' }}>
+                            {n}
+                          </div>
+                          <div>
+                            <p className="font-bold text-xs text-gray-800">
+                              {localConfigs[`como_passo${n}_titulo`] || `Passo ${n}`}
+                            </p>
+                            {localConfigs[`como_passo${n}_desc`] && (
+                              <p className="text-xs text-gray-500 mt-0.5">
+                                {localConfigs[`como_passo${n}_desc`]}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeSection === 'sorteio' && (
+                  <div className="p-4 bg-white">
+                    <h2 className="text-base font-black text-center mb-3" style={{ color: '#1B5E20' }}>
+                      {localConfigs.sorteio_titulo || 'Sorteio da Semana'}
+                    </h2>
+                    {localConfigs.banner_sorteio_mobile_url && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={localConfigs.banner_sorteio_mobile_url} alt="Banner"
+                        className="w-full rounded-xl mb-3"
+                        onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
+                    )}
+                    <div className="text-center p-3 rounded-xl"
+                      style={{ background: 'rgba(46,125,50,0.06)' }}>
+                      <p className="text-xs text-gray-500">{localConfigs.sorteio_subtitulo || 'Próximo sorteio'}</p>
+                      <p className="text-lg font-black" style={{ color: '#2E7D32' }}>
+                        {localConfigs.sorteio_dia_semana || 'Sábado'}
+                      </p>
+                      <p className="text-sm font-bold text-gray-600">{localConfigs.sorteio_horario || '09h00'}</p>
+                      {localConfigs.sorteio_cta && (
+                        <p className="text-xs text-gray-400 mt-1">{localConfigs.sorteio_cta}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {activeSection === 'premios' && (
+                  <div className="p-4 bg-white">
+                    <h2 className="text-base font-black text-center mb-4" style={{ color: '#1B5E20' }}>
+                      Prêmios da Edição
+                    </h2>
+                    <div className="text-center p-4 rounded-2xl mb-3"
+                      style={{ background: localConfigs.cor_secundaria || '#FFC107' }}>
+                      <p className="text-2xl font-black" style={{ color: '#1B5E20' }}>
+                        R$ {localConfigs.premio_principal_valor || '120.000'}
+                      </p>
+                      <p className="text-xs font-bold" style={{ color: '#1B5E20' }}>Prêmio principal</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[1, 2, 3, 4].map(n => (
+                        <div key={n} className="text-center p-3 rounded-xl border border-gray-100">
+                          <p className="font-black text-sm" style={{ color: '#2E7D32' }}>
+                            {localConfigs[`premio_${n}_valor`]
+                              ? `R$ ${localConfigs[`premio_${n}_valor`]}`
+                              : 'R$ 5.000'}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {localConfigs[`premio_${n}_nome`] || `${n}º Prêmio`}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeSection === 'historico' && (
+                  <div className="p-4 bg-gray-50">
+                    <h2 className="text-base font-black text-center mb-3" style={{ color: '#1B5E20' }}>
+                      {localConfigs.historico_titulo || 'Histórico de Sorteios'}
+                    </h2>
+                    {localConfigs.historico_subtitulo && (
+                      <p className="text-xs text-gray-500 text-center mb-3">{localConfigs.historico_subtitulo}</p>
+                    )}
+                    <div className="space-y-2">
+                      {['1º Prêmio', '2º Prêmio', '3º Prêmio'].map(p => (
+                        <div key={p} className="bg-white rounded-xl p-3 flex justify-between items-center">
+                          <span className="text-xs font-bold text-gray-700">{p}</span>
+                          <span className="text-xs font-black" style={{ color: '#2E7D32' }}>R$ 5.000</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeSection === 'depoimentos' && (
+                  <div className="p-4 bg-gray-50">
+                    <h2 className="text-base font-black text-center mb-4" style={{ color: '#1B5E20' }}>
+                      Depoimentos
+                    </h2>
+                    <div className="bg-white rounded-xl p-4 shadow-sm">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                          style={{ background: localConfigs.cor_primaria || '#2E7D32' }}>G</div>
+                        <div>
+                          <p className="text-xs font-bold text-gray-800">Ganhador Exemplo</p>
+                          <p className="text-xs text-gray-400">Recife, PE</p>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-600 italic">
+                        &quot;Não acreditei quando recebi o PIX! Sistema muito transparente.&quot;
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {activeSection === 'rodape' && (
+                  <div className="p-4" style={{ background: localConfigs.cor_primaria || '#1B5E20' }}>
+                    {localConfigs.logo_url && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={localConfigs.logo_url} alt="Logo"
+                        className="w-10 h-10 object-contain mb-3"
+                        onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
+                    )}
+                    <p className="text-white font-bold text-sm mb-1">
+                      {localConfigs.nome_sistema || 'Recife Cap'}
+                    </p>
+                    <p className="text-green-300 text-xs mb-3">
+                      {localConfigs.slogan || 'Filantropia Premiável'}
+                    </p>
+                    {localConfigs.rodape_cnpj && (
+                      <p className="text-green-400 text-xs">CNPJ: {localConfigs.rodape_cnpj}</p>
+                    )}
+                    {localConfigs.rodape_endereco && (
+                      <p className="text-green-400 text-xs">{localConfigs.rodape_endereco}</p>
+                    )}
+                    {localConfigs.rodape_susep && (
+                      <p className="text-green-400 text-xs mt-1">{localConfigs.rodape_susep}</p>
+                    )}
+                    <p className="text-green-500 text-xs mt-3 border-t border-green-700 pt-3">
+                      {localConfigs.rodape_copyright || `© ${new Date().getFullYear()} ${localConfigs.nome_sistema || 'Recife Cap'}.`}
+                    </p>
+                  </div>
+                )}
+
               </div>
             </div>
           )}
+
+          {/* ── Desktop ── */}
+          {previewMode === 'desktop' && (
+            <div className="w-full bg-white rounded-xl border border-gray-200 shadow-md overflow-hidden flex-shrink-0">
+              <div className="flex items-center justify-between px-5 py-2.5"
+                style={{ background: localConfigs.cor_primaria || '#2E7D32' }}>
+                <div className="flex items-center gap-2">
+                  {localConfigs.logo_url && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={localConfigs.logo_url} alt="Logo" className="w-7 h-7 object-contain"
+                      onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
+                  )}
+                  <span className="text-white font-black text-sm">
+                    {localConfigs.nome_sistema || 'Recife Cap'}
+                  </span>
+                </div>
+                <div className="flex gap-3">
+                  {['Início', 'Sorteio', 'Resultados', 'Comprar'].map(item => (
+                    <span key={item} className="text-white text-xs opacity-80">{item}</span>
+                  ))}
+                </div>
+              </div>
+              <div className="p-4 text-center min-h-[160px] flex flex-col items-center justify-center">
+                <p className="text-xs text-gray-300 uppercase tracking-wider mb-1">Seção ativa</p>
+                <p className="text-sm font-bold text-gray-600">
+                  {SECTIONS.find(s => s.id === activeSection)?.label}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">Alterne para Mobile para o preview detalhado</p>
+              </div>
+            </div>
+          )}
+
         </div>
 
         {/* Botão publicar */}
