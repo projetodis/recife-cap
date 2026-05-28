@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
   Layout, Save, Plus, Trash2, Camera, Eye, EyeOff,
-  Upload, ChevronUp, ChevronDown, Star, Image as ImageIcon, Send,
+  Upload, ChevronUp, ChevronDown, Star, Image as ImageIcon,
 } from 'lucide-react'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -23,6 +23,7 @@ interface Depoimento {
 type Section =
   | 'hero'
   | 'sorteio'
+  | 'sobre'
   | 'como'
   | 'premios'
   | 'historico'
@@ -32,6 +33,7 @@ type Section =
 const SECTIONS: { id: Section; label: string; desc: string }[] = [
   { id: 'hero',        label: 'Hero',                 desc: 'Imagens, título e botões' },
   { id: 'sorteio',     label: 'Sorteio da Semana',    desc: 'Textos do sorteio' },
+  { id: 'sobre',       label: 'Quem Somos',           desc: 'Texto e imagem da seção' },
   { id: 'como',        label: 'Como Participar',       desc: '4 passos explicativos' },
   { id: 'premios',     label: 'Prêmios da Edição',    desc: 'Via Edições → Prêmios' },
   { id: 'historico',   label: 'Histórico',             desc: 'Textos dos resultados' },
@@ -165,6 +167,64 @@ function SectionSorteio({ configs, onChange, onSave, saving }: {
       <div className="pt-2 flex justify-end">
         <SaveBtn saving={saving} onClick={onSave} />
       </div>
+    </div>
+  )
+}
+
+// ─── Section: Quem Somos ─────────────────────────────────────────────────────
+
+function SectionSobre({ localConfigs, onChange, uploadingKey, uploadMidia }: {
+  localConfigs: Record<string, string>
+  onChange: (chave: string, valor: string) => void
+  uploadingKey: string | null
+  uploadMidia: (chave: string, e: React.ChangeEvent<HTMLInputElement>) => Promise<void>
+}) {
+  return (
+    <div className="space-y-5">
+      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Imagem</p>
+      <div className="border-2 border-dashed border-gray-200 rounded-2xl p-5 hover:border-emerald-300 transition-colors">
+        <div className="flex items-center gap-4">
+          <div className="w-20 h-16 rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
+            {localConfigs['cartela_imagem_url'] ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={localConfigs['cartela_imagem_url']} alt="Cartela" className="w-full h-full object-contain" />
+            ) : (
+              <ImageIcon size={20} className="text-gray-400" />
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-gray-800 text-sm">Imagem da cartela</p>
+            <p className="text-xs text-gray-400 mt-0.5">PNG/JPG, ideal 900×500px</p>
+            <label className="mt-2 inline-flex items-center gap-1.5 cursor-pointer bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-emerald-800 transition-colors">
+              <Upload size={12} />
+              {uploadingKey === 'cartela_imagem_url' ? 'Enviando…' : 'Alterar'}
+              <input type="file" accept="image/*" className="hidden"
+                disabled={uploadingKey === 'cartela_imagem_url'}
+                onChange={e => uploadMidia('cartela_imagem_url', e)} />
+            </label>
+          </div>
+        </div>
+      </div>
+      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide pt-1">Textos</p>
+      <Field label="Título da seção"
+        value={localConfigs['sobre_titulo'] ?? ''}
+        onChange={v => onChange('sobre_titulo', v)}
+        placeholder="Quem Somos" />
+      <Field label="Texto principal"
+        value={localConfigs['sobre_texto'] ?? ''}
+        onChange={v => onChange('sobre_texto', v)}
+        multiline placeholder="Somos uma organização filantrópica…" />
+      <Field label="Hospital / instituição beneficiada"
+        value={localConfigs['sobre_hospital'] ?? ''}
+        onChange={v => onChange('sobre_hospital', v)}
+        placeholder="Hospital da Criança de Recife" />
+      <Field label="Títulos emitidos por edição"
+        value={localConfigs['sobre_titulos_edicao'] ?? ''}
+        onChange={v => onChange('sobre_titulos_edicao', v)}
+        placeholder="10.000 títulos por edição" />
+      <p className="text-xs text-gray-400">
+        As alterações ficam visíveis no preview ao lado. Clique em <strong>Publicar</strong> para salvar.
+      </p>
     </div>
   )
 }
@@ -437,15 +497,20 @@ function SectionRodape({ configs, onChange, onSave, saving }: {
     <div className="space-y-4">
       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Contato</p>
       <Field label="WhatsApp" value={configs['rodape_whatsapp'] ?? ''} onChange={v => onChange('rodape_whatsapp', v)} placeholder="+55 (81) 99999-9999" />
+      <Field label="Telefone" value={configs['rodape_telefone'] ?? ''} onChange={v => onChange('rodape_telefone', v)} placeholder="+55 (81) 3333-3333" />
       <Field label="E-mail" value={configs['rodape_email'] ?? ''} onChange={v => onChange('rodape_email', v)} placeholder="contato@recifecap.com.br" />
       <Field label="Endereço" value={configs['rodape_endereco'] ?? ''} onChange={v => onChange('rodape_endereco', v)} placeholder="Recife, Pernambuco" />
+      <Field label="CNPJ" value={configs['rodape_cnpj'] ?? ''} onChange={v => onChange('rodape_cnpj', v)} placeholder="00.000.000/0001-00" />
       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide pt-2">Redes sociais</p>
       <Field label="Instagram (URL)" value={configs['rodape_instagram'] ?? ''} onChange={v => onChange('rodape_instagram', v)} placeholder="https://instagram.com/recifecap" />
       <Field label="Facebook (URL)" value={configs['rodape_facebook'] ?? ''} onChange={v => onChange('rodape_facebook', v)} placeholder="https://facebook.com/recifecap" />
       <Field label="YouTube (URL)" value={configs['rodape_youtube'] ?? ''} onChange={v => onChange('rodape_youtube', v)} placeholder="https://youtube.com/@recifecap" />
       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide pt-2">Textos legais</p>
       <Field label="Texto de copyright" value={configs['rodape_copyright'] ?? ''} onChange={v => onChange('rodape_copyright', v)} placeholder="© 2025 Recife Cap. Todos os direitos reservados." />
+      <Field label="Número SUSEP" value={configs['rodape_susep'] ?? ''} onChange={v => onChange('rodape_susep', v)} placeholder="SUSEP Proc. nº 15414.000000/0000-00" />
       <Field label="Regulamento" value={configs['rodape_regulamento'] ?? ''} onChange={v => onChange('rodape_regulamento', v)} multiline placeholder="Participação sujeita a regulamento…" />
+      <Field label="URL Política de Privacidade" value={configs['politica_privacidade_url'] ?? ''} onChange={v => onChange('politica_privacidade_url', v)} placeholder="https://recifecap.com.br/privacidade" />
+      <Field label="URL Termos de Uso" value={configs['termos_uso_url'] ?? ''} onChange={v => onChange('termos_uso_url', v)} placeholder="https://recifecap.com.br/termos" />
       <div className="pt-2 flex justify-end">
         <SaveBtn saving={saving} onClick={onSave} />
       </div>
@@ -566,6 +631,14 @@ export default function AdminLandingPage() {
               />
             )}
             {activeSection === 'sorteio'     && <SectionSorteio     {...sharedProps} />}
+            {activeSection === 'sobre' && (
+              <SectionSobre
+                localConfigs={localConfigs}
+                onChange={onChange}
+                uploadingKey={uploadingKey}
+                uploadMidia={uploadMidia}
+              />
+            )}
             {activeSection === 'como'        && <SectionComo        {...sharedProps} />}
             {activeSection === 'premios'     && <SectionPremios />}
             {activeSection === 'historico'   && <SectionHistorico   {...sharedProps} />}
@@ -622,7 +695,7 @@ export default function AdminLandingPage() {
                       style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
                       {localConfigs.hero_titulo || localConfigs.nome_sistema || 'RECIFE CAP'}
                     </h1>
-                    <p className="font-bold text-xs tracking-widest mt-1" style={{ color: '#FFC107' }}>
+                    <p className="font-bold text-xs tracking-widest mt-1" style={{ color: localConfigs.cor_secundaria || '#FFC107' }}>
                       {(localConfigs.hero_badge || localConfigs.slogan || 'FILANTROPIA PREMIÁVEL').toUpperCase()}
                     </p>
                     {localConfigs.hero_subtitulo && (
@@ -638,7 +711,7 @@ export default function AdminLandingPage() {
                     </div>
                     <div className="w-full space-y-2">
                       <div className="w-full py-2.5 rounded-full text-xs font-black text-center"
-                        style={{ background: '#FFC107', color: '#1B5E20' }}>
+                        style={{ background: localConfigs.cor_secundaria || '#FFC107', color: localConfigs.cor_primaria || '#1B5E20' }}>
                         {localConfigs.texto_btn_principal || 'Quero participar →'}
                       </div>
                       <div className="w-full py-2.5 rounded-full text-xs font-bold text-white text-center border border-white/40">
@@ -666,12 +739,12 @@ export default function AdminLandingPage() {
                 <h1 className="text-white font-black text-xl" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>
                   {localConfigs.hero_titulo || localConfigs.nome_sistema || 'RECIFE CAP'}
                 </h1>
-                <p className="font-bold text-xs tracking-widest mt-0.5" style={{ color: '#FFC107' }}>
+                <p className="font-bold text-xs tracking-widest mt-0.5" style={{ color: localConfigs.cor_secundaria || '#FFC107' }}>
                   {(localConfigs.hero_badge || localConfigs.slogan || 'FILANTROPIA PREMIÁVEL').toUpperCase()}
                 </p>
                 <div className="flex gap-2 mt-3">
                   <span className="px-4 py-1.5 rounded-full text-xs font-black"
-                    style={{ background: '#FFC107', color: '#1B5E20' }}>
+                    style={{ background: localConfigs.cor_secundaria || '#FFC107', color: localConfigs.cor_primaria || '#1B5E20' }}>
                     {localConfigs.texto_btn_principal || 'Quero participar →'}
                   </span>
                   <span className="px-4 py-1.5 rounded-full text-xs font-bold text-white border border-white/50">
@@ -688,7 +761,7 @@ export default function AdminLandingPage() {
           <button onClick={publicarAlteracoes} disabled={salvando}
             className="w-full py-3 rounded-xl font-black text-white text-sm transition-all hover:opacity-90 disabled:opacity-60 flex items-center justify-center gap-2"
             style={{ background: 'linear-gradient(135deg, #2E7D32, #43A047)' }}>
-            <Send size={15} className="flex-shrink-0" />
+            <Save size={15} className="flex-shrink-0" />
             {salvando ? 'Publicando…' : 'Publicar alterações'}
           </button>
           <p className="text-xs text-gray-400 text-center mt-2">

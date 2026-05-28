@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   Settings, Image, Palette, Trophy, Layout,
   FileText, Phone, AlignJustify, Smartphone,
-  LayoutDashboard, CheckCircle, RotateCcw,
+  LayoutDashboard, CheckCircle, RotateCcw, Search,
 } from 'lucide-react'
 
 const MENU = [
@@ -22,6 +22,7 @@ const MENU = [
     { id: 'premios',  label: 'Premios',      icon: <Trophy   size={16} /> },
     { id: 'banners',  label: 'Banners',      icon: <Layout   size={16} /> },
     { id: 'textos',   label: 'Textos',       icon: <FileText size={16} /> },
+    { id: 'seo',      label: 'SEO',          icon: <Search   size={16} /> },
   ]},
   { grupo: 'CONTATO', itens: [
     { id: 'redes',   label: 'Redes Sociais', icon: <Phone         size={16} /> },
@@ -31,6 +32,16 @@ const MENU = [
     { id: 'appstores', label: 'App Stores', icon: <Smartphone size={16} /> },
   ]},
 ]
+
+const CORESPADRAO: Record<string, string> = {
+  cor_primaria:     '#2E7D32',
+  cor_secundaria:   '#FFC107',
+  cor_hero_bg:      '#1B5E20',
+  cor_hero_text:    '#FFFFFF',
+  cor_site_bg:      '#F5F7FA',
+  dash_cor_sidebar: '#1B5E20',
+  dash_cor_header:  '#2E7D32',
+}
 
 const DESCRICOES: Record<string, string> = {
   logo_url:            'Logo principal',
@@ -65,7 +76,12 @@ export default function AdminConfiguracoesPage() {
       const map: Record<string, string> = {}
       for (const row of data ?? []) map[row.chave] = row.valor ?? ''
       setConfigs(map)
-      setPendentes({})
+      // Auto-fill color defaults for any key missing or empty in DB
+      const colorFills: Record<string, string> = {}
+      for (const [k, padr] of Object.entries(CORESPADRAO)) {
+        if (!map[k]) colorFills[k] = padr
+      }
+      setPendentes(Object.keys(colorFills).length > 0 ? colorFills : {})
       setLoading(false)
     }
     carregar()
@@ -77,6 +93,11 @@ export default function AdminConfiguracoesPage() {
 
   function val(chave: string) {
     return chave in pendentes ? pendentes[chave] : (configs[chave] ?? '')
+  }
+
+  function valCor(chave: string): string {
+    const v = chave in pendentes ? pendentes[chave] : (configs[chave] ?? '')
+    return v || CORESPADRAO[chave] || '#000000'
   }
 
   async function salvarConfig(chave: string, valor: string) {
@@ -146,9 +167,13 @@ export default function AdminConfiguracoesPage() {
   const hasPendentes = Object.keys(pendentes).length > 0
 
   const DEFAULTS: Record<string, string> = {
-    cor_primaria: '#2E7D32', cor_secundaria: '#FFC107',
-    cor_sidebar: '#1B5E20', cor_header: '#2E7D32',
-    cor_hero_bg: '#1B5E20', cor_hero_text: '#FFFFFF', cor_site_bg: '#F5F7FA',
+    cor_primaria:     '#2E7D32',
+    cor_secundaria:   '#FFC107',
+    dash_cor_sidebar: '#1B5E20',
+    dash_cor_header:  '#2E7D32',
+    cor_hero_bg:      '#1B5E20',
+    cor_hero_text:    '#FFFFFF',
+    cor_site_bg:      '#F5F7FA',
   }
 
   function resetarCores() {
@@ -361,11 +386,11 @@ export default function AdminConfiguracoesPage() {
                       <p className="text-xs text-gray-400 mt-0.5">{exemplo}</p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <input type="color" value={val(chave) || '#000000'} onChange={e => set(chave, e.target.value)}
+                      <input type="color" value={valCor(chave)} onChange={e => set(chave, e.target.value)}
                         className="w-12 h-12 rounded-xl cursor-pointer border-0 p-0.5 bg-transparent" />
-                      <input type="text" value={val(chave)} onChange={e => set(chave, e.target.value)}
+                      <input type="text" value={valCor(chave)} onChange={e => set(chave, e.target.value)}
                         className={`border rounded-xl px-3 py-2 text-sm font-mono w-28 focus:outline-none focus:border-green-400 ${chave in pendentes ? 'border-yellow-300 bg-yellow-50' : 'border-gray-200'}`} />
-                      <div className="w-10 h-10 rounded-xl border border-gray-200 shadow-sm" style={{ background: val(chave) }} />
+                      <div className="w-10 h-10 rounded-xl border border-gray-200 shadow-sm" style={{ background: valCor(chave) }} />
                     </div>
                   </div>
                 ))}
@@ -384,11 +409,11 @@ export default function AdminConfiguracoesPage() {
                       <p className="text-xs text-gray-400 mt-0.5">{exemplo}</p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <input type="color" value={val(chave) || '#000000'} onChange={e => set(chave, e.target.value)}
+                      <input type="color" value={valCor(chave)} onChange={e => set(chave, e.target.value)}
                         className="w-12 h-12 rounded-xl cursor-pointer border-0 p-0.5 bg-transparent" />
-                      <input type="text" value={val(chave)} onChange={e => set(chave, e.target.value)}
+                      <input type="text" value={valCor(chave)} onChange={e => set(chave, e.target.value)}
                         className={`border rounded-xl px-3 py-2 text-sm font-mono w-28 focus:outline-none focus:border-green-400 ${chave in pendentes ? 'border-yellow-300 bg-yellow-50' : 'border-gray-200'}`} />
-                      <div className="w-10 h-10 rounded-xl border border-gray-200 shadow-sm" style={{ background: val(chave) }} />
+                      <div className="w-10 h-10 rounded-xl border border-gray-200 shadow-sm" style={{ background: valCor(chave) }} />
                     </div>
                   </div>
                 ))}
@@ -442,8 +467,8 @@ export default function AdminConfiguracoesPage() {
                   <p className="text-sm text-gray-400 mt-0.5">Cores da sidebar e cabeçalho dos painéis admin, distribuidor e PDV.</p>
                 </div>
                 {[
-                  { chave: 'cor_sidebar', label: 'Cor da sidebar',   exemplo: 'Fundo do menu lateral em todos os painéis' },
-                  { chave: 'cor_header',  label: 'Cor do cabeçalho', exemplo: 'Cabeçalho dos painéis internos' },
+                  { chave: 'dash_cor_sidebar', label: 'Cor da sidebar',   exemplo: 'Fundo do menu lateral em todos os painéis' },
+                  { chave: 'dash_cor_header',  label: 'Cor do cabeçalho', exemplo: 'Cabeçalho dos painéis internos' },
                 ].map(({ chave, label, exemplo }) => (
                   <div key={chave} className="flex items-center gap-4 p-4 border border-gray-100 rounded-2xl">
                     <div className="flex-1">
@@ -451,51 +476,49 @@ export default function AdminConfiguracoesPage() {
                       <p className="text-xs text-gray-400 mt-0.5">{exemplo}</p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <input type="color" value={val(chave) || '#000000'} onChange={e => set(chave, e.target.value)}
+                      <input type="color" value={valCor(chave)} onChange={e => set(chave, e.target.value)}
                         className="w-12 h-12 rounded-xl cursor-pointer border-0 p-0.5 bg-transparent" />
-                      <input type="text" value={val(chave)} onChange={e => set(chave, e.target.value)}
+                      <input type="text" value={valCor(chave)} onChange={e => set(chave, e.target.value)}
                         className={`border rounded-xl px-3 py-2 text-sm font-mono w-28 focus:outline-none focus:border-green-400 ${chave in pendentes ? 'border-yellow-300 bg-yellow-50' : 'border-gray-200'}`} />
-                      <div className="w-10 h-10 rounded-xl border border-gray-200 shadow-sm" style={{ background: val(chave) }} />
+                      <div className="w-10 h-10 rounded-xl border border-gray-200 shadow-sm" style={{ background: valCor(chave) }} />
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* Preview sidebar */}
+              {/* Logo na sidebar */}
+              <UploadCard chave="dash_logo_sidebar_url" label="Logo na Sidebar" dimensao="PNG transparente, 180×60px" />
+
+              {/* Preview mini do dashboard */}
               <div className="bg-white rounded-2xl border border-gray-100 p-6">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Preview da sidebar</p>
-                <div className="flex gap-4 items-start">
-                  <div className="w-40 rounded-2xl overflow-hidden shadow-md flex-shrink-0"
-                    style={{ background: val('cor_sidebar') || '#1B5E20' }}>
-                    <div className="px-3 py-3 border-b border-white/10">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-lg bg-white/20" />
-                        <div>
-                          <div className="h-2.5 w-16 rounded bg-white/80 mb-1" />
-                          <div className="h-2 w-12 rounded bg-white/40" />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="px-2 py-2 space-y-0.5">
-                      <div className="px-2 py-1.5 rounded-lg text-xs text-white/40">Dashboard</div>
-                      <div className="px-2 py-1.5 rounded-lg text-xs text-white font-medium border-l-2 flex items-center gap-1"
-                        style={{ background: val('cor_header') || '#2E7D32', borderColor: val('cor_secundaria') || '#FFC107' }}>
-                        <div className="w-3 h-3 rounded-sm bg-white/30" />
-                        Sorteios
-                      </div>
-                      <div className="px-2 py-1.5 rounded-lg text-xs text-white/40">Relatórios</div>
-                      <div className="px-2 py-1.5 rounded-lg text-xs text-white/40">Configurações</div>
-                    </div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Preview do painel</p>
+                <div className="rounded-xl overflow-hidden border border-gray-200 h-36 flex shadow-sm">
+                  {/* Sidebar */}
+                  <div className="w-14 flex flex-col gap-1 p-2 flex-shrink-0"
+                    style={{ background: valCor('dash_cor_sidebar') }}>
+                    <div className="w-full h-6 rounded bg-white/20 mb-1" />
+                    {[1, 2, 3, 4].map(i => (
+                      <div key={i} className="w-full h-2 rounded bg-white/10" />
+                    ))}
                   </div>
-                  <div className="text-xs text-gray-400 space-y-2 pt-2">
-                    <p><span className="font-medium text-gray-600">Sidebar:</span> {val('cor_sidebar') || '#1B5E20'}</p>
-                    <p><span className="font-medium text-gray-600">Item ativo:</span> {val('cor_header') || '#2E7D32'}</p>
-                    <p><span className="font-medium text-gray-600">Borda ativa:</span> {val('cor_secundaria') || '#FFC107'}</p>
-                    <p className="text-[11px] text-gray-300 mt-3 max-w-[180px]">
-                      Alterações entram em vigor após recarregar a página do painel.
-                    </p>
+                  {/* Conteúdo */}
+                  <div className="flex-1 bg-gray-50 flex flex-col">
+                    <div className="h-7 flex-shrink-0"
+                      style={{ background: valCor('dash_cor_header') }} />
+                    <div className="flex-1 p-2 grid grid-cols-3 gap-2 content-start">
+                      {[1, 2, 3].map(i => (
+                        <div key={i} className="h-12 bg-white rounded-lg border border-gray-200" />
+                      ))}
+                    </div>
                   </div>
                 </div>
+                <div className="flex gap-4 mt-3 text-xs text-gray-400">
+                  <span><span className="font-medium text-gray-600">Sidebar:</span> {valCor('dash_cor_sidebar')}</span>
+                  <span><span className="font-medium text-gray-600">Header:</span> {valCor('dash_cor_header')}</span>
+                </div>
+                <p className="text-[11px] text-gray-300 mt-1">
+                  Alterações entram em vigor após recarregar a página do painel.
+                </p>
               </div>
             </div>
           )}
@@ -595,6 +618,80 @@ export default function AdminConfiguracoesPage() {
               <Field chave="nome_sistema"  label="Nome do sistema" />
               <Field chave="slogan"        label="Slogan" />
               <Field chave="canal_sorteio" label="Link do canal de transmissão" placeholder="https://..." />
+            </div>
+          )}
+
+          {/* ── SEO ──────────────────────────────────────────────────── */}
+          {secao === 'seo' && (
+            <div className="space-y-5">
+              <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
+                <h2 className="font-bold text-gray-800 text-lg">SEO</h2>
+                <p className="text-sm text-gray-500">Metadados para buscadores e compartilhamento em redes sociais.</p>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Título da página (title)</label>
+                    <span className={`text-xs font-mono ${(val('seo_titulo')?.length ?? 0) > 60 ? 'text-red-500' : 'text-gray-400'}`}>
+                      {val('seo_titulo')?.length ?? 0}/60
+                    </span>
+                  </div>
+                  <input
+                    type="text"
+                    maxLength={80}
+                    value={val('seo_titulo')}
+                    onChange={e => set('seo_titulo', e.target.value)}
+                    placeholder="Recife Cap — Filantropia Premiável"
+                    className={`w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-green-400 ${
+                      'seo_titulo' in pendentes ? 'border-yellow-300 bg-yellow-50' : 'border-gray-200'
+                    }`}
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Ideal: até 60 caracteres</p>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Meta descrição</label>
+                    <span className={`text-xs font-mono ${(val('seo_descricao')?.length ?? 0) > 160 ? 'text-red-500' : 'text-gray-400'}`}>
+                      {val('seo_descricao')?.length ?? 0}/160
+                    </span>
+                  </div>
+                  <textarea
+                    rows={3}
+                    maxLength={200}
+                    value={val('seo_descricao')}
+                    onChange={e => set('seo_descricao', e.target.value)}
+                    placeholder="Participe do Recife Cap e concorra a prêmios incríveis toda semana. Filantropia premiável em Pernambuco."
+                    className={`w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-green-400 resize-none ${
+                      'seo_descricao' in pendentes ? 'border-yellow-300 bg-yellow-50' : 'border-gray-200'
+                    }`}
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Ideal: até 160 caracteres</p>
+                </div>
+
+                <UploadCard chave="seo_og_image_url" label="Imagem Open Graph (og:image)" dimensao="Recomendado: 1200×630px JPG/PNG" />
+              </div>
+
+              {/* Google snippet preview */}
+              <div className="bg-white rounded-2xl border border-gray-100 p-6">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Preview no Google</p>
+                <div className="border border-gray-200 rounded-xl p-4 max-w-xl font-sans">
+                  <p className="text-[13px] text-blue-700 truncate font-medium leading-tight">
+                    {val('seo_titulo') || val('nome_sistema') || 'Recife Cap — Filantropia Premiável'}
+                  </p>
+                  <p className="text-[11px] text-green-700 mt-0.5 truncate">recifecap.com.br</p>
+                  <p className="text-[12px] text-gray-600 mt-1 leading-relaxed line-clamp-2">
+                    {val('seo_descricao') || 'Participe do Recife Cap e concorra a prêmios incríveis toda semana. Filantropia premiável em Pernambuco.'}
+                  </p>
+                </div>
+                {val('seo_og_image_url') && (
+                  <div className="mt-4">
+                    <p className="text-xs text-gray-400 mb-2">Pré-visualização og:image</p>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={val('seo_og_image_url')} alt="og:image"
+                      className="w-full max-w-sm rounded-xl border border-gray-200 object-contain" />
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
