@@ -27,7 +27,7 @@ interface Venda {
   status_pagamento: string
   forma_pagamento: string
   created_at: string
-  cartelas: { codigo: string } | null
+  cartelas: { codigo: string }[] | { codigo: string } | null
 }
 
 interface Saque {
@@ -183,7 +183,7 @@ export default function DashboardView({ pdv, cards, ultimasVendas, saques, saque
               <tbody>
                 {ultimasVendas.map((v) => (
                   <tr key={v.id} className="border-b border-gray-50 last:border-0">
-                    <td className="px-6 py-3 font-medium text-gray-900">{v.cartelas?.codigo ?? '—'}</td>
+                    <td className="px-6 py-3 font-medium text-gray-900">{(Array.isArray(v.cartelas) ? v.cartelas[0]?.codigo : v.cartelas?.codigo) ?? '—'}</td>
                     <td className="px-6 py-3 text-gray-600">{fmt(Number(v.valor))}</td>
                     <td className="px-6 py-3 text-gray-600 capitalize">{v.forma_pagamento}</td>
                     <td className="px-6 py-3">

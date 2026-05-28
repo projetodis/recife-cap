@@ -21,8 +21,8 @@ export default async function PDVDashboard() {
   const [
     { data: vendasHoje },
     { data: vendasTotal },
-    { data: cartelasEstoque },
-    { data: cartelasVendidas },
+    { count: cartelasEstoque },
+    { count: cartelasVendidas },
     { data: ultimasVendas },
     { data: saques },
   ] = await Promise.all([
