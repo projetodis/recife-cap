@@ -46,7 +46,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Dashboard',  href: '/pdv/dashboard',  icon: <LayoutDashboard size={16} /> },
     { label: 'Nova venda', href: '/pdv/venda',      icon: <Plus size={16} /> },
     { label: 'Cartelas',   href: '/pdv/cartelas',   icon: <Tag size={16} /> },
-    { label: 'Caixa',      href: '/pdv/caixa',      icon: <CreditCard size={16} /> },
+    { label: 'Saques',     href: '/pdv/saques',     icon: <CreditCard size={16} /> },
   ],
   cliente: [
     { label: 'Minhas cartelas', href: '/cliente/dashboard', icon: <Tag size={16} /> },
