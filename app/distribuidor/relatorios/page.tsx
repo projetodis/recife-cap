@@ -571,8 +571,8 @@ export default function RelatoriosDistribuidorPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Relatórios</h1>
-        <p className="text-sm text-gray-500 mt-1">Financeiro, PDVs e cartelas do seu portfólio</p>
+        <h1 className="text-2xl font-black text-gray-900">Relatórios</h1>
+        <p className="text-sm text-gray-500 mt-0.5">Financeiro, PDVs e cartelas do seu portfólio</p>
       </div>
 
       {/* Tabs */}
@@ -583,7 +583,7 @@ export default function RelatoriosDistribuidorPage() {
             onClick={() => setTab(t.id)}
             className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
               tab === t.id
-                ? 'border-violet-600 text-violet-600'
+                ? 'border-[#2E7D32] text-[#2E7D32]'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >

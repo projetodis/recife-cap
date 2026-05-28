@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { Bike, Car, UserPlus } from 'lucide-react'
 
 export default async function MotoboyListPage() {
   const supabase = await createClient()
@@ -35,7 +36,6 @@ export default async function MotoboyListPage() {
 
   if (error) console.error('Erro motoboys:', error)
 
-  // Rotas de hoje por motoboy
   const hoje = new Date().toISOString().split('T')[0]
   const { data: rotasHoje } = await supabase
     .from('rotas_entrega')
@@ -46,18 +46,27 @@ export default async function MotoboyListPage() {
   const rotaPorMotoboy: Record<string, string> = {}
   rotasHoje?.forEach(r => { rotaPorMotoboy[r.motoboy_id] = r.status })
 
-  const veiculoIcon: Record<string, string> = { moto: '🏍️', bicicleta: '🚲', carro: '🚗' }
+  function VeiculoIcon({ veiculo }: { veiculo: string }) {
+    if (veiculo === 'carro') return <Car size={20} style={{ color: '#2E7D32' }} />
+    return <Bike size={20} style={{ color: '#2E7D32' }} />
+  }
 
   return (
-    <div>
+    <div style={{ background: '#F5F7FA', minHeight: '100vh' }} className="p-1">
+
+      {/* HEADER */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Motoboys</h1>
-          <p className="text-sm text-gray-500 mt-1">{motoboys?.length ?? 0} cadastrados</p>
+          <h1 className="text-2xl font-black text-gray-900">Motoboys</h1>
+          <p className="text-sm text-gray-500 mt-0.5">{motoboys?.length ?? 0} cadastrados</p>
         </div>
-        <Link href="/distribuidor/motoboys/novo"
-          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition">
-          + Cadastrar motoboy
+        <Link
+          href="/distribuidor/motoboys/novo"
+          className="flex items-center gap-2 px-4 py-2.5 text-white text-sm font-bold rounded-xl transition hover:opacity-90"
+          style={{ background: '#2E7D32' }}
+        >
+          <UserPlus size={16} />
+          Cadastrar motoboy
         </Link>
       </div>
 
@@ -65,56 +74,96 @@ export default async function MotoboyListPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {motoboys.map((m: any) => {
             const rotaStatus = rotaPorMotoboy[m.id]
+            const inicial    = (m.nome ?? '?').charAt(0).toUpperCase()
+
             return (
-              <div key={m.id} className="bg-white rounded-xl border border-gray-200 p-5">
-                <div className="flex items-start justify-between mb-3">
+              <div
+                key={m.id}
+                className="bg-white rounded-2xl border p-5"
+                style={{ borderColor: '#E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
+              >
+                {/* Header do card */}
+                <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{veiculoIcon[m.veiculo] ?? '🛵'}</span>
+                    <div
+                      className="w-11 h-11 rounded-2xl flex items-center justify-center text-lg font-black flex-shrink-0"
+                      style={{ background: '#E8F5E9', color: '#2E7D32' }}
+                    >
+                      {inicial}
+                    </div>
                     <div>
-                      <h3 className="font-medium text-gray-900">{m.nome}</h3>
-                      {m.telefone && <p className="text-xs text-gray-400">{m.telefone}</p>}
+                      <h3 className="font-bold text-gray-900">{m.nome}</h3>
+                      {m.telefone && <p className="text-xs text-gray-400 mt-0.5">{m.telefone}</p>}
                     </div>
                   </div>
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                    m.status === 'ativo' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'
-                  }`}>
+                  <span
+                    className="text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0"
+                    style={m.status === 'ativo'
+                      ? { background: '#E8F5E9', color: '#2E7D32' }
+                      : { background: '#F5F5F5', color: '#6B7280' }
+                    }
+                  >
                     {m.status === 'ativo' ? 'Ativo' : 'Inativo'}
                   </span>
                 </div>
 
-                <div className="space-y-1.5 text-xs text-gray-500 mb-4">
-                  {m.telefone && <p>📞 {m.telefone}</p>}
-                  {m.placa && <p>🔖 Placa: {m.placa}</p>}
-                  <p>Veículo: {m.veiculo}</p>
+                {/* Dados do veículo */}
+                <div
+                  className="flex items-center gap-3 rounded-xl p-3 mb-4"
+                  style={{ background: '#F5F7FA' }}
+                >
+                  <VeiculoIcon veiculo={m.veiculo} />
+                  <div className="text-xs text-gray-500 space-y-0.5">
+                    <p className="font-medium text-gray-700 capitalize">{m.veiculo ?? 'Veículo não informado'}</p>
+                    {m.placa && <p>Placa: <span className="font-mono font-bold text-gray-800">{m.placa}</span></p>}
+                  </div>
                 </div>
 
-                {/* Rota de hoje */}
-                <div className={`text-xs px-3 py-2 rounded-lg mb-3 ${
-                  rotaStatus === 'em_andamento' ? 'bg-blue-50 text-blue-700' :
-                  rotaStatus === 'concluida'    ? 'bg-emerald-50 text-emerald-700' :
-                  rotaStatus === 'pendente'     ? 'bg-amber-50 text-amber-700' :
-                  'bg-gray-50 text-gray-500'
-                }`}>
-                  {rotaStatus === 'em_andamento' ? '🔵 Em rota agora' :
-                   rotaStatus === 'concluida'    ? '✅ Rota concluída hoje' :
-                   rotaStatus === 'pendente'     ? '⏳ Rota pendente hoje' :
-                   '— Sem rota hoje'}
+                {/* Status da rota hoje */}
+                <div
+                  className="text-xs font-medium px-3 py-2 rounded-xl mb-4"
+                  style={rotaStatus === 'em_andamento'
+                    ? { background: '#E8F5E9', color: '#2E7D32' }
+                    : rotaStatus === 'concluida'
+                    ? { background: '#F5F5F5', color: '#4B5563' }
+                    : rotaStatus === 'pendente'
+                    ? { background: '#FFF8E1', color: '#B45309' }
+                    : { background: '#F5F5F5', color: '#9CA3AF' }
+                  }
+                >
+                  {rotaStatus === 'em_andamento' ? 'Em rota agora'
+                   : rotaStatus === 'concluida'  ? 'Rota concluída hoje'
+                   : rotaStatus === 'pendente'   ? 'Rota pendente hoje'
+                   : 'Sem rota hoje'}
                 </div>
 
-                <Link href={`/distribuidor/rotas/nova?motoboy=${m.id}`}
-                  className="text-xs text-emerald-600 hover:text-emerald-700 font-medium">
-                  + Criar rota para este motoboy →
+                {/* Ações */}
+                <Link
+                  href={`/distribuidor/rotas/nova?motoboy=${m.id}`}
+                  className="text-xs font-bold"
+                  style={{ color: '#2E7D32' }}
+                >
+                  + Criar rota para este motoboy
                 </Link>
               </div>
             )
           })}
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 p-16 text-center">
-          <p className="text-4xl mb-4">🛵</p>
-          <p className="text-gray-400 text-sm mb-4">Nenhum motoboy cadastrado ainda.</p>
-          <Link href="/distribuidor/motoboys/novo"
-            className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition">
+        <div
+          className="bg-white rounded-2xl border p-16 text-center"
+          style={{ borderColor: '#E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
+        >
+          <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: '#F5F5F5' }}>
+            <Bike size={32} className="text-gray-300" />
+          </div>
+          <p className="font-bold text-gray-400 text-sm mb-4">Nenhum motoboy cadastrado ainda.</p>
+          <Link
+            href="/distribuidor/motoboys/novo"
+            className="inline-flex items-center gap-2 px-4 py-2.5 text-white text-sm font-bold rounded-xl transition hover:opacity-90"
+            style={{ background: '#2E7D32' }}
+          >
+            <UserPlus size={16} />
             Cadastrar primeiro motoboy
           </Link>
         </div>

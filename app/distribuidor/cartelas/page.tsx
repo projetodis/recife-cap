@@ -64,22 +64,22 @@ export default async function CartelasDistribuidorPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-gray-900">Minhas cartelas</h1>
-        <p className="text-sm text-gray-500 mt-1">Apenas as cartelas do seu lote</p>
+        <h1 className="text-2xl font-black text-gray-900">Minhas cartelas</h1>
+        <p className="text-sm text-gray-500 mt-0.5">Apenas as cartelas do seu lote</p>
       </div>
 
       {/* Resumo geral */}
       <div className="grid grid-cols-5 gap-3 mb-6">
         {[
-          { label: 'Total recebidas', value: total, color: 'text-gray-900' },
-          { label: 'Comigo',          value: comDist, color: 'text-amber-600' },
-          { label: 'Nos PDVs',        value: comPDV,  color: 'text-blue-600' },
-          { label: 'Vendidas',        value: vendidas, color: 'text-emerald-600' },
-          { label: 'Devolvidas',      value: devolvidas, color: 'text-red-500' },
+          { label: 'Total recebidas', value: total,      bg: '#F5F7FA',  text: '#1A1A1A' },
+          { label: 'Comigo',          value: comDist,    bg: '#FFF8E1',  text: '#B45309' },
+          { label: 'Nos PDVs',        value: comPDV,     bg: '#E8F5E9',  text: '#2E7D32' },
+          { label: 'Vendidas',        value: vendidas,   bg: '#E8F5E9',  text: '#1B5E20' },
+          { label: 'Devolvidas',      value: devolvidas, bg: '#F5F5F5',  text: '#6B7280' },
         ].map(c => (
-          <div key={c.label} className="bg-white rounded-xl border border-gray-200 p-4">
-            <p className="text-xs text-gray-500 mb-1">{c.label}</p>
-            <p className={`text-xl font-semibold ${c.color}`}>{c.value.toLocaleString('pt-BR')}</p>
+          <div key={c.label} className="bg-white rounded-2xl border p-4" style={{ borderColor: '#E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+            <p className="text-xs text-gray-500 mb-1 uppercase tracking-wider">{c.label}</p>
+            <p className="text-xl font-black" style={{ color: c.text }}>{c.value.toLocaleString('pt-BR')}</p>
           </div>
         ))}
       </div>
@@ -110,18 +110,15 @@ export default async function CartelasDistribuidorPage() {
                   <span>{e.vendidas} vendidas de {e.total}</span>
                   <span>{e.total > 0 ? Math.round(e.vendidas / e.total * 100) : 0}%</span>
                 </div>
-                <div className="h-2 bg-gray-100 rounded-full overflow-hidden flex">
-                  <div className="h-full bg-emerald-500 transition-all"
-                    style={{ width: `${e.total > 0 ? (e.vendidas / e.total) * 100 : 0}%` }} />
-                  <div className="h-full bg-blue-400 transition-all"
-                    style={{ width: `${e.total > 0 ? (e.comPDV / e.total) * 100 : 0}%` }} />
-                  <div className="h-full bg-amber-400 transition-all"
-                    style={{ width: `${e.total > 0 ? (e.comDist / e.total) * 100 : 0}%` }} />
+                <div className="h-2 rounded-full overflow-hidden flex" style={{ background: '#F3F4F6' }}>
+                  <div className="h-full transition-all" style={{ width: `${e.total > 0 ? (e.vendidas / e.total) * 100 : 0}%`, background: '#2E7D32' }} />
+                  <div className="h-full transition-all" style={{ width: `${e.total > 0 ? (e.comPDV / e.total) * 100 : 0}%`, background: '#FFC107' }} />
+                  <div className="h-full transition-all" style={{ width: `${e.total > 0 ? (e.comDist / e.total) * 100 : 0}%`, background: '#D1D5DB' }} />
                 </div>
                 <div className="flex gap-4 mt-1.5 text-xs text-gray-400">
-                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>Vendidas: {e.vendidas}</span>
-                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-400 inline-block"></span>Nos PDVs: {e.comPDV}</span>
-                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>Comigo: {e.comDist}</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: '#2E7D32' }}></span>Vendidas: {e.vendidas}</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: '#FFC107' }}></span>Nos PDVs: {e.comPDV}</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block bg-gray-300"></span>Comigo: {e.comDist}</span>
                 </div>
               </div>
             </div>
