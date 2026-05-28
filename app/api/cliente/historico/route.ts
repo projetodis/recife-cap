@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   const { data: edicoes } = await sb
     .from('edicoes')
     .select('id, numero, data_sorteio, status')
-    .in('status', ['encerrada', 'finalizada', 'concluida'])
+    .or('status.eq.encerrada,status.eq.finalizada,status.eq.concluida,status.eq.realizado')
     .order('numero', { ascending: false })
 
   if (!edicoes?.length) {
@@ -28,8 +28,9 @@ export async function GET(req: NextRequest) {
 
   const { data: sorteiosRaw } = await sb
     .from('sorteios')
-    .select('id, numero_sorteio, valor_premio, status, dezenas_sorteadas, realizado_em, cartela_vencedora')
+    .select('id, numero_sorteio, valor_premio, status, dezenas_sorteadas, realizado_em, cartela_vencedora, arte_url, banner_url, premio_id, premios_edicao(id, nome, valor, foto_url, ordem)')
     .eq('edicao_id', edicao.id)
+    .eq('status', 'realizado')
     .order('numero_sorteio', { ascending: true })
 
   const sorteioIds = (sorteiosRaw ?? []).map((s: any) => s.id)
@@ -78,15 +79,27 @@ export async function GET(req: NextRequest) {
     snapshot = snapRow ?? null
   }
 
-  const sorteios = (sorteiosRaw ?? []).map((s: any) => ({
-    id:                s.id,
-    numero_sorteio:    s.numero_sorteio,
-    valor_premio:      parseFloat(s.valor_premio ?? 0),
-    status:            s.status ?? 'aguardando',
-    dezenas_sorteadas: s.dezenas_sorteadas ?? [],
-    realizado_em:      s.realizado_em ?? null,
-    cartela_vencedora: s.cartela_vencedora ?? null,
-  }))
+  const sorteios = (sorteiosRaw ?? []).map((s: any) => {
+    const pe = Array.isArray(s.premios_edicao) ? s.premios_edicao[0] : s.premios_edicao
+    return {
+      id:                s.id,
+      numero_sorteio:    s.numero_sorteio,
+      valor_premio:      parseFloat(s.valor_premio ?? 0),
+      status:            s.status ?? 'aguardando',
+      dezenas_sorteadas: s.dezenas_sorteadas ?? [],
+      realizado_em:      s.realizado_em ?? null,
+      cartela_vencedora: s.cartela_vencedora ?? null,
+      arte_url:          s.arte_url ?? null,
+      banner_url:        s.banner_url ?? null,
+      premios_edicao:    pe ? {
+        id:      pe.id,
+        nome:    pe.nome,
+        valor:   parseFloat(pe.valor ?? 0),
+        foto_url: pe.foto_url ?? null,
+        ordem:   pe.ordem,
+      } : null,
+    }
+  })
 
   return NextResponse.json({
     edicoes:   edicoes.map((e: any) => ({ id: e.id, numero: e.numero, data_sorteio: e.data_sorteio, status: e.status })),

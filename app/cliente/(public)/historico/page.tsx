@@ -14,6 +14,13 @@ interface EdicaoItem {
   data_sorteio: string
   status: string
 }
+interface PremioEdicao {
+  id: string
+  nome: string
+  valor: number
+  foto_url: string | null
+  ordem: number
+}
 interface SorteioRow {
   id: string
   numero_sorteio: number
@@ -22,6 +29,9 @@ interface SorteioRow {
   dezenas_sorteadas: string[]
   realizado_em: string | null
   cartela_vencedora: string | null
+  arte_url: string | null
+  banner_url: string | null
+  premios_edicao: PremioEdicao | null
 }
 interface Ganhador {
   sorteio_numero: number
@@ -81,10 +91,8 @@ const ABAS_FALLBACK = ['1º Prêmio', '2º Prêmio', '3º Prêmio', '4º Prêmio
 
 // ── Componente ────────────────────────────────────────────────────────────────
 export default function HistoricoPage() {
-  const configs      = useConfig()
-  const logoUrl      = configs.logo_url       || '/logo.png'
-  const fundoUrl     = configs.fundo_hero_url || '/fundo.png'
-  const nomeSistema  = configs.nome_sistema   || 'Recife Cap'
+  const configs  = useConfig()
+  const logoUrl  = configs.logo_url || '/logo.png'
 
   const [abaAtiva,         setAbaAtiva]         = useState(0)
   const [edicaoSelecionada, setEdicaoSelecionada] = useState<string>('')
@@ -135,6 +143,8 @@ export default function HistoricoPage() {
   const snapshot     = data?.snapshot   ?? null
 
   const abas = Array.from({ length: 5 }, (_, i) => {
+    const s = sorteiosData.find(s => s.numero_sorteio === i + 1)
+    if (s?.premios_edicao?.nome) return s.premios_edicao.nome
     const p = premios.find(p => p.ordem === i + 1)
     return p?.nome ?? ABAS_FALLBACK[i] ?? `${i + 1}º Prêmio`
   })
@@ -144,14 +154,12 @@ export default function HistoricoPage() {
   const premioAba     = sorteiosData.find(s => s.numero_sorteio === abaAtiva + 1)?.valor_premio ?? 0
 
   const fotosPremios: Record<number, string> = {
-    0: snapshot?.premio_1_foto_url         || premios.find(p => p.ordem === 1)?.foto_url || logoUrl,
-    1: snapshot?.premio_2_foto_url         || premios.find(p => p.ordem === 2)?.foto_url || logoUrl,
-    2: snapshot?.premio_3_foto_url         || premios.find(p => p.ordem === 3)?.foto_url || logoUrl,
-    3: snapshot?.premio_4_foto_url         || premios.find(p => p.ordem === 4)?.foto_url || logoUrl,
-    4: snapshot?.premio_principal_foto_url || premios.find(p => p.ordem === 5)?.foto_url || logoUrl,
+    0: snapshot?.premio_1_foto_url         || sorteiosData.find(s => s.numero_sorteio === 1)?.premios_edicao?.foto_url || premios.find(p => p.ordem === 1)?.foto_url || logoUrl,
+    1: snapshot?.premio_2_foto_url         || sorteiosData.find(s => s.numero_sorteio === 2)?.premios_edicao?.foto_url || premios.find(p => p.ordem === 2)?.foto_url || logoUrl,
+    2: snapshot?.premio_3_foto_url         || sorteiosData.find(s => s.numero_sorteio === 3)?.premios_edicao?.foto_url || premios.find(p => p.ordem === 3)?.foto_url || logoUrl,
+    3: snapshot?.premio_4_foto_url         || sorteiosData.find(s => s.numero_sorteio === 4)?.premios_edicao?.foto_url || premios.find(p => p.ordem === 4)?.foto_url || logoUrl,
+    4: snapshot?.premio_principal_foto_url || sorteiosData.find(s => s.numero_sorteio === 5)?.premios_edicao?.foto_url || premios.find(p => p.ordem === 5)?.foto_url || logoUrl,
   }
-
-  const bannerUrl = snapshot?.banner_url || configs.banner_sorteio_url || fundoUrl
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -177,44 +185,53 @@ export default function HistoricoPage() {
       </div>
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
-      <div
-        className="relative py-10 flex flex-col items-center justify-center text-center"
-        style={{
-          backgroundImage:    `url('${bannerUrl}')`,
-          backgroundSize:     'cover',
-          backgroundPosition: 'center top',
-        }}
+      <section
+        className="py-16 text-center relative overflow-hidden"
+        style={{ background: 'linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%)' }}
       >
-        <div className="absolute inset-0 bg-black/55" />
-        <div className="relative z-10 flex flex-col items-center px-4">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={logoUrl} alt={nomeSistema} className="w-16 h-16 object-contain mb-3 drop-shadow-2xl" />
-          <h1 className="text-white text-2xl md:text-3xl font-black tracking-wider drop-shadow-lg">
+        <div
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
+            backgroundSize:  '24px 24px',
+          }}
+        />
+        <div className="relative z-10 max-w-2xl mx-auto px-4">
+          <div
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4"
+            style={{ background: 'rgba(255,255,255,0.15)' }}
+          >
+            <Trophy size={16} className="text-yellow-300" />
+            <span className="text-white text-sm font-bold">Resultados Oficiais</span>
+          </div>
+          <h1 className="text-4xl lg:text-5xl font-black text-white mb-3">
             Histórico de Resultados
           </h1>
-          <p className="text-sm mt-1 drop-shadow" style={{ color: '#FFC107' }}>
-            Consulte os contemplados de todas as edições encerradas.
+          <p className="text-green-200 text-lg">
+            Consulte os contemplados de todas as edições encerradas
           </p>
+        </div>
+      </section>
 
-          {/* Abas dos prêmios */}
-          <div className="flex gap-2 mt-6 flex-wrap justify-center">
-            {abas.map((aba, i) => (
-              <button
-                key={i}
-                onClick={() => setAbaAtiva(i)}
-                className="px-4 py-1.5 rounded-full text-sm font-semibold transition-all"
-                style={
-                  abaAtiva === i
-                    ? { background: '#FFC107', color: '#1B5E20' }
-                    : { background: 'rgba(255,255,255,0.2)', color: '#fff' }
-                }
-                onMouseEnter={e => { if (abaAtiva !== i) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.3)' }}
-                onMouseLeave={e => { if (abaAtiva !== i) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.2)' }}
-              >
-                {aba}
-              </button>
-            ))}
-          </div>
+      {/* ── ABAS DOS PRÊMIOS ─────────────────────────────────────────────── */}
+      <div style={{ background: '#1B5E20' }}>
+        <div className="max-w-6xl mx-auto px-4 py-3 flex gap-2 flex-wrap justify-center">
+          {abas.map((aba, i) => (
+            <button
+              key={i}
+              onClick={() => setAbaAtiva(i)}
+              className="px-4 py-1.5 rounded-full text-sm font-semibold transition-all"
+              style={
+                abaAtiva === i
+                  ? { background: '#FFC107', color: '#1B5E20' }
+                  : { background: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.85)' }
+              }
+              onMouseEnter={e => { if (abaAtiva !== i) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.25)' }}
+              onMouseLeave={e => { if (abaAtiva !== i) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.15)' }}
+            >
+              {aba}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -337,12 +354,13 @@ export default function HistoricoPage() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-7 gap-2">
-                    {dezenasAba.map((n, i) => (
+                    {dezenasAba.map((dezena, i) => (
                       <div
                         key={i}
-                        className="w-9 h-9 flex items-center justify-center rounded-full text-sm font-bold text-gray-700 bg-white border-2 border-gray-200 shadow-sm"
+                        className="w-10 h-10 flex items-center justify-center rounded-full text-xs font-black text-white"
+                        style={{ background: 'linear-gradient(135deg, #2E7D32, #43A047)' }}
                       >
-                        {String(n).padStart(2, '0')}
+                        {String(dezena).padStart(2, '0')}
                       </div>
                     ))}
                   </div>
