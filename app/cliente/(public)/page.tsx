@@ -7,7 +7,7 @@ import { useConfig } from '@/lib/config-client'
 import {
   Trophy, Ticket, QrCode, Tv, ChevronDown, ChevronRight, ChevronLeft, Menu, X,
   ShoppingCart, BarChart2, MessageCircle, Star,
-  Shield, Radio, Calendar,
+  Shield, Radio, Calendar, Search,
 } from 'lucide-react'
 
 // ── SVG brand icons ────────────────────────────────────────────────────────────
@@ -386,6 +386,11 @@ export default function ClienteHome() {
                 className="text-white/80 hover:text-[#FFC107] text-sm font-semibold tracking-wide transition-colors">
                 Resultados
               </Link>
+              <Link href="/cliente/consulta-cpf"
+                className="text-white/80 hover:text-[#FFC107] text-sm font-semibold tracking-wide transition-colors flex items-center gap-1">
+                <Search size={14} />
+                Meus Títulos
+              </Link>
               <Link href="/cliente/compra"
                 className="px-5 py-2 rounded-full text-sm font-black transition-all hover:scale-105 hover:shadow-lg whitespace-nowrap"
                 style={{ background: '#FFC107', color: '#1B5E20', boxShadow: '0 4px 15px rgba(255,193,7,0.35)' }}>
@@ -418,6 +423,11 @@ export default function ClienteHome() {
               <Link href="/cliente/historico" onClick={() => setMenuOpen(false)}
                 className="block py-3 text-white/80 hover:text-[#FFC107] font-medium text-sm">
                 Resultados
+              </Link>
+              <Link href="/cliente/consulta-cpf" onClick={() => setMenuOpen(false)}
+                className="block py-3 text-white/80 hover:text-[#FFC107] font-medium text-sm flex items-center gap-1.5">
+                <Search size={13} />
+                Meus Títulos
               </Link>
             </div>
           )}
@@ -937,7 +947,7 @@ export default function ClienteHome() {
                   {[
                     { label: 'Comprar títulos',     href: '/cliente/compra'    },
                     { label: 'Resultados',         href: '/cliente/historico' },
-                    { label: 'Consultar CPF',      href: '/cliente'           },
+                    { label: 'Consultar CPF',      href: '/cliente/consulta-cpf' },
                   ].map(link => (
                     <Link key={link.label} href={link.href}
                       className="block text-sm hover:text-white transition-colors"
@@ -995,7 +1005,7 @@ export default function ClienteHome() {
               backdropFilter: 'blur(20px)',
               border: '1px solid rgba(0,0,0,0.06)',
             }}>
-            <Link href="/cliente"
+            <Link href="/cliente/consulta-cpf"
               className="flex flex-col items-center gap-1 px-4 py-1 text-gray-500 hover:text-[#2E7D32] transition-colors">
               <Ticket size={20} />
               <span className="font-semibold" style={{ fontSize: '10px' }}>Meus Títulos</span>

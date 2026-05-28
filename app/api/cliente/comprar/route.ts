@@ -118,8 +118,10 @@ export async function POST(request: Request) {
   const pixId = crypto.randomUUID()
   const reservadaAte = new Date(Date.now() + 15 * 60 * 1000)
 
-  // Reserva as cartelas
-  const { error: errReserva } = await sb
+  // Reserva as cartelas atomicamente — só atualiza se ainda estiverem disponíveis
+  // As condições extras (.eq status + .is cpf_comprador null) evitam dupla venda
+  // em caso de requisições concorrentes que passaram pelo SELECT acima ao mesmo tempo
+  const { data: reservadas, error: errReserva } = await sb
     .from('cartelas')
     .update({
       status:                     'reservada',
@@ -131,10 +133,19 @@ export async function POST(request: Request) {
       pix_id:                     pixId,
     })
     .in('id', ids)
+    .eq('status', 'em_estoque_distribuidor')
+    .is('cpf_comprador', null)
+    .select('codigo, dv')
 
   if (errReserva) {
     console.error('[comprar] reserva:', errReserva)
     return NextResponse.json({ erro: 'Erro ao reservar cartelas' }, { status: 500 })
+  }
+  if (!reservadas?.length || reservadas.length < quantidade) {
+    return NextResponse.json(
+      { erro: 'Títulos indisponíveis no momento. Tente novamente.' },
+      { status: 409 },
+    )
   }
 
   // Chave PIX do admin
@@ -148,7 +159,7 @@ export async function POST(request: Request) {
   const QRCode = (await import('qrcode')).default
   const qrBase64 = await QRCode.toDataURL(pixPayload, { width: 250, margin: 2, color: { dark: '#000', light: '#fff' } })
 
-  const titulos = disponiveis.map(c => `${c.codigo}-${c.dv}`)
+  const titulos = reservadas.map((c: any) => `${c.codigo}-${c.dv}`)
 
   logPagamento('compra_iniciada', { cpf: cpfNumeros.slice(0, 3) + '***', quantidade, valor_total: valorTotal, edicao_id: edicaoId })
 
