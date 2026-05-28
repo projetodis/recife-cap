@@ -14,11 +14,16 @@ export async function GET(req: NextRequest) {
   const sb       = adminSB()
   const edicaoId = req.nextUrl.searchParams.get('edicao')
 
-  const { data: edicoes } = await sb
+  const { data: edicoes, error: edicaoError } = await sb
     .from('edicoes')
-    .select('id, numero, data_sorteio, status')
-    .or('status.eq.encerrada,status.eq.finalizada,status.eq.concluida,status.eq.realizado')
+    .select('id, numero, descricao, data_sorteio, status, premio_principal')
+    .in('status', ['encerrada', 'finalizada', 'concluida', 'realizado', 'encerrado'])
     .order('numero', { ascending: false })
+
+  if (edicaoError) {
+    console.error('Erro query edicoes:', edicaoError)
+    return NextResponse.json({ error: edicaoError.message }, { status: 500 })
+  }
 
   if (!edicoes?.length) {
     return NextResponse.json({ edicoes: [], edicao: null, sorteios: [], ganhadores: [], premios: [], snapshot: null })
