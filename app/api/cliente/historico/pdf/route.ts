@@ -169,7 +169,7 @@ export async function GET(req: NextRequest) {
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
     })
     const page = await browser.newPage()
-    await page.setContent(html, { waitUntil: 'networkidle0', timeout: 30_000 })
+    await page.setContent(html, { waitUntil: 'load', timeout: 30_000 })
     const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true, margin: { top: '10mm', right: '10mm', bottom: '10mm', left: '10mm' } })
     await browser.close()
 
