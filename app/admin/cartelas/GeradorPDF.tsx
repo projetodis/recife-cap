@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { FileText, X, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
+import { FileText, X, Loader2, CheckCircle, AlertCircle, Image } from 'lucide-react'
 
 interface EdicaoProps {
   id: string
@@ -10,6 +10,7 @@ interface EdicaoProps {
   hora_sorteio: string
   valor_unitario: number
   premio_principal: number
+  template_cartela_url?: string | null
 }
 
 interface CartelaProps {
@@ -35,12 +36,17 @@ function formatarDataBR(iso: string) {
 }
 
 export default function GeradorPDF({ edicao, cartelas, onClose }: Props) {
-  const [quantidade, setQuantidade] = useState(Math.min(10, cartelas.length))
-  const [estado, setEstado]         = useState<Estado>('idle')
-  const [progresso, setProgresso]   = useState('')
-  const [erroMsg, setErroMsg]       = useState('')
+  const [quantidade,    setQuantidade]    = useState(Math.min(10, cartelas.length))
+  const [estado,        setEstado]        = useState<Estado>('idle')
+  const [progresso,     setProgresso]     = useState('')
+  const [erroMsg,       setErroMsg]       = useState('')
+  const [usarTemplate,  setUsarTemplate]  = useState(!!edicao.template_cartela_url)
 
-  const total = Math.min(quantidade, cartelas.length)
+  const total         = Math.min(quantidade, cartelas.length)
+  const temTemplate   = !!edicao.template_cartela_url
+  const endpointAtivo = usarTemplate && temTemplate
+    ? '/api/cartelas/pdf-template'
+    : '/api/cartelas/pdf-puppeteer'
 
   async function gerarPDF() {
     if (total === 0) return
@@ -49,7 +55,7 @@ export default function GeradorPDF({ edicao, cartelas, onClose }: Props) {
     setErroMsg('')
 
     try {
-      const lote = cartelas.slice(0, total)
+      const lote          = cartelas.slice(0, total)
       const dataFormatada = formatarDataBR(edicao.data_sorteio)
 
       const payload = {
@@ -63,11 +69,14 @@ export default function GeradorPDF({ edicao, cartelas, onClose }: Props) {
           ],
           qr_code_pix: `NATALCAP:${c.id}:${c.codigo}`,
         })),
+        ...(usarTemplate && temTemplate
+          ? { template_url: edicao.template_cartela_url }
+          : {}),
       }
 
       setProgresso(`Gerando ${total} cartela${total !== 1 ? 's' : ''} no servidor...`)
 
-      const res = await fetch('/api/cartelas/pdf-puppeteer', {
+      const res = await fetch(endpointAtivo, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify(payload),
@@ -109,7 +118,7 @@ export default function GeradorPDF({ edicao, cartelas, onClose }: Props) {
             </div>
             <div>
               <h2 className="font-semibold text-gray-900">Gerar PDF de Cartelas</h2>
-              <p className="text-xs text-gray-400">Edicao #{edicao.numero} · Puppeteer</p>
+              <p className="text-xs text-gray-400">Edição #{edicao.numero}</p>
             </div>
           </div>
           <button
@@ -122,27 +131,62 @@ export default function GeradorPDF({ edicao, cartelas, onClose }: Props) {
         </div>
 
         {/* Body */}
-        <div className="px-6 py-5 space-y-5">
+        <div className="px-6 py-5 space-y-4">
 
           {/* Info */}
           <div className="bg-gray-50 rounded-xl px-4 py-3 text-sm text-gray-600 space-y-1.5">
             <div className="flex justify-between">
-              <span className="text-gray-400">Disponiveis</span>
+              <span className="text-gray-400">Disponíveis</span>
               <span className="font-medium text-gray-900">{cartelas.length.toLocaleString('pt-BR')} cartelas</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-400">Formato</span>
-              <span className="font-medium text-gray-900">A4 Landscape · 2 por pagina</span>
+              <span className="font-medium text-gray-900">A4 Landscape · 2 por página</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-400">Motor</span>
-              <span className="font-medium text-gray-900">Puppeteer (Chromium)</span>
+              <span className="font-medium text-gray-900">
+                {usarTemplate && temTemplate ? 'Template customizado' : 'Puppeteer (Chromium)'}
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-400">Paginas estimadas</span>
+              <span className="text-gray-400">Páginas estimadas</span>
               <span className="font-medium text-gray-900">{Math.ceil(total / 2).toLocaleString('pt-BR')}</span>
             </div>
           </div>
+
+          {/* Usar template */}
+          {temTemplate && (
+            <div className="flex items-center justify-between p-3 rounded-xl border border-violet-100 bg-violet-50">
+              <div className="flex items-center gap-2">
+                <Image size={15} className="text-violet-600" />
+                <div>
+                  <p className="text-sm font-medium text-violet-900">Usar arte da edição</p>
+                  <p className="text-xs text-violet-500">Template configurado em Template Cartela</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setUsarTemplate(u => !u)}
+                className="w-10 h-5 rounded-full transition-all relative flex-shrink-0"
+                style={{ background: usarTemplate ? '#7C3AED' : '#E5E7EB' }}
+              >
+                <div
+                  className="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all"
+                  style={{ left: usarTemplate ? '22px' : '2px' }}
+                />
+              </button>
+            </div>
+          )}
+
+          {/* Preview do template */}
+          {usarTemplate && temTemplate && edicao.template_cartela_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={edicao.template_cartela_url}
+              alt="Template"
+              className="w-full rounded-xl border border-gray-200 max-h-40 object-contain bg-gray-50"
+            />
+          )}
 
           {/* Quantidade */}
           <div>
@@ -159,31 +203,29 @@ export default function GeradorPDF({ edicao, cartelas, onClose }: Props) {
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:opacity-50"
             />
             <p className="text-xs text-amber-600 mt-1.5">
-              Maximo 200 por vez — o Puppeteer processa no servidor
+              Máximo 200 por vez
             </p>
           </div>
 
-          {/* Status gerando */}
+          {/* Status */}
           {estado === 'gerando' && (
             <div className="flex items-center gap-3 bg-violet-50 border border-violet-100 rounded-xl px-4 py-3">
               <Loader2 size={18} className="text-violet-500 animate-spin flex-shrink-0" />
               <div>
                 <p className="text-sm font-medium text-violet-800">{progresso}</p>
-                <p className="text-xs text-violet-500 mt-0.5">Nao feche esta janela</p>
+                <p className="text-xs text-violet-500 mt-0.5">Não feche esta janela</p>
               </div>
             </div>
           )}
-
           {estado === 'concluido' && (
             <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3">
               <CheckCircle size={18} className="text-emerald-500 flex-shrink-0" />
               <div>
                 <p className="text-sm font-medium text-emerald-800">PDF gerado com sucesso!</p>
-                <p className="text-xs text-emerald-600 mt-0.5">O download foi iniciado automaticamente.</p>
+                <p className="text-xs text-emerald-600 mt-0.5">Download iniciado automaticamente.</p>
               </div>
             </div>
           )}
-
           {estado === 'erro' && (
             <div className="flex items-center gap-3 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
               <AlertCircle size={18} className="text-red-500 flex-shrink-0" />

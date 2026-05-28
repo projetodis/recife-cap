@@ -15,6 +15,7 @@ interface EdicaoResumida {
   hora_sorteio: string
   valor_unitario: number
   premio_principal: number
+  template_cartela_url?: string | null
 }
 
 interface ResumoCartelas {

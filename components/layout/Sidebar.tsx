@@ -9,7 +9,7 @@ import type { UserRole } from '@/types'
 import {
   LayoutDashboard, Users, Store, Calendar, Tag, Trophy,
   BarChart2, UserPlus, Activity, LayoutGrid, Settings,
-  Map, Bike, Route, User, Plus, CreditCard, LogOut, Package,
+  Map, Bike, Route, User, Plus, CreditCard, LogOut, Package, Layout,
 } from 'lucide-react'
 
 interface NavItem {
@@ -23,9 +23,10 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Dashboard',      href: '/admin/dashboard',      icon: <LayoutDashboard size={16} /> },
     { label: 'Distribuidores', href: '/admin/distribuidores',  icon: <Users size={16} /> },
     { label: 'PDVs',           href: '/admin/pdvs',            icon: <Store size={16} /> },
-    { label: 'Edições',        href: '/admin/edicoes',         icon: <Calendar size={16} /> },
-    { label: 'Cartelas',       href: '/admin/cartelas',        icon: <Tag size={16} /> },
-    { label: 'Sorteios',       href: '/admin/sorteios',        icon: <Trophy size={16} /> },
+    { label: 'Edições',          href: '/admin/edicoes',           icon: <Calendar size={16} /> },
+    { label: 'Cartelas',         href: '/admin/cartelas',          icon: <Tag size={16} /> },
+    { label: 'Template Cartela', href: '/admin/cartelas/template', icon: <Layout size={16} /> },
+    { label: 'Sorteios',         href: '/admin/sorteios',          icon: <Trophy size={16} /> },
     { label: 'Relatórios',     href: '/admin/relatorios',      icon: <BarChart2 size={16} /> },
     { label: 'Usuários',       href: '/admin/usuarios',        icon: <UserPlus size={16} /> },
     { label: 'Logs',           href: '/admin/logs',            icon: <Activity size={16} /> },
