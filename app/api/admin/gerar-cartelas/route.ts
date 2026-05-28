@@ -2,14 +2,22 @@ import { createClient as createAdminSupabase } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
-function gerarDezenasUnicas(quantidade: number): string[] {
+function gerarDezenasUnicas(numBingos: number): number[] {
+  const totalDezenas = numBingos * 20 // cada bingo: 5 cols × 4 rows
   const pool = Array.from({ length: 60 }, (_, i) => i + 1)
   const sorteadas: number[] = []
-  for (let i = 0; i < quantidade; i++) {
+  const totalNecessario = Math.min(totalDezenas, 60)
+  for (let i = 0; i < totalNecessario; i++) {
     const idx = Math.floor(Math.random() * pool.length)
     sorteadas.push(pool.splice(idx, 1)[0]!)
   }
-  return sorteadas.sort((a, b) => a - b).map(n => String(n).padStart(2, '0'))
+  // Se numBingos > 3 (> 60 dezenas), reutilizar pool
+  while (sorteadas.length < totalDezenas) {
+    const pool2 = Array.from({ length: 60 }, (_, i) => i + 1)
+    const idx = Math.floor(Math.random() * pool2.length)
+    sorteadas.push(pool2.splice(idx, 1)[0]!)
+  }
+  return sorteadas
 }
 
 function gerarSerie(indice: number): string {
@@ -47,8 +55,7 @@ export async function POST(request: Request) {
   if (total > 500000)
     return NextResponse.json({ error: 'Máximo 500.000 cartelas por edição' }, { status: 400 })
 
-  const numBingos  = Math.min(8, Math.max(4, num_bingos))
-  const dezPorGrupo = 5 * Math.ceil(numBingos / 2)
+  const numBingos = Math.min(8, Math.max(4, num_bingos))
 
   const admin = createAdminSupabase(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -74,10 +81,9 @@ export async function POST(request: Request) {
         codigo,
         dv,
         serie,
-        giro_da_sorte:    giro_da_sorte_ativo,
-        dezenas_sorteio_1: gerarDezenasUnicas(dezPorGrupo),
-        dezenas_sorteio_2: gerarDezenasUnicas(dezPorGrupo),
-        status: 'em_estoque_distribuidor',
+        giro_da_sorte:     giro_da_sorte_ativo,
+        dezenas_sorteio_1: gerarDezenasUnicas(numBingos), // array flat com todas as dezenas
+        status:            'em_estoque_distribuidor',
       })
     }
 

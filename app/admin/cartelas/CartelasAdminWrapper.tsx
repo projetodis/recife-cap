@@ -16,6 +16,8 @@ interface EdicaoResumida {
   valor_unitario: number
   premio_principal: number
   template_cartela_url?: string | null
+  num_bingos?: number | null
+  giro_da_sorte_ativo?: boolean | null
 }
 
 interface ResumoCartelas {
@@ -36,8 +38,9 @@ interface CartelaPDF {
   id: string
   codigo: string
   dv: string
+  serie?: string | null
+  giro_da_sorte?: boolean | null
   dezenas_sorteio_1: string[]
-  dezenas_sorteio_2: string[]
 }
 
 interface Props {

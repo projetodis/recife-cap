@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import { CARTELA_CONFIG, type CamposVariaveis, type GradeConfig } from '@/lib/cartela-template'
 import {
   type CartelaDB,
-  validarDezenas,
   prepararCamposCartela,
 } from '@/lib/cartela-dados'
 
@@ -12,6 +11,7 @@ export const dynamic = 'force-dynamic'
 
 interface RequestBody {
   cartelas: CartelaDB[]
+  template_url: string
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -31,12 +31,14 @@ function gerarRaspadinha(): number[] {
   return [...nums]
 }
 
-function gerarBarras(codigo: string): string {
-  const seed = codigo.split('').reduce((s, c) => s + c.charCodeAt(0), 0)
-  return Array.from({ length: 110 }, (_, i) => {
-    const w = ((seed * (i + 1) * 7 + i * 13) % 5 === 0) ? 2.5 : 1
-    return `<span style="display:inline-block;width:${w}px;background:#333;height:100%;flex-shrink:0;"></span>`
-  }).join('')
+/** Baixa a imagem do template e converte para data URL base64 */
+async function templateParaBase64(url: string): Promise<string> {
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`Falha ao baixar template: HTTP ${res.status}`)
+  const buffer = await res.arrayBuffer()
+  const mime   = res.headers.get('content-type') ?? 'image/png'
+  const b64    = Buffer.from(buffer).toString('base64')
+  return `data:${mime};base64,${b64}`
 }
 
 /** Grade dinâmica: cols × rows células posicionadas absolutamente */
@@ -115,7 +117,7 @@ function gerarHTMLCartela(campos: CamposVariaveis): string {
     <img src="${campos.qr_code_base64}"
          width="${cfg.qr_code.width}"
          height="${cfg.qr_code.height}"
-         style="display:block;border-radius:4px;border:1px solid #ccc;"
+         style="display:block;border-radius:4px;"
          alt="QR PIX" />
     <div style="font-size:5px;font-family:monospace;text-align:center;margin-top:2px;max-width:${cfg.qr_code.width}px;word-break:break-all;color:#555;">
       ${campos.numero_titulo}-${campos.dv}
@@ -123,9 +125,6 @@ function gerarHTMLCartela(campos: CamposVariaveis): string {
   </div>
 
   <!-- Código de barras -->
-  <div style="position:absolute;top:${cfg.codigo_barras.top - 14}px;left:${cfg.codigo_barras.left}px;width:300px;height:12px;display:flex;align-items:flex-end;gap:0.3px;overflow:hidden;z-index:1;">
-    ${gerarBarras(campos.codigo_barras)}
-  </div>
   <div class="campo" style="top:${cfg.codigo_barras.top}px;left:${cfg.codigo_barras.left}px;font-size:${cfg.codigo_barras.fontSize ?? 6}px;color:${cfg.codigo_barras.color ?? '#333333'};font-family:monospace;">
     ${campos.codigo_barras}
   </div>
@@ -139,10 +138,10 @@ function gerarHTMLCartela(campos: CamposVariaveis): string {
 </div>`
 }
 
-// ── CSS ───────────────────────────────────────────────────────────────────────
+// ── CSS — usa background-image do template ────────────────────────────────────
 
-// A5 portrait (559 × 794 px) × 2 lado a lado = A4 landscape
-const CSS = `
+function gerarCSS(templateBase64: string): string {
+  return `
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -152,6 +151,7 @@ body {
   print-color-adjust: exact;
 }
 
+/* A5 portrait (559 × 794 px) × 2 lado a lado = A4 landscape */
 .pagina {
   width: ${CARTELA_CONFIG.width * 2}px;
   height: ${CARTELA_CONFIG.height}px;
@@ -169,7 +169,7 @@ body {
 .divisor {
   width: 1px;
   height: 100%;
-  border-left: 2px dashed #bbb;
+  border-left: 2px dashed #999;
   flex-shrink: 0;
 }
 
@@ -181,12 +181,13 @@ body {
   flex-shrink: 0;
 }
 
-/* Fundo placeholder — substituir por background-image após PNG do designer */
 .cartela-fundo {
   position: absolute;
   inset: 0;
-  background-color: #f5f5f5;
-  border: 1px solid #e0e0e0;
+  background-image: url('${templateBase64}');
+  background-size: ${CARTELA_CONFIG.width}px ${CARTELA_CONFIG.height}px;
+  background-repeat: no-repeat;
+  background-position: top left;
 }
 
 .campo {
@@ -208,18 +209,19 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #fff;
-  border: 1px solid #ccc;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.15);
   color: #1A1A1A;
   font-weight: 700;
   font-size: 7px;
   border-radius: 2px;
 }
 `
+}
 
 // ── Builder de página ─────────────────────────────────────────────────────────
 
-function gerarPaginaHTML(htmlCartelas: string[]): string {
+function gerarPaginaHTML(htmlCartelas: string[], css: string): string {
   const paginas: string[] = []
   for (let i = 0; i < htmlCartelas.length; i += 2) {
     const c1 = htmlCartelas[i]
@@ -235,7 +237,7 @@ function gerarPaginaHTML(htmlCartelas: string[]): string {
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <style>${CSS}</style>
+  <style>${css}</style>
 </head>
 <body>${paginas.join('\n')}</body>
 </html>`
@@ -262,7 +264,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Body JSON invalido' }, { status: 400 })
   }
 
-  const { cartelas } = body
+  const { cartelas, template_url } = body
 
   if (!Array.isArray(cartelas) || cartelas.length === 0) {
     return NextResponse.json({ error: 'Nenhuma cartela enviada' }, { status: 400 })
@@ -270,16 +272,13 @@ export async function POST(request: Request) {
   if (cartelas.length > 200) {
     return NextResponse.json({ error: 'Maximo 200 cartelas por requisicao' }, { status: 400 })
   }
-
-  const invalidas = cartelas.filter(c => !validarDezenas(c.dezenas, c.num_bingos ?? 4))
-  if (invalidas.length > 0) {
-    return NextResponse.json(
-      { error: `${invalidas.length} cartela(s) com dezenas insuficientes` },
-      { status: 400 },
-    )
+  if (!template_url || typeof template_url !== 'string') {
+    return NextResponse.json({ error: 'template_url obrigatorio' }, { status: 400 })
   }
 
   try {
+    const templateBase64 = await templateParaBase64(template_url)
+
     const camposCartelas: CamposVariaveis[] = await Promise.all(
       cartelas.map(async (c) => {
         const qrText     = c.qr_code_pix ?? c.chave_pix ?? `NATALCAP:${c.numero}`
@@ -289,8 +288,9 @@ export async function POST(request: Request) {
       }),
     )
 
+    const css          = gerarCSS(templateBase64)
     const htmlCartelas = camposCartelas.map(gerarHTMLCartela)
-    const html         = gerarPaginaHTML(htmlCartelas)
+    const html         = gerarPaginaHTML(htmlCartelas, css)
 
     const browser = await puppeteer.launch({
       headless: true,
@@ -328,7 +328,7 @@ export async function POST(request: Request) {
     }
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Erro interno ao gerar PDF'
-    console.error('[pdf-puppeteer]', msg)
+    console.error('[pdf-template]', msg)
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

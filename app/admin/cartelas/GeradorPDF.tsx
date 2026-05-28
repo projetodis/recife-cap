@@ -11,14 +11,17 @@ interface EdicaoProps {
   valor_unitario: number
   premio_principal: number
   template_cartela_url?: string | null
+  num_bingos?: number | null
+  giro_da_sorte_ativo?: boolean | null
 }
 
 interface CartelaProps {
   id: string
   codigo: string
   dv: string
+  serie?: string | null
+  giro_da_sorte?: boolean | null
   dezenas_sorteio_1: string[]
-  dezenas_sorteio_2: string[]
 }
 
 interface Props {
@@ -60,14 +63,14 @@ export default function GeradorPDF({ edicao, cartelas, onClose }: Props) {
 
       const payload = {
         cartelas: lote.map(c => ({
-          numero:       `${c.codigo}-${c.dv}`,
-          edicao:       edicao.numero,
-          data_sorteio: dataFormatada,
-          dezenas:      [
-            ...c.dezenas_sorteio_1.map(Number),
-            ...c.dezenas_sorteio_2.map(Number),
-          ],
-          qr_code_pix: `NATALCAP:${c.id}:${c.codigo}`,
+          numero:        `${c.codigo}-${c.dv}`,
+          serie:         c.serie || '',
+          edicao:        edicao.numero,
+          data_sorteio:  dataFormatada,
+          dezenas:       c.dezenas_sorteio_1.map(Number),
+          num_bingos:    edicao.num_bingos || 4,
+          giro_da_sorte: c.giro_da_sorte || false,
+          qr_code_pix:   `NATALCAP:${c.id}:${c.codigo}`,
         })),
         ...(usarTemplate && temTemplate
           ? { template_url: edicao.template_cartela_url }

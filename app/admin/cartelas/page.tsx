@@ -20,7 +20,7 @@ export default async function CartelasAdminPage({
   // Edições ativas — campos completos para o GeradorPDF
   const { data: edicoes } = await supabase
     .from('edicoes')
-    .select('id, numero, status, total_cartelas, data_sorteio, hora_sorteio, valor_unitario, premio_principal, template_cartela_url')
+    .select('id, numero, status, total_cartelas, data_sorteio, hora_sorteio, valor_unitario, premio_principal, template_cartela_url, num_bingos, giro_da_sorte_ativo')
     .in('status', ['ativa', 'rascunho'])
     .order('numero', { ascending: false })
 
@@ -76,7 +76,7 @@ export default async function CartelasAdminPage({
   const { data: cartelasParaPDF } = edicaoSelecionada
     ? await supabase
         .from('cartelas')
-        .select('id, codigo, dv, dezenas_sorteio_1, dezenas_sorteio_2')
+        .select('id, codigo, dv, serie, giro_da_sorte, dezenas_sorteio_1')
         .eq('edicao_id', edicaoSelecionada)
         .eq('status', 'em_estoque_distribuidor')
         .limit(1000)
