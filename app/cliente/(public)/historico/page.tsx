@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useConfig } from '@/lib/config-client'
 import {
-  Download, Calendar, ChevronDown, ChevronLeft, Trophy, MapPin, Clock, Store,
+  Download, Calendar, ChevronDown, ChevronLeft, ChevronRight,
+  Trophy, MapPin, Clock, Store, BarChart2,
 } from 'lucide-react'
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
@@ -191,30 +192,58 @@ export default function HistoricoPage() {
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <section
-        className="py-16 text-center relative overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%)' }}
+        className="relative py-20 text-center overflow-hidden"
+        style={{ background: 'linear-gradient(135deg, #1B5E20 0%, #2E7D32 60%, #388E3C 100%)' }}
       >
+        {/* Padrão hexagonal decorativo */}
         <div
-          className="absolute inset-0 opacity-10"
+          className="absolute inset-0 opacity-5"
           style={{
-            backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
-            backgroundSize:  '24px 24px',
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
           }}
         />
-        <div className="relative z-10 max-w-2xl mx-auto px-4">
+        {/* Círculos decorativos */}
+        <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full opacity-10"
+          style={{ background: '#FFC107' }} />
+        <div className="absolute -bottom-20 -right-20 w-80 h-80 rounded-full opacity-10"
+          style={{ background: '#FFC107' }} />
+
+        <div className="relative z-10 max-w-3xl mx-auto px-4">
+          {/* Badge */}
           <div
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4"
-            style={{ background: 'rgba(255,255,255,0.15)' }}
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-full mb-6"
+            style={{ background: 'rgba(255,193,7,0.2)', border: '1px solid rgba(255,193,7,0.4)' }}
           >
-            <Trophy size={16} className="text-yellow-300" />
-            <span className="text-white text-sm font-bold">Resultados Oficiais</span>
+            <Trophy size={16} style={{ color: '#FFC107' }} />
+            <span className="text-sm font-bold" style={{ color: '#FFC107' }}>Resultados Oficiais</span>
           </div>
-          <h1 className="text-4xl lg:text-5xl font-black text-white mb-3">
-            Histórico de Resultados
+
+          <h1 className="text-5xl lg:text-6xl font-black text-white mb-4 leading-tight">
+            Histórico de<br />
+            <span style={{ color: '#FFC107' }}>Resultados</span>
           </h1>
-          <p className="text-green-200 text-lg">
+
+          <p className="text-green-200 text-lg max-w-xl mx-auto">
             Consulte os contemplados de todas as edições encerradas
           </p>
+
+          {/* Stats decorativos */}
+          <div className="flex items-center justify-center gap-8 mt-8">
+            <div className="text-center">
+              <p className="text-2xl font-black text-white">{data?.edicoes?.length || 0}</p>
+              <p className="text-xs text-green-300 uppercase tracking-wider">Edições</p>
+            </div>
+            <div className="w-px h-10 bg-green-600" />
+            <div className="text-center">
+              <p className="text-2xl font-black" style={{ color: '#FFC107' }}>100%</p>
+              <p className="text-xs text-green-300 uppercase tracking-wider">Transparente</p>
+            </div>
+            <div className="w-px h-10 bg-green-600" />
+            <div className="text-center">
+              <p className="text-2xl font-black text-white">PIX</p>
+              <p className="text-xs text-green-300 uppercase tracking-wider">Pagamento</p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -348,9 +377,9 @@ export default function HistoricoPage() {
                 </div>
               </div>
 
-              {/* Dezenas sorteadas */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                <h3 className="font-bold text-gray-600 mb-4 text-xs uppercase tracking-widest">
+              {/* Dezenas Sorteadas */}
+              <div className="bg-white rounded-2xl border p-5 shadow-sm">
+                <h3 className="font-bold text-gray-700 mb-4 text-sm uppercase tracking-wider">
                   Dezenas Sorteadas ({dezenasAba.length})
                 </h3>
                 {dezenasAba.length === 0 ? (
@@ -358,12 +387,18 @@ export default function HistoricoPage() {
                     <p className="text-sm font-medium">Sem dezenas registradas.</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-7 gap-2">
+                  <div className="grid grid-cols-8 gap-2">
                     {dezenasAba.map((dezena, i) => (
                       <div
                         key={i}
-                        className="w-10 h-10 flex items-center justify-center rounded-full text-xs font-black text-white"
-                        style={{ background: 'linear-gradient(135deg, #2E7D32, #43A047)' }}
+                        className="aspect-square rounded-full flex items-center justify-center text-sm font-black shadow-sm"
+                        style={{
+                          background: 'white',
+                          border:     '2px solid #E5E7EB',
+                          color:      '#1A1A1A',
+                          minWidth:   40,
+                          minHeight:  40,
+                        }}
                       >
                         {String(dezena).padStart(2, '0')}
                       </div>
@@ -438,48 +473,80 @@ export default function HistoricoPage() {
                 )}
               </div>
 
-              {/* Resumo de todos os sorteios da edição */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="px-5 py-3 border-b border-gray-100">
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Resumo da Edição</p>
+              {/* Resumo da Edição */}
+              <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
+                <div
+                  className="px-5 py-4 border-b flex items-center gap-2"
+                  style={{ background: 'rgba(46,125,50,0.04)' }}
+                >
+                  <BarChart2 size={16} style={{ color: '#2E7D32' }} />
+                  <h3 className="font-bold text-gray-700 text-sm uppercase tracking-wider">
+                    Resumo da Edição
+                  </h3>
                 </div>
+
                 <div className="divide-y divide-gray-50">
-                  {Array.from({ length: 5 }, (_, i) => {
-                    const s  = sorteiosData.find(s => s.numero_sorteio === i + 1)
-                    const gs = ganhadores.filter(g => g.sorteio_numero === i + 1)
+                  {sorteiosData.map((s, index) => {
+                    const ganhadoresCount = ganhadores.filter(
+                      g => g.sorteio_id === s.id || g.sorteio_numero === s.numero_sorteio
+                    ).length
+                    const isAtivo = s.numero_sorteio === abaAtiva + 1
                     return (
                       <button
-                        key={i}
-                        onClick={() => setAbaAtiva(i)}
-                        className="w-full px-5 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors text-left"
+                        key={s.id}
+                        onClick={() => setAbaAtiva(s.numero_sorteio - 1)}
+                        className="w-full flex items-center gap-4 px-5 py-4 transition-all hover:bg-gray-50 text-left"
+                        style={{ background: isAtivo ? 'rgba(46,125,50,0.05)' : 'white' }}
                       >
-                        <div className="flex items-center gap-3">
-                          <span
-                            className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0"
-                            style={
-                              abaAtiva === i
-                                ? { background: '#FFC107', color: '#1B5E20' }
-                                : { background: '#f3f4f6', color: '#6b7280' }
-                            }
-                          >
-                            {i + 1}
-                          </span>
-                          <span className="text-sm font-medium text-gray-700">{abas[i]}</span>
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-black flex-shrink-0"
+                          style={{
+                            background: isAtivo ? '#2E7D32' : '#F5F5F5',
+                            color:      isAtivo ? 'white'   : '#6B7280',
+                          }}
+                        >
+                          {index + 1}
                         </div>
-                        <div className="text-right">
-                          <p className="text-xs font-semibold" style={{ color: '#2E7D32' }}>
-                            {s && s.valor_premio > 0 ? brl(s.valor_premio) : '—'}
+
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-gray-800 text-sm">
+                            {s.premios_edicao?.nome || abas[index] || `${index + 1}º Prêmio`}
                           </p>
                           <p className="text-xs text-gray-400 mt-0.5">
-                            {gs.length > 0
-                              ? `${gs.length} contemplado${gs.length !== 1 ? 's' : ''}`
-                              : 'Sem ganhadores'}
+                            {ganhadoresCount} contemplado{ganhadoresCount !== 1 ? 's' : ''}
                           </p>
                         </div>
+
+                        <div className="text-right flex-shrink-0">
+                          <p className="font-black text-sm" style={{ color: '#2E7D32' }}>
+                            {s.valor_premio > 0 ? brl(s.valor_premio) : '—'}
+                          </p>
+                          {isAtivo && (
+                            <div className="flex items-center justify-end gap-1 mt-1">
+                              <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#FFC107' }} />
+                              <span className="text-xs" style={{ color: '#FFC107' }}>Visualizando</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <ChevronRight size={14} className="text-gray-300 flex-shrink-0" />
                       </button>
                     )
                   })}
                 </div>
+
+                {/* Total da edição */}
+                {sorteiosData.length > 0 && (
+                  <div
+                    className="px-5 py-4 flex items-center justify-between"
+                    style={{ background: 'rgba(46,125,50,0.05)', borderTop: '1px solid #E5E7EB' }}
+                  >
+                    <span className="text-sm font-bold text-gray-600">Total em prêmios</span>
+                    <span className="text-lg font-black" style={{ color: '#1B5E20' }}>
+                      {brl(sorteiosData.reduce((acc, s) => acc + (s.valor_premio || 0), 0))}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
