@@ -41,6 +41,12 @@ const SECTIONS: { id: Section; label: string; desc: string }[] = [
   { id: 'rodape',      label: 'Rodapé',                desc: 'Contato e redes sociais' },
 ]
 
+function resolverUrl(url: string): string {
+  if (!url) return ''
+  if (url.startsWith('http')) return url
+  return `https://recifecap.com.br${url}`
+}
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function Field({
@@ -686,7 +692,7 @@ export default function AdminLandingPage() {
                   style={{ background: localConfigs['cor_primaria'] || '#2E7D32' }}>
                   {localConfigs['logo_url'] ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={localConfigs['logo_url']} alt="logo" className="h-6 object-contain" />
+                    <img src={resolverUrl(localConfigs['logo_url'] || '')} alt="logo" className="h-6 object-contain" />
                   ) : (
                     <span className="text-white font-bold text-sm">{localConfigs['nome_sistema'] || 'RECIFE CAP'}</span>
                   )}
@@ -702,9 +708,9 @@ export default function AdminLandingPage() {
                   <div className="relative overflow-hidden"
                     style={{
                       background: localConfigs['fundo_hero_mobile_url']
-                        ? `url(${localConfigs['fundo_hero_mobile_url']}) center/cover no-repeat`
+                        ? `url(${resolverUrl(localConfigs['fundo_hero_mobile_url'])}) center/cover no-repeat`
                         : localConfigs['fundo_hero_url']
-                        ? `url(${localConfigs['fundo_hero_url']}) center/cover no-repeat`
+                        ? `url(${resolverUrl(localConfigs['fundo_hero_url'])}) center/cover no-repeat`
                         : `linear-gradient(160deg, ${localConfigs['cor_primaria_escura'] || '#1B5E20'} 0%, ${localConfigs['cor_primaria'] || '#2E7D32'} 60%, #388E3C 100%)`,
                       minHeight: 520,
                       paddingTop: 40,
@@ -715,7 +721,7 @@ export default function AdminLandingPage() {
                       {localConfigs['logo_url']
                         ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={localConfigs['logo_url']} alt="logo" className="w-8 h-8 object-contain" />
+                          <img src={resolverUrl(localConfigs['logo_url'] || '')} alt="logo" className="w-8 h-8 object-contain" />
                         ) : (
                           <div className="w-8 h-8 rounded-full bg-white opacity-30" />
                         )
@@ -788,7 +794,7 @@ export default function AdminLandingPage() {
                     </h2>
                     {localConfigs['cartela_imagem_url'] && (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={localConfigs['cartela_imagem_url']} alt=""
+                      <img src={resolverUrl(localConfigs['cartela_imagem_url'] || '')} alt=""
                         className="w-full h-28 object-contain rounded-xl mb-3 bg-gray-100" />
                     )}
                     <p className="text-xs text-gray-600 leading-relaxed line-clamp-6">
@@ -911,7 +917,7 @@ export default function AdminLandingPage() {
                     <div className="flex justify-center mb-3">
                       {localConfigs['logo_url'] ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={localConfigs['logo_url']} alt="logo" className="h-9 object-contain" />
+                        <img src={resolverUrl(localConfigs['logo_url'] || '')} alt="logo" className="h-9 object-contain" />
                       ) : (
                         <p className="text-white font-black text-sm">{localConfigs['nome_sistema'] || 'RECIFE CAP'}</p>
                       )}
@@ -947,7 +953,7 @@ export default function AdminLandingPage() {
                 style={{ background: localConfigs['cor_primaria'] || '#2E7D32' }}>
                 {localConfigs['logo_url'] ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={localConfigs['logo_url']} alt="logo" className="h-5 object-contain" />
+                  <img src={resolverUrl(localConfigs['logo_url'] || '')} alt="logo" className="h-5 object-contain" />
                 ) : (
                   <span className="text-white font-bold text-xs">{localConfigs['nome_sistema'] || 'RECIFE CAP'}</span>
                 )}
