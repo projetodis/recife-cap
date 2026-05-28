@@ -699,37 +699,60 @@ export default function AdminLandingPage() {
 
                 {/* Hero */}
                 {activeSection === 'hero' && (
-                  <div className="relative overflow-hidden flex flex-col items-center text-center px-4 pt-6 pb-8 gap-2"
-                    style={{ background: localConfigs['cor_hero_bg'] || '#1B5E20', minHeight: 460 }}>
-                    {localConfigs['fundo_hero_mobile_url'] && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={localConfigs['fundo_hero_mobile_url']} alt=""
-                        className="absolute inset-0 w-full h-full object-cover opacity-40 pointer-events-none" />
-                    )}
-                    <div className="relative z-10 flex flex-col items-center gap-2">
-                      {localConfigs['hero_badge'] && (
-                        <span className="text-xs px-2 py-0.5 rounded-full font-bold uppercase"
-                          style={{ background: localConfigs['cor_secundaria'] || '#FFC107', color: '#1B5E20' }}>
-                          {localConfigs['hero_badge']}
-                        </span>
-                      )}
-                      <h1 className="text-xl font-black leading-tight mt-1"
-                        style={{ color: localConfigs['cor_hero_text'] || '#FFFFFF' }}>
-                        {localConfigs['hero_titulo'] || 'RECIFE CAP'}
+                  <div className="relative overflow-hidden"
+                    style={{
+                      background: localConfigs['fundo_hero_mobile_url']
+                        ? `url(${localConfigs['fundo_hero_mobile_url']}) center/cover no-repeat`
+                        : localConfigs['fundo_hero_url']
+                        ? `url(${localConfigs['fundo_hero_url']}) center/cover no-repeat`
+                        : `linear-gradient(160deg, ${localConfigs['cor_primaria_escura'] || '#1B5E20'} 0%, ${localConfigs['cor_primaria'] || '#2E7D32'} 60%, #388E3C 100%)`,
+                      minHeight: 520,
+                      paddingTop: 40,
+                    }}>
+                    {/* Navbar */}
+                    <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 py-3 z-10"
+                      style={{ background: 'rgba(0,0,0,0.2)' }}>
+                      {localConfigs['logo_url']
+                        ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={localConfigs['logo_url']} alt="logo" className="w-8 h-8 object-contain" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-white opacity-30" />
+                        )
+                      }
+                      <div className="flex flex-col gap-1">
+                        <div className="w-5 h-0.5 bg-white rounded" />
+                        <div className="w-5 h-0.5 bg-white rounded" />
+                        <div className="w-5 h-0.5 bg-white rounded" />
+                      </div>
+                    </div>
+                    {/* Conteúdo centralizado */}
+                    <div className="flex flex-col items-center justify-center text-center px-5 py-8 mt-8">
+                      <h1 className="text-2xl font-black text-white mb-1 leading-tight drop-shadow-lg">
+                        {localConfigs['hero_titulo'] || localConfigs['nome_sistema'] || 'Recife Cap'}
                       </h1>
-                      <p className="text-xs leading-snug max-w-[220px]"
-                        style={{ color: localConfigs['cor_hero_text'] || '#FFFFFF', opacity: 0.85 }}>
-                        {localConfigs['hero_subtitulo'] || 'Participe e concorra a prêmios incríveis'}
+                      <p className="text-xs font-black mb-2 uppercase tracking-wider drop-shadow"
+                        style={{ color: localConfigs['cor_secundaria'] || '#FFC107' }}>
+                        {localConfigs['hero_badge'] || 'SORTEIO TODA SEMANA'}
                       </p>
-                      <button className="mt-3 px-5 py-2 rounded-full text-xs font-bold"
-                        style={{ background: localConfigs['cor_secundaria'] || '#FFC107', color: '#1B5E20' }}>
+                      <p className="text-xs text-white opacity-80 mb-5 drop-shadow">
+                        {localConfigs['hero_subtitulo'] || localConfigs['slogan'] || 'Filantropia Premiável'}
+                      </p>
+                      <div className="px-3 py-1.5 rounded-full text-xs text-white mb-5 text-center"
+                        style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)' }}>
+                        PRÓXIMO SORTEIO: {localConfigs['sorteio_dia_semana'] || 'TODA SEXTA'} ÀS {localConfigs['sorteio_horario'] || '21H00'}
+                      </div>
+                      <button className="w-full py-3 rounded-full text-sm font-black mb-3 shadow-lg"
+                        style={{
+                          background: `linear-gradient(135deg, ${localConfigs['cor_secundaria'] || '#FFC107'}, #FFB300)`,
+                          color: localConfigs['cor_primaria_escura'] || '#1B5E20',
+                        }}>
                         {localConfigs['texto_btn_principal'] || 'Quero participar →'}
                       </button>
-                      {localConfigs['texto_btn_secundario'] && (
-                        <button className="px-5 py-1.5 rounded-full text-xs font-medium border border-white/40 text-white">
-                          {localConfigs['texto_btn_secundario']}
-                        </button>
-                      )}
+                      <button className="w-full py-3 rounded-full text-sm font-bold text-white"
+                        style={{ border: '2px solid rgba(255,255,255,0.5)' }}>
+                        {localConfigs['texto_btn_secundario'] || 'Ver sorteio'}
+                      </button>
                     </div>
                   </div>
                 )}
