@@ -216,7 +216,7 @@ export default function NovoPDVPage() {
   }
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-2xl mx-auto pb-16">
       <div className="mb-8">
         <h1 className="text-2xl font-semibold text-gray-900">Cadastrar PDV</h1>
         <p className="text-sm text-gray-500 mt-1">Adicione um novo ponto de venda à sua rede</p>
@@ -437,7 +437,7 @@ export default function NovoPDVPage() {
         </section>
 
         {/* ── ACESSO DO LOJISTA ── */}
-        <section className="bg-white rounded-xl border border-gray-200 p-6">
+        <section className="bg-white rounded-xl border-2 border-red-500 p-6">
           <h2 className="text-sm font-semibold text-gray-900 mb-1 flex items-center gap-2">
             <Lock size={15} className="text-emerald-600" />
             Acesso do lojista
