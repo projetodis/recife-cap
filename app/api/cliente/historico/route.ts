@@ -31,13 +31,23 @@ export async function GET(req: NextRequest) {
 
   const edicao = (edicaoId ? edicoes.find((e: any) => e.id === edicaoId) : null) ?? edicoes[0]
 
-  // ── Sorteios com FK hint para pegar o prêmio certo ────────────────────────
+  // ── Sorteios ──────────────────────────────────────────────────────────────
   const { data: sorteiosRaw } = await sb
     .from('sorteios')
-    .select('id, numero_sorteio, valor_premio, status, dezenas_sorteadas, realizado_em, cartela_vencedora, arte_url, banner_url, premio_id, premios_edicao!sorteios_premio_id_fkey(id, nome, valor, foto_url, tipo, ordem)')
+    .select('id, numero_sorteio, valor_premio, status, dezenas_sorteadas, realizado_em, cartela_vencedora, arte_url, banner_url, premio_id')
     .eq('edicao_id', edicao.id)
     .eq('status', 'realizado')
     .order('numero_sorteio', { ascending: true })
+
+  const premioIds = (sorteiosRaw ?? []).map((s: any) => s.premio_id).filter(Boolean)
+  const { data: premiosLookup } = premioIds.length
+    ? await sb.from('premios_edicao').select('id, nome, valor, foto_url, tipo, ordem').in('id', premioIds)
+    : { data: [] }
+
+  const sorteiosComPremio = (sorteiosRaw ?? []).map((s: any) => ({
+    ...s,
+    premios_edicao: (premiosLookup ?? []).find((p: any) => p.id === s.premio_id) ?? null,
+  }))
 
   const sorteioIds = (sorteiosRaw ?? []).map((s: any) => s.id)
 
@@ -82,8 +92,8 @@ export async function GET(req: NextRequest) {
     snapshot = snapRow ?? null
   }
 
-  const sorteios = (sorteiosRaw ?? []).map((s: any) => {
-    const pe = Array.isArray(s.premios_edicao) ? s.premios_edicao[0] : s.premios_edicao
+  const sorteios = sorteiosComPremio.map((s: any) => {
+    const pe = s.premios_edicao
     return {
       id:                s.id,
       numero_sorteio:    s.numero_sorteio,
