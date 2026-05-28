@@ -386,6 +386,10 @@ export default function ClienteHome() {
                 className="text-white/80 hover:text-[#FFC107] text-sm font-semibold tracking-wide transition-colors">
                 Resultados
               </Link>
+              <Link href="/cliente/historico"
+                className="text-white/80 hover:text-[#FFC107] text-sm font-semibold tracking-wide transition-colors">
+                Histórico
+              </Link>
               <Link href="/cliente/compra"
                 className="px-5 py-2 rounded-full text-sm font-black transition-all hover:scale-105 hover:shadow-lg whitespace-nowrap"
                 style={{ background: '#FFC107', color: '#1B5E20', boxShadow: '0 4px 15px rgba(255,193,7,0.35)' }}>
@@ -419,6 +423,11 @@ export default function ClienteHome() {
                 className="block py-3 text-white/80 hover:text-[#FFC107] font-medium text-sm"
                 style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
                 Resultados
+              </Link>
+              <Link href="/cliente/historico" onClick={() => setMenuOpen(false)}
+                className="block py-3 text-white/80 hover:text-[#FFC107] font-medium text-sm"
+                style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+                Histórico
               </Link>
             </div>
           )}
@@ -936,9 +945,10 @@ export default function ClienteHome() {
                     </button>
                   ))}
                   {[
-                    { label: 'Comprar títulos', href: '/cliente/compra'  },
-                    { label: 'Ver resultados',  href: '/cliente/sorteio' },
-                    { label: 'Consultar CPF',   href: '/cliente'         },
+                    { label: 'Comprar títulos',     href: '/cliente/compra'    },
+                    { label: 'Ver resultados',     href: '/cliente/sorteio'   },
+                    { label: 'Histórico',          href: '/cliente/historico' },
+                    { label: 'Consultar CPF',      href: '/cliente'           },
                   ].map(link => (
                     <Link key={link.label} href={link.href}
                       className="block text-sm hover:text-white transition-colors"
