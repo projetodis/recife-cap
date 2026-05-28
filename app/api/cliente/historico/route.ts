@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   const { data: edicoes, error: edicaoError } = await sb
     .from('edicoes')
     .select('id, numero, descricao, data_sorteio, status, premio_principal')
-    .in('status', ['encerrada', 'finalizada', 'concluida', 'realizado', 'encerrado'])
+    .in('status', ['encerrada'])
     .order('numero', { ascending: false })
 
   if (edicaoError) {
