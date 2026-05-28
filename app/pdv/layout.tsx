@@ -7,13 +7,25 @@ export default async function PDVLayout({ children }: { children: React.ReactNod
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('nome, role')
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'pdv') redirect('/login')
+  console.log('PDV Layout - user.id:', user.id)
+  console.log('PDV Layout - profile:', profile)
+  console.log('PDV Layout - profileError:', profileError)
+
+  if (profileError || !profile) {
+    console.log('PDV Layout - sem profile, redirecionando')
+    redirect('/login')
+  }
+
+  if (profile.role !== 'pdv') {
+    console.log('PDV Layout - role incorreto:', profile.role)
+    redirect('/login')
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50">
