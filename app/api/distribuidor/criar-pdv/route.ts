@@ -73,6 +73,9 @@ export async function POST(request: Request) {
   }
 
   // 3. Inserir PDV
+  const logradouro = body.logradouro?.trim() ?? ''
+  const numero     = body.numero?.trim() ?? ''
+
   const { data: pdv, error: pdvErr } = await admin.from('pontos_de_venda').insert({
     distribuidor_id:   dist.id,
     responsavel_id:    novoUserId,
@@ -81,8 +84,8 @@ export async function POST(request: Request) {
     responsavel_nome:  responsavel_nome?.trim() ?? '',
     telefone:          telefone?.replace(/\D/g, '') ?? '',
     cep:               body.cep?.replace(/\D/g, '') ?? '',
-    logradouro:        body.logradouro?.trim() ?? '',
-    numero:            body.numero?.trim() ?? '',
+    endereco:          logradouro + (numero ? ', ' + numero : ''),
+    numero,
     complemento:       body.complemento?.trim() ?? '',
     bairro:            body.bairro?.trim() ?? '',
     cidade:            body.cidade?.trim() ?? '',
@@ -91,7 +94,7 @@ export async function POST(request: Request) {
     latitude:          body.latitude ?? null,
     longitude:         body.longitude ?? null,
     maps_url:          body.maps_url ?? null,
-    comissao_pct:      comissao_pct ?? 5,
+    comissao_pct:      comissao_pct ?? 10,
     status:            'ativo',
   }).select('id').single()
 
