@@ -192,58 +192,45 @@ export default function HistoricoPage() {
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <section
-        className="relative py-20 text-center overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, #1B5E20 0%, #2E7D32 60%, #388E3C 100%)' }}
+        className="relative py-24 text-center overflow-hidden"
+        style={{ background: 'linear-gradient(160deg, #1B5E20 0%, #2E7D32 50%, #1B5E20 100%)' }}
       >
-        {/* Padrão hexagonal decorativo */}
+        {/* Linhas diagonais decorativas */}
         <div
           className="absolute inset-0 opacity-5"
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            backgroundImage: 'repeating-linear-gradient(45deg, white 0, white 1px, transparent 0, transparent 50%)',
+            backgroundSize:  '20px 20px',
           }}
         />
-        {/* Círculos decorativos */}
-        <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full opacity-10"
-          style={{ background: '#FFC107' }} />
-        <div className="absolute -bottom-20 -right-20 w-80 h-80 rounded-full opacity-10"
-          style={{ background: '#FFC107' }} />
+        {/* Glow dourado central */}
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full opacity-10 blur-3xl pointer-events-none"
+          style={{ background: '#FFC107' }}
+        />
 
-        <div className="relative z-10 max-w-3xl mx-auto px-4">
-          {/* Badge */}
+        <div className="relative z-10 max-w-2xl mx-auto px-4">
+          {/* Ícone troféu */}
           <div
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-full mb-6"
-            style={{ background: 'rgba(255,193,7,0.2)', border: '1px solid rgba(255,193,7,0.4)' }}
+            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-6"
+            style={{
+              background: 'rgba(255,193,7,0.15)',
+              border:     '1px solid rgba(255,193,7,0.3)',
+            }}
           >
-            <Trophy size={16} style={{ color: '#FFC107' }} />
-            <span className="text-sm font-bold" style={{ color: '#FFC107' }}>Resultados Oficiais</span>
+            <Trophy size={32} style={{ color: '#FFC107' }} />
           </div>
 
           <h1 className="text-5xl lg:text-6xl font-black text-white mb-4 leading-tight">
-            Histórico de<br />
-            <span style={{ color: '#FFC107' }}>Resultados</span>
+            Histórico de Resultados
           </h1>
 
-          <p className="text-green-200 text-lg max-w-xl mx-auto">
-            Consulte os contemplados de todas as edições encerradas
-          </p>
+          <div className="w-16 h-1 rounded-full mx-auto mb-5" style={{ background: '#FFC107' }} />
 
-          {/* Stats decorativos */}
-          <div className="flex items-center justify-center gap-8 mt-8">
-            <div className="text-center">
-              <p className="text-2xl font-black text-white">{data?.edicoes?.length || 0}</p>
-              <p className="text-xs text-green-300 uppercase tracking-wider">Edições</p>
-            </div>
-            <div className="w-px h-10 bg-green-600" />
-            <div className="text-center">
-              <p className="text-2xl font-black" style={{ color: '#FFC107' }}>100%</p>
-              <p className="text-xs text-green-300 uppercase tracking-wider">Transparente</p>
-            </div>
-            <div className="w-px h-10 bg-green-600" />
-            <div className="text-center">
-              <p className="text-2xl font-black text-white">PIX</p>
-              <p className="text-xs text-green-300 uppercase tracking-wider">Pagamento</p>
-            </div>
-          </div>
+          <p className="text-green-200 text-lg">
+            Consulte os ganhadores e dezenas sorteadas<br />
+            de todas as edições encerradas
+          </p>
         </div>
       </section>
 
