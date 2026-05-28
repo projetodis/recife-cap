@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
   Layout, Save, Plus, Trash2, Camera, Eye, EyeOff,
-  Upload, ChevronUp, ChevronDown, Star, Image as ImageIcon,
+  Upload, ChevronUp, ChevronDown, Star, Image as ImageIcon, Send,
 } from 'lucide-react'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -84,15 +84,19 @@ function SectionHero({ localConfigs, onChange, uploadingKey, uploadMidia }: {
   uploadMidia: (chave: string, e: React.ChangeEvent<HTMLInputElement>) => Promise<void>
 }) {
   const mediaFields = [
-    { chave: 'logo_url',              label: 'Logo principal',         hint: 'PNG transparente, 400×400px' },
-    { chave: 'fundo_hero_url',        label: 'Fundo hero — Desktop',   hint: 'JPG/PNG, 1920×1080px landscape' },
-    { chave: 'fundo_hero_mobile_url', label: 'Fundo hero — Mobile',    hint: 'JPG/PNG, 800×1600px portrait' },
+    { chave: 'logo_url',                   label: 'Logo principal',               hint: 'PNG transparente, 400×400px' },
+    { chave: 'fundo_hero_url',             label: 'Fundo hero — Desktop',         hint: 'JPG/PNG, 1920×1080px landscape' },
+    { chave: 'fundo_hero_mobile_url',      label: 'Fundo hero — Mobile',          hint: 'JPG/PNG, 800×1600px portrait' },
+    { chave: 'banner_sorteio_mobile_url',  label: 'Banner sorteio — Mobile',      hint: 'JPG/PNG, 800×400px' },
   ]
   const textFields = [
-    { chave: 'nome_sistema',         label: 'Nome do sistema',   placeholder: 'RECIFE CAP' },
-    { chave: 'slogan',               label: 'Slogan',             placeholder: 'FILANTROPIA PREMIÁVEL' },
-    { chave: 'texto_btn_principal',  label: 'Botão principal',    placeholder: 'Quero participar →' },
-    { chave: 'texto_btn_secundario', label: 'Botão secundário',   placeholder: 'Ver sorteio' },
+    { chave: 'nome_sistema',         label: 'Nome do sistema',        placeholder: 'RECIFE CAP' },
+    { chave: 'hero_titulo',          label: 'Título do hero',         placeholder: 'RECIFE CAP' },
+    { chave: 'hero_badge',           label: 'Texto do badge hero',    placeholder: 'FILANTROPIA PREMIÁVEL' },
+    { chave: 'hero_subtitulo',       label: 'Subtítulo do hero',      placeholder: 'Participe e concorra a prêmios incríveis toda semana' },
+    { chave: 'slogan',               label: 'Slogan (geral)',          placeholder: 'FILANTROPIA PREMIÁVEL' },
+    { chave: 'texto_btn_principal',  label: 'Botão principal',        placeholder: 'Quero participar →' },
+    { chave: 'texto_btn_secundario', label: 'Botão secundário',       placeholder: 'Ver sorteio' },
   ]
 
   return (
@@ -151,8 +155,12 @@ function SectionSorteio({ configs, onChange, onSave, saving }: {
       <Field label="Título da seção" value={configs['sorteio_titulo'] ?? ''} onChange={v => onChange('sorteio_titulo', v)} placeholder="Sorteio da Semana" />
       <Field label="Subtítulo / chamada" value={configs['sorteio_subtitulo'] ?? ''} onChange={v => onChange('sorteio_subtitulo', v)} placeholder="Prêmio acumulado desta edição" />
       <Field label="Texto de chamada para ação" value={configs['sorteio_cta'] ?? ''} onChange={v => onChange('sorteio_cta', v)} placeholder="Garanta já sua cartela!" />
+      <div className="grid grid-cols-2 gap-4">
+        <Field label="Dia da semana" value={configs['sorteio_dia_semana'] ?? ''} onChange={v => onChange('sorteio_dia_semana', v)} placeholder="Sábado" />
+        <Field label="Horário" value={configs['sorteio_horario'] ?? ''} onChange={v => onChange('sorteio_horario', v)} placeholder="09h00" />
+      </div>
       <p className="text-xs text-gray-400">
-        A data, hora e valor são puxados automaticamente da edição ativa em <strong>Edições</strong>.
+        O valor exato do prêmio é puxado automaticamente da edição ativa em <strong>Edições</strong>. O dia e horário aqui sobrescrevem o texto padrão exibido no site.
       </p>
       <div className="pt-2 flex justify-end">
         <SaveBtn saving={saving} onClick={onSave} />
@@ -612,15 +620,20 @@ export default function AdminLandingPage() {
                       onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
                     <h1 className="text-white font-black text-2xl leading-tight"
                       style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
-                      {localConfigs.nome_sistema || 'RECIFE CAP'}
+                      {localConfigs.hero_titulo || localConfigs.nome_sistema || 'RECIFE CAP'}
                     </h1>
                     <p className="font-bold text-xs tracking-widest mt-1" style={{ color: '#FFC107' }}>
-                      {(localConfigs.slogan || 'FILANTROPIA PREMIÁVEL').toUpperCase()}
+                      {(localConfigs.hero_badge || localConfigs.slogan || 'FILANTROPIA PREMIÁVEL').toUpperCase()}
                     </p>
+                    {localConfigs.hero_subtitulo && (
+                      <p className="text-white/80 text-xs mt-1 max-w-[180px] leading-tight">
+                        {localConfigs.hero_subtitulo}
+                      </p>
+                    )}
                     <div className="border border-white/30 rounded-full px-3 py-1.5 mt-3 mb-4"
                       style={{ background: 'rgba(0,0,0,0.2)' }}>
                       <span className="text-white font-bold" style={{ fontSize: '9px' }}>
-                        PRÓXIMO SORTEIO: 31/05 ÀS 09H00
+                        PRÓXIMO SORTEIO: {localConfigs.sorteio_dia_semana?.toUpperCase() || 'SÁBADO'} ÀS {localConfigs.sorteio_horario?.toUpperCase() || '09H00'}
                       </span>
                     </div>
                     <div className="w-full space-y-2">
@@ -651,10 +664,10 @@ export default function AdminLandingPage() {
                   className="w-10 h-10 object-contain mb-1"
                   onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
                 <h1 className="text-white font-black text-xl" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>
-                  {localConfigs.nome_sistema || 'RECIFE CAP'}
+                  {localConfigs.hero_titulo || localConfigs.nome_sistema || 'RECIFE CAP'}
                 </h1>
                 <p className="font-bold text-xs tracking-widest mt-0.5" style={{ color: '#FFC107' }}>
-                  {(localConfigs.slogan || 'FILANTROPIA PREMIÁVEL').toUpperCase()}
+                  {(localConfigs.hero_badge || localConfigs.slogan || 'FILANTROPIA PREMIÁVEL').toUpperCase()}
                 </p>
                 <div className="flex gap-2 mt-3">
                   <span className="px-4 py-1.5 rounded-full text-xs font-black"
@@ -673,9 +686,10 @@ export default function AdminLandingPage() {
         {/* Botão publicar */}
         <div className="p-4 border-t border-gray-200 bg-white flex-shrink-0">
           <button onClick={publicarAlteracoes} disabled={salvando}
-            className="w-full py-3 rounded-xl font-black text-white text-sm transition-all hover:opacity-90 disabled:opacity-60"
+            className="w-full py-3 rounded-xl font-black text-white text-sm transition-all hover:opacity-90 disabled:opacity-60 flex items-center justify-center gap-2"
             style={{ background: 'linear-gradient(135deg, #2E7D32, #43A047)' }}>
-            {salvando ? 'Publicando…' : '🚀 Publicar alterações'}
+            <Send size={15} className="flex-shrink-0" />
+            {salvando ? 'Publicando…' : 'Publicar alterações'}
           </button>
           <p className="text-xs text-gray-400 text-center mt-2">
             As alterações ficam visíveis imediatamente

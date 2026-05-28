@@ -19,6 +19,11 @@ export default function ThemeProvider({ children, initialConfigs = {} }: ThemePr
       if (configs.cor_secundaria) {
         root.style.setProperty('--color-secondary', configs.cor_secundaria)
       }
+      if (configs.cor_sidebar)  root.style.setProperty('--dash-sidebar',    configs.cor_sidebar)
+      if (configs.cor_header)   root.style.setProperty('--dash-header',     configs.cor_header)
+      if (configs.cor_hero_bg)  root.style.setProperty('--color-hero-bg',   configs.cor_hero_bg)
+      if (configs.cor_hero_text) root.style.setProperty('--color-hero-text', configs.cor_hero_text)
+      if (configs.cor_site_bg)  root.style.setProperty('--color-site-bg',   configs.cor_site_bg)
       if (configs.nome_sistema) {
         document.title = configs.nome_sistema
       }

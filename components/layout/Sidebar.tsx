@@ -119,7 +119,7 @@ export function Sidebar({ role, nome, nivel }: SidebarProps) {
       <button
         onClick={() => setIsOpen(true)}
         className="lg:hidden fixed top-3 left-3 z-50 w-10 h-10 text-white rounded-xl flex items-center justify-center shadow-md"
-        style={{ background: '#1B5E20' }}
+        style={{ background: 'var(--dash-sidebar, #1B5E20)' }}
         aria-label="Abrir menu"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -145,7 +145,7 @@ export function Sidebar({ role, nome, nivel }: SidebarProps) {
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0
         `}
-        style={{ background: '#1B5E20' }}
+        style={{ background: 'var(--dash-sidebar, #1B5E20)' }}
       >
         {/* Header: logo + nome do sistema + usuário */}
         <div
@@ -190,8 +190,8 @@ export function Sidebar({ role, nome, nivel }: SidebarProps) {
                     : 'text-green-200 hover:bg-white/10 hover:text-white'
                 }`}
                 style={active ? {
-                  background: '#2E7D32',
-                  borderLeft: '3px solid #FFC107',
+                  background: 'var(--color-primary, #2E7D32)',
+                  borderLeft: '3px solid var(--color-secondary, #FFC107)',
                   paddingLeft: '9px',
                 } : undefined}
               >

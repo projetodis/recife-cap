@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   Settings, Image, Palette, Trophy, Layout,
   FileText, Phone, AlignJustify, Smartphone,
+  LayoutDashboard, CheckCircle, RotateCcw,
 } from 'lucide-react'
 
 const MENU = [
@@ -13,6 +14,9 @@ const MENU = [
     { id: 'geral',  label: 'Geral',        icon: <Settings size={16} /> },
     { id: 'marca',  label: 'Logo & Marca', icon: <Image    size={16} /> },
     { id: 'cores',  label: 'Cores',        icon: <Palette  size={16} /> },
+  ]},
+  { grupo: 'PAINÉIS', itens: [
+    { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={16} /> },
   ]},
   { grupo: 'CONTEÚDO', itens: [
     { id: 'premios',  label: 'Premios',      icon: <Trophy   size={16} /> },
@@ -141,6 +145,22 @@ export default function AdminConfiguracoesPage() {
 
   const hasPendentes = Object.keys(pendentes).length > 0
 
+  const DEFAULTS: Record<string, string> = {
+    cor_primaria: '#2E7D32', cor_secundaria: '#FFC107',
+    cor_sidebar: '#1B5E20', cor_header: '#2E7D32',
+    cor_hero_bg: '#1B5E20', cor_hero_text: '#FFFFFF', cor_site_bg: '#F5F7FA',
+  }
+
+  function resetarCores() {
+    if (!confirm('Resetar todas as cores para os padrões Recife Cap?')) return
+    const updates = Object.entries(DEFAULTS).map(([chave, valor]) => ({ chave, valor }))
+    fetch('/api/admin/config', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    }).then(r => r.ok && (setConfigs(c => ({ ...c, ...DEFAULTS })), setSucesso('Cores resetadas para o padrão!')))
+  }
+
   // ── Componentes inline ────────────────────────────────────────────────────
   function Field({ chave, label, tipo = 'text', placeholder }: {
     chave: string; label: string; tipo?: string; placeholder?: string
@@ -203,14 +223,25 @@ export default function AdminConfiguracoesPage() {
           <h1 className="text-2xl font-bold text-gray-900">Configurações</h1>
           <p className="text-gray-500 text-sm mt-0.5">White label e personalização do sistema</p>
         </div>
-        <button
-          onClick={salvarTudo}
-          disabled={!hasPendentes || salvando}
-          className="px-5 py-2.5 rounded-xl text-white font-bold text-sm disabled:opacity-40 transition-all"
-          style={{ background: hasPendentes ? 'var(--color-primary)' : '#9ca3af' }}
-        >
-          {salvando ? 'Salvando...' : `Salvar tudo${hasPendentes ? ` (${Object.keys(pendentes).length})` : ''}`}
-        </button>
+        <div className="flex items-center gap-2">
+          {secao === 'cores' || secao === 'dashboard' ? (
+            <button
+              onClick={resetarCores}
+              className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-gray-600 font-medium text-sm border border-gray-200 hover:bg-gray-50 transition-all"
+            >
+              <RotateCcw size={14} />
+              Resetar padrões
+            </button>
+          ) : null}
+          <button
+            onClick={salvarTudo}
+            disabled={!hasPendentes || salvando}
+            className="px-5 py-2.5 rounded-xl text-white font-bold text-sm disabled:opacity-40 transition-all"
+            style={{ background: hasPendentes ? 'var(--color-primary)' : '#9ca3af' }}
+          >
+            {salvando ? 'Salvando...' : `Salvar tudo${hasPendentes ? ` (${Object.keys(pendentes).length})` : ''}`}
+          </button>
+        </div>
       </div>
 
       {msg && (
@@ -221,8 +252,9 @@ export default function AdminConfiguracoesPage() {
         </div>
       )}
       {sucesso && (
-        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm">
-          ✓ {sucesso}
+        <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm">
+          <CheckCircle size={15} className="flex-shrink-0" />
+          {sucesso}
         </div>
       )}
 
@@ -316,38 +348,51 @@ export default function AdminConfiguracoesPage() {
 
           {/* ── CORES ────────────────────────────────────────────────── */}
           {secao === 'cores' && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-6">
-              <h2 className="font-bold text-gray-800 text-lg">Cores</h2>
+            <div className="space-y-5">
+              <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
+                <h2 className="font-bold text-gray-800 text-lg">Cores principais</h2>
+                {[
+                  { chave: 'cor_primaria',   label: 'Cor principal',  exemplo: 'Botões, links, ativo na sidebar' },
+                  { chave: 'cor_secundaria', label: 'Cor secundária', exemplo: 'Badges dourados, prêmios, destaques' },
+                ].map(({ chave, label, exemplo }) => (
+                  <div key={chave} className="flex items-center gap-4 p-4 border border-gray-100 rounded-2xl">
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-gray-700">{label}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{exemplo}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <input type="color" value={val(chave) || '#000000'} onChange={e => set(chave, e.target.value)}
+                        className="w-12 h-12 rounded-xl cursor-pointer border-0 p-0.5 bg-transparent" />
+                      <input type="text" value={val(chave)} onChange={e => set(chave, e.target.value)}
+                        className={`border rounded-xl px-3 py-2 text-sm font-mono w-28 focus:outline-none focus:border-green-400 ${chave in pendentes ? 'border-yellow-300 bg-yellow-50' : 'border-gray-200'}`} />
+                      <div className="w-10 h-10 rounded-xl border border-gray-200 shadow-sm" style={{ background: val(chave) }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
 
-              {[
-                { chave: 'cor_primaria',   label: 'Cor principal',  exemplo: 'Botões, links, sidebar, destaque' },
-                { chave: 'cor_secundaria', label: 'Cor secundária', exemplo: 'Badges dourados, prêmios, moedas' },
-              ].map(({ chave, label, exemplo }) => (
-                <div key={chave} className="flex items-center gap-4 p-4 border border-gray-100 rounded-2xl">
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-700">{label}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{exemplo}</p>
+              <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
+                <h2 className="font-bold text-gray-800 text-lg">Cores do site público</h2>
+                {[
+                  { chave: 'cor_hero_bg',   label: 'Fundo do hero',    exemplo: 'Cor quando não há imagem de fundo' },
+                  { chave: 'cor_hero_text', label: 'Texto no hero',     exemplo: 'Cor do título e textos sobre o hero' },
+                  { chave: 'cor_site_bg',   label: 'Fundo do site',     exemplo: 'Cor de fundo geral das páginas públicas' },
+                ].map(({ chave, label, exemplo }) => (
+                  <div key={chave} className="flex items-center gap-4 p-4 border border-gray-100 rounded-2xl">
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-gray-700">{label}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{exemplo}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <input type="color" value={val(chave) || '#000000'} onChange={e => set(chave, e.target.value)}
+                        className="w-12 h-12 rounded-xl cursor-pointer border-0 p-0.5 bg-transparent" />
+                      <input type="text" value={val(chave)} onChange={e => set(chave, e.target.value)}
+                        className={`border rounded-xl px-3 py-2 text-sm font-mono w-28 focus:outline-none focus:border-green-400 ${chave in pendentes ? 'border-yellow-300 bg-yellow-50' : 'border-gray-200'}`} />
+                      <div className="w-10 h-10 rounded-xl border border-gray-200 shadow-sm" style={{ background: val(chave) }} />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      value={val(chave) || '#000000'}
-                      onChange={e => set(chave, e.target.value)}
-                      className="w-12 h-12 rounded-xl cursor-pointer border-0 p-0.5 bg-transparent"
-                    />
-                    <input
-                      type="text"
-                      value={val(chave)}
-                      onChange={e => set(chave, e.target.value)}
-                      className={`border rounded-xl px-3 py-2 text-sm font-mono w-28 focus:outline-none focus:border-green-400 ${
-                        chave in pendentes ? 'border-yellow-300 bg-yellow-50' : 'border-gray-200'
-                      }`}
-                    />
-                    <div className="w-10 h-10 rounded-xl border border-gray-200 shadow-sm"
-                      style={{ background: val(chave) }} />
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
 
               <div className="p-5 bg-gray-50 rounded-2xl space-y-3">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Preview ao vivo</p>
@@ -365,7 +410,7 @@ export default function AdminConfiguracoesPage() {
                     Badge prêmio
                   </span>
                 </div>
-                <div className="flex gap-3 items-center mt-1">
+                <div className="flex gap-3 items-start mt-2">
                   <div className="w-28 rounded-xl p-2 text-xs text-white space-y-1"
                     style={{ background: val('cor_primaria') || 'var(--color-primary)' }}>
                     <div className="bg-white/10 rounded px-2 py-1">Dashboard</div>
@@ -375,7 +420,81 @@ export default function AdminConfiguracoesPage() {
                     </div>
                     <div className="bg-white/10 rounded px-2 py-1">Relatórios</div>
                   </div>
-                  <p className="text-xs text-gray-400">Preview da sidebar</p>
+                  <div className="flex-1 rounded-xl overflow-hidden h-16"
+                    style={{ background: val('cor_hero_bg') || '#1B5E20' }}>
+                    <div className="h-full flex items-center justify-center">
+                      <span className="text-sm font-bold" style={{ color: val('cor_hero_text') || '#FFFFFF' }}>
+                        Hero preview
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── DASHBOARD INTERNO ────────────────────────────────── */}
+          {secao === 'dashboard' && (
+            <div className="space-y-5">
+              <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
+                <div>
+                  <h2 className="font-bold text-gray-800 text-lg">Dashboard Interno</h2>
+                  <p className="text-sm text-gray-400 mt-0.5">Cores da sidebar e cabeçalho dos painéis admin, distribuidor e PDV.</p>
+                </div>
+                {[
+                  { chave: 'cor_sidebar', label: 'Cor da sidebar',   exemplo: 'Fundo do menu lateral em todos os painéis' },
+                  { chave: 'cor_header',  label: 'Cor do cabeçalho', exemplo: 'Cabeçalho dos painéis internos' },
+                ].map(({ chave, label, exemplo }) => (
+                  <div key={chave} className="flex items-center gap-4 p-4 border border-gray-100 rounded-2xl">
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-gray-700">{label}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{exemplo}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <input type="color" value={val(chave) || '#000000'} onChange={e => set(chave, e.target.value)}
+                        className="w-12 h-12 rounded-xl cursor-pointer border-0 p-0.5 bg-transparent" />
+                      <input type="text" value={val(chave)} onChange={e => set(chave, e.target.value)}
+                        className={`border rounded-xl px-3 py-2 text-sm font-mono w-28 focus:outline-none focus:border-green-400 ${chave in pendentes ? 'border-yellow-300 bg-yellow-50' : 'border-gray-200'}`} />
+                      <div className="w-10 h-10 rounded-xl border border-gray-200 shadow-sm" style={{ background: val(chave) }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Preview sidebar */}
+              <div className="bg-white rounded-2xl border border-gray-100 p-6">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Preview da sidebar</p>
+                <div className="flex gap-4 items-start">
+                  <div className="w-40 rounded-2xl overflow-hidden shadow-md flex-shrink-0"
+                    style={{ background: val('cor_sidebar') || '#1B5E20' }}>
+                    <div className="px-3 py-3 border-b border-white/10">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-white/20" />
+                        <div>
+                          <div className="h-2.5 w-16 rounded bg-white/80 mb-1" />
+                          <div className="h-2 w-12 rounded bg-white/40" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="px-2 py-2 space-y-0.5">
+                      <div className="px-2 py-1.5 rounded-lg text-xs text-white/40">Dashboard</div>
+                      <div className="px-2 py-1.5 rounded-lg text-xs text-white font-medium border-l-2 flex items-center gap-1"
+                        style={{ background: val('cor_header') || '#2E7D32', borderColor: val('cor_secundaria') || '#FFC107' }}>
+                        <div className="w-3 h-3 rounded-sm bg-white/30" />
+                        Sorteios
+                      </div>
+                      <div className="px-2 py-1.5 rounded-lg text-xs text-white/40">Relatórios</div>
+                      <div className="px-2 py-1.5 rounded-lg text-xs text-white/40">Configurações</div>
+                    </div>
+                  </div>
+                  <div className="text-xs text-gray-400 space-y-2 pt-2">
+                    <p><span className="font-medium text-gray-600">Sidebar:</span> {val('cor_sidebar') || '#1B5E20'}</p>
+                    <p><span className="font-medium text-gray-600">Item ativo:</span> {val('cor_header') || '#2E7D32'}</p>
+                    <p><span className="font-medium text-gray-600">Borda ativa:</span> {val('cor_secundaria') || '#FFC107'}</p>
+                    <p className="text-[11px] text-gray-300 mt-3 max-w-[180px]">
+                      Alterações entram em vigor após recarregar a página do painel.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -447,13 +566,23 @@ export default function AdminConfiguracoesPage() {
 
           {/* ── BANNERS ──────────────────────────────────────────────── */}
           {secao === 'banners' && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-6">
-              <h2 className="font-bold text-gray-800 text-lg">Banners & Mídias</h2>
-              <div className="grid grid-cols-2 gap-5">
-                <UploadCard chave="banner_home_url"    label="Banner da Home"    dimensao="Recomendado: 1200×400px" />
-                <UploadCard chave="banner_compra_url"  label="Banner de Compra"  dimensao="Recomendado: 600×800px" />
-                <UploadCard chave="banner_sorteio_url" label="Banner do Sorteio" dimensao="Recomendado: 1200×400px" />
-                <UploadCard chave="cartela_imagem_url" label="Cartela — Seção Quem Somos" dimensao="PNG/JPG, ideal 900×500px" />
+            <div className="space-y-5">
+              <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
+                <h2 className="font-bold text-gray-800 text-lg">Hero</h2>
+                <div className="grid grid-cols-2 gap-5">
+                  <UploadCard chave="fundo_hero_url"        label="Fundo hero — Desktop"   dimensao="JPG/PNG, 1920×1080px" />
+                  <UploadCard chave="fundo_hero_mobile_url" label="Fundo hero — Mobile"    dimensao="JPG/PNG, 800×1600px portrait" />
+                </div>
+              </div>
+              <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
+                <h2 className="font-bold text-gray-800 text-lg">Banners internos</h2>
+                <div className="grid grid-cols-2 gap-5">
+                  <UploadCard chave="banner_home_url"           label="Banner da Home"              dimensao="Recomendado: 1200×400px" />
+                  <UploadCard chave="banner_compra_url"         label="Banner de Compra"            dimensao="Recomendado: 600×800px" />
+                  <UploadCard chave="banner_sorteio_url"        label="Banner do Sorteio — Desktop" dimensao="Recomendado: 1200×400px" />
+                  <UploadCard chave="banner_sorteio_mobile_url" label="Banner do Sorteio — Mobile"  dimensao="Recomendado: 800×400px" />
+                  <UploadCard chave="cartela_imagem_url"        label="Cartela — Quem Somos"        dimensao="PNG/JPG, ideal 900×500px" />
+                </div>
               </div>
             </div>
           )}
