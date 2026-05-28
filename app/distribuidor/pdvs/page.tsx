@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import PDVsView from './PDVsView'
+import SaquesView from './SaquesView'
 
 export interface PDVRow {
   id: string
@@ -21,6 +22,17 @@ export interface PDVRow {
   rota_nome: string | null
   cartelas_estoque: number
   cartelas_vendidas: number
+}
+
+export interface SaqueRow {
+  id: string
+  pdv_id: string
+  pdv_nome: string
+  responsavel_nome: string
+  valor: number
+  chave_pix: string
+  status: string
+  created_at: string
 }
 
 export default async function PDVsPage() {
@@ -104,5 +116,37 @@ export default async function PDVsPage() {
     cartelas_vendidas: vendidasMap[p.id] ?? 0,
   }))
 
-  return <PDVsView pdvs={pdvs} distribuidorId={dist.id} />
+  // Saques pendentes dos PDVs deste distribuidor
+  const pdvNomeMap: Record<string, { nome: string; responsavel_nome: string }> = {}
+  for (const p of pdvList as any[]) {
+    pdvNomeMap[p.id] = { nome: p.nome, responsavel_nome: p.responsavel_nome ?? '' }
+  }
+
+  let saques: SaqueRow[] = []
+  if (pdvIds.length > 0) {
+    const { data: saquesRaw } = await supabase
+      .from('saques_pdv')
+      .select('id, pdv_id, valor, chave_pix, status, created_at')
+      .in('pdv_id', pdvIds)
+      .order('created_at', { ascending: false })
+      .limit(50)
+
+    saques = (saquesRaw ?? []).map((s: any) => ({
+      id:               s.id,
+      pdv_id:           s.pdv_id,
+      pdv_nome:         pdvNomeMap[s.pdv_id]?.nome ?? '—',
+      responsavel_nome: pdvNomeMap[s.pdv_id]?.responsavel_nome ?? '—',
+      valor:            Number(s.valor),
+      chave_pix:        s.chave_pix,
+      status:           s.status,
+      created_at:       s.created_at,
+    }))
+  }
+
+  return (
+    <>
+      <PDVsView pdvs={pdvs} distribuidorId={dist.id} />
+      {saques.length > 0 && <SaquesView saques={saques} />}
+    </>
+  )
 }

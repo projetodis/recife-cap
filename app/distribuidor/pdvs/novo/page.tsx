@@ -2,12 +2,14 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { Lock } from 'lucide-react'
 
 interface Form {
   nome: string
   responsavel_nome: string
   telefone: string
+  email: string
+  senha: string
   cep: string
   logradouro: string
   numero: string
@@ -23,6 +25,7 @@ interface Form {
 
 const FORM_INICIAL: Form = {
   nome: '', responsavel_nome: '', telefone: '',
+  email: '', senha: '',
   cep: '', logradouro: '', numero: '', complemento: '',
   bairro: '', cidade: '', regiao: '', uf: '',
   comissao_pct: '5',
@@ -44,13 +47,12 @@ function mascaraTelefone(v: string) {
 
 export default function NovoPDVPage() {
   const router = useRouter()
-  const supabase = createClient()
 
   const [form, setForm] = useState<Form>(FORM_INICIAL)
-  const [carregando, setCarregando]     = useState(false)
-  const [buscandoCep, setBuscandoCep]   = useState(false)
-  const [buscandoGeo, setBuscandoGeo]   = useState(false)
-  const [buscandoEnd, setBuscandoEnd]   = useState(false)
+  const [carregando, setCarregando]   = useState(false)
+  const [buscandoCep, setBuscandoCep] = useState(false)
+  const [buscandoGeo, setBuscandoGeo] = useState(false)
+  const [buscandoEnd, setBuscandoEnd] = useState(false)
   const [erro, setErro]     = useState('')
   const [sucesso, setSucesso] = useState('')
 
@@ -109,14 +111,13 @@ export default function NovoPDVPage() {
           cidade:     addr.city ?? addr.town ?? addr.municipality ?? f.cidade,
           uf:         addr.state_code ?? (addr.ISO3166_2_lvl4 ? addr.ISO3166_2_lvl4.replace('BR-', '') : undefined) ?? f.uf,
         }))
-        setSucesso(`📍 Localização capturada: ${addr.city ?? addr.town}, ${addr.state}`)
+        setSucesso(`Localização capturada: ${addr.city ?? addr.town}, ${addr.state}`)
       } catch {
         setForm(f => ({ ...f, latitude: lat, longitude: lng }))
-        setSucesso(`📍 Localização capturada: ${Number(lat).toFixed(6)}, ${Number(lng).toFixed(6)}`)
+        setSucesso(`Localização capturada: ${Number(lat).toFixed(6)}, ${Number(lng).toFixed(6)}`)
       }
     }
 
-    // Tenta GPS do navegador primeiro
     if (navigator.geolocation) {
       const gpsPromise = new Promise<GeolocationPosition>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
@@ -125,28 +126,21 @@ export default function NovoPDVPage() {
           maximumAge: 60000,
         })
       })
-
       try {
         const pos = await gpsPromise
-        await aplicarLocalizacao(
-          pos.coords.latitude.toString(),
-          pos.coords.longitude.toString(),
-        )
+        await aplicarLocalizacao(pos.coords.latitude.toString(), pos.coords.longitude.toString())
         setBuscandoGeo(false)
         return
-      } catch {
-        // GPS falhou, tenta por IP
-      }
+      } catch { /* GPS falhou, tenta por IP */ }
     }
 
-    // Fallback: geolocalização por IP (ipapi.co gratuito)
     try {
       const res = await fetch('https://ipapi.co/json/')
       const data = await res.json()
       if (data.latitude && data.longitude) {
         await aplicarLocalizacao(String(data.latitude), String(data.longitude))
       } else {
-        setErro('Não foi possível obter localização. Use o botão "Buscar endereço no mapa".')
+        setErro('Não foi possível obter localização. Use "Buscar endereço no mapa".')
       }
     } catch {
       setErro('Não foi possível obter localização. Digite o CEP e use "Buscar endereço no mapa".')
@@ -168,16 +162,11 @@ export default function NovoPDVPage() {
       const query = encodeURIComponent(
         [logradouro, numero, bairro, cidade, 'Brasil'].filter(Boolean).join(', ')
       )
-      const res  = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`
-      )
+      const res  = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`)
       const data = await res.json()
-      if (!data.length) {
-        setErro('Endereço não encontrado. Tente ser mais específico.')
-        return
-      }
+      if (!data.length) { setErro('Endereço não encontrado. Tente ser mais específico.'); return }
       setForm(f => ({ ...f, latitude: data[0].lat, longitude: data[0].lon }))
-      setSucesso(`📍 Endereço localizado: ${data[0].display_name}`)
+      setSucesso(`Endereço localizado: ${data[0].display_name}`)
     } catch {
       setErro('Erro ao buscar endereço no mapa.')
     } finally {
@@ -185,49 +174,42 @@ export default function NovoPDVPage() {
     }
   }
 
-  /* ── Submit ── */
+  /* ── Submit → API ── */
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setErro('')
     setCarregando(true)
 
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Não autenticado.')
-
-      const { data: dist } = await supabase
-        .from('distribuidores')
-        .select('id')
-        .eq('user_id', user.id)
-        .single()
-
-      if (!dist) throw new Error('Distribuidor não encontrado.')
-
-      const { error } = await supabase.from('pontos_de_venda').insert({
-        distribuidor_id:  dist.id,
-        nome:             form.nome,
-        responsavel_nome: form.responsavel_nome,
-        telefone:         form.telefone,
-        cep:              form.cep,
-        endereco:         `${form.logradouro}, ${form.numero}`,
-        numero:           form.numero,
-        complemento:      form.complemento,
-        bairro:           form.bairro,
-        cidade:           form.cidade,
-        uf:               form.uf,
-        comissao_pct:     parseFloat(form.comissao_pct),
-        regiao:           form.regiao || null,
-        latitude:         form.latitude  ? parseFloat(form.latitude)  : null,
-        longitude:        form.longitude ? parseFloat(form.longitude) : null,
-        maps_url:         form.latitude  ? `https://maps.google.com/?q=${form.latitude},${form.longitude}` : null,
+      const response = await fetch('/api/distribuidor/criar-pdv', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome:             form.nome,
+          responsavel_nome: form.responsavel_nome,
+          telefone:         form.telefone,
+          email:            form.email,
+          senha:            form.senha,
+          cep:              form.cep,
+          logradouro:       form.logradouro,
+          numero:           form.numero,
+          complemento:      form.complemento,
+          bairro:           form.bairro,
+          cidade:           form.cidade,
+          uf:               form.uf,
+          regiao:           form.regiao || null,
+          latitude:         form.latitude  ? parseFloat(form.latitude)  : null,
+          longitude:        form.longitude ? parseFloat(form.longitude) : null,
+          maps_url:         form.latitude  ? `https://maps.google.com/?q=${form.latitude},${form.longitude}` : null,
+          comissao_pct:     parseFloat(form.comissao_pct),
+        }),
       })
-
-      if (error) throw new Error(error.message)
-
-      setSucesso('PDV cadastrado com sucesso!')
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || 'Erro ao criar PDV')
+      setSucesso('PDV criado com sucesso!')
       setTimeout(() => router.push('/distribuidor/pdvs'), 1200)
     } catch (err: unknown) {
-      setErro(err instanceof Error ? err.message : 'Erro ao cadastrar PDV.')
+      setErro(err instanceof Error ? err.message : 'Erro ao criar PDV.')
     } finally {
       setCarregando(false)
     }
@@ -256,7 +238,7 @@ export default function NovoPDVPage() {
               disabled={buscandoGeo || buscandoEnd}
               className="flex-1 px-4 py-2.5 text-sm border border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition disabled:opacity-50 font-medium"
             >
-              {buscandoGeo ? 'Capturando...' : '📍 Estou aqui agora'}
+              {buscandoGeo ? 'Capturando...' : 'Estou aqui agora'}
             </button>
             <button
               type="button"
@@ -264,13 +246,13 @@ export default function NovoPDVPage() {
               disabled={buscandoEnd || buscandoGeo}
               className="flex-1 px-4 py-2.5 text-sm border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition disabled:opacity-50 font-medium"
             >
-              {buscandoEnd ? 'Buscando...' : '🔍 Buscar endereço no mapa'}
+              {buscandoEnd ? 'Buscando...' : 'Buscar endereço no mapa'}
             </button>
           </div>
 
           {form.latitude && form.longitude && (
             <div className="mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
-              <p className="text-xs text-emerald-700 font-medium">✅ Localização definida</p>
+              <p className="text-xs text-emerald-700 font-medium">Localização definida</p>
               <p className="text-xs text-emerald-600 mt-1">
                 Lat: {form.latitude} · Lng: {form.longitude}
               </p>
@@ -287,7 +269,7 @@ export default function NovoPDVPage() {
                 onClick={() => setForm(f => ({ ...f, latitude: '', longitude: '' }))}
                 className="ml-4 text-xs text-red-500 hover:text-red-700"
               >
-                ✕ Remover
+                Remover
               </button>
             </div>
           )}
@@ -325,7 +307,7 @@ export default function NovoPDVPage() {
                 type="text"
                 value={form.telefone}
                 onChange={e => set('telefone', mascaraTelefone(e.target.value))}
-                placeholder="(84) 99999-9999"
+                placeholder="(81) 99999-9999"
                 className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
               />
             </div>
@@ -357,7 +339,7 @@ export default function NovoPDVPage() {
                 type="text"
                 value={form.uf}
                 onChange={e => set('uf', e.target.value.toUpperCase().slice(0, 2))}
-                placeholder="RN"
+                placeholder="PE"
                 maxLength={2}
                 className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
               />
@@ -415,7 +397,7 @@ export default function NovoPDVPage() {
                 type="text"
                 value={form.cidade}
                 onChange={e => set('cidade', e.target.value)}
-                placeholder="Natal, Recife..."
+                placeholder="Recife, Caruaru..."
                 required
                 className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
               />
@@ -427,7 +409,7 @@ export default function NovoPDVPage() {
                 type="text"
                 value={form.regiao}
                 onChange={e => set('regiao', e.target.value)}
-                placeholder="Ex: Zona Norte, Zona Sul, Centro..."
+                placeholder="Ex: Zona Norte, Centro..."
                 className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
@@ -451,6 +433,42 @@ export default function NovoPDVPage() {
             <p className="text-xs text-gray-400 mt-1.5">
               Percentual sobre cada venda que o PDV recebe
             </p>
+          </div>
+        </section>
+
+        {/* ── ACESSO DO LOJISTA ── */}
+        <section className="bg-white rounded-xl border border-gray-200 p-6">
+          <h2 className="text-sm font-semibold text-gray-900 mb-1 flex items-center gap-2">
+            <Lock size={15} className="text-emerald-600" />
+            Acesso do lojista
+          </h2>
+          <p className="text-xs text-gray-400 mb-4">
+            Crie as credenciais para o responsável acessar o painel PDV
+          </p>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2 sm:col-span-1">
+              <label className="block text-xs text-gray-500 mb-1.5">Email *</label>
+              <input
+                type="email"
+                value={form.email}
+                onChange={e => set('email', e.target.value)}
+                placeholder="email@exemplo.com"
+                required
+                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
+              />
+            </div>
+            <div className="col-span-2 sm:col-span-1">
+              <label className="block text-xs text-gray-500 mb-1.5">Senha *</label>
+              <input
+                type="password"
+                value={form.senha}
+                onChange={e => set('senha', e.target.value)}
+                placeholder="Mínimo 6 caracteres"
+                required
+                minLength={6}
+                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
+              />
+            </div>
           </div>
         </section>
 
@@ -480,7 +498,7 @@ export default function NovoPDVPage() {
             disabled={carregando}
             className="px-7 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white text-sm font-medium rounded-lg transition"
           >
-            {carregando ? 'Cadastrando...' : 'Cadastrar PDV'}
+            {carregando ? 'Criando...' : 'Criar PDV'}
           </button>
         </div>
 
