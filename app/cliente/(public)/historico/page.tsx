@@ -98,11 +98,11 @@ export default function HistoricoPage() {
   const configs  = useConfig()
   const logoUrl  = configs.logo_url || '/logo.png'
 
-  const [abaAtiva,         setAbaAtiva]         = useState(0)
+  const [abaAtiva,          setAbaAtiva]          = useState<string>('')
   const [edicaoSelecionada, setEdicaoSelecionada] = useState<string>('')
-  const [data,             setData]             = useState<HistoricoData | null>(null)
-  const [loading,          setLoading]          = useState(true)
-  const [baixandoPdf,      setBaixandoPdf]      = useState(false)
+  const [data,              setData]              = useState<HistoricoData | null>(null)
+  const [loading,           setLoading]           = useState(true)
+  const [baixandoPdf,       setBaixandoPdf]       = useState(false)
 
   async function carregarDados(edicaoId?: string) {
     setLoading(true)
@@ -112,6 +112,7 @@ export default function HistoricoPage() {
       const json = await res.json() as HistoricoData
       setData(json)
       if (json.edicao) setEdicaoSelecionada(json.edicao.id)
+      if (json.sorteios?.length) setAbaAtiva(json.sorteios[0].id)
     } catch { /* ignora */ }
     finally { setLoading(false) }
   }
@@ -120,7 +121,7 @@ export default function HistoricoPage() {
 
   function onChangeEdicao(id: string) {
     setEdicaoSelecionada(id)
-    setAbaAtiva(0)
+    setAbaAtiva('')
     carregarDados(id)
   }
 
@@ -153,19 +154,25 @@ export default function HistoricoPage() {
     return p?.nome ?? ABAS_FALLBACK[i] ?? `${i + 1}º Prêmio`
   })
 
-  const sorteioAtual        = sorteiosData.find(s => s.numero_sorteio === abaAtiva + 1)
+  const sorteioAtual        = sorteiosData.find(s => s.id === abaAtiva)
   const dezenasAba          = sorteioAtual?.dezenas_sorteadas ?? []
-  const ganhadoresDoSorteio = ganhadores.filter(g => g.sorteio_numero === abaAtiva + 1)
-  const premioAba           = sorteioAtual?.valor_premio ?? 0
-  const bannerSorteioUrl    = sorteioAtual?.arte_url || sorteioAtual?.banner_url || configs.banner_sorteio_url || null
+  const ganhadoresDoSorteio = sorteioAtual
+    ? ganhadores.filter(g => g.sorteio_id === sorteioAtual.id)
+    : []
+  const premioAba        = sorteioAtual?.valor_premio ?? 0
+  const bannerSorteioUrl = sorteioAtual?.arte_url || sorteioAtual?.banner_url || configs.banner_sorteio_url || null
+  const nomeAbaAtiva     = sorteioAtual?.premios_edicao?.nome
+    || abas[sorteioAtual ? sorteioAtual.numero_sorteio - 1 : 0]
+    || 'Prêmio'
 
   const fotosPremios: Record<number, string> = {
-    0: snapshot?.premio_1_foto_url         || sorteiosData.find(s => s.numero_sorteio === 1)?.premios_edicao?.foto_url || premios.find(p => p.ordem === 1)?.foto_url || logoUrl,
-    1: snapshot?.premio_2_foto_url         || sorteiosData.find(s => s.numero_sorteio === 2)?.premios_edicao?.foto_url || premios.find(p => p.ordem === 2)?.foto_url || logoUrl,
-    2: snapshot?.premio_3_foto_url         || sorteiosData.find(s => s.numero_sorteio === 3)?.premios_edicao?.foto_url || premios.find(p => p.ordem === 3)?.foto_url || logoUrl,
-    3: snapshot?.premio_4_foto_url         || sorteiosData.find(s => s.numero_sorteio === 4)?.premios_edicao?.foto_url || premios.find(p => p.ordem === 4)?.foto_url || logoUrl,
-    4: snapshot?.premio_principal_foto_url || sorteiosData.find(s => s.numero_sorteio === 5)?.premios_edicao?.foto_url || premios.find(p => p.ordem === 5)?.foto_url || logoUrl,
+    1: snapshot?.premio_1_foto_url         || sorteiosData.find(s => s.numero_sorteio === 1)?.premios_edicao?.foto_url || premios.find(p => p.ordem === 1)?.foto_url || logoUrl,
+    2: snapshot?.premio_2_foto_url         || sorteiosData.find(s => s.numero_sorteio === 2)?.premios_edicao?.foto_url || premios.find(p => p.ordem === 2)?.foto_url || logoUrl,
+    3: snapshot?.premio_3_foto_url         || sorteiosData.find(s => s.numero_sorteio === 3)?.premios_edicao?.foto_url || premios.find(p => p.ordem === 3)?.foto_url || logoUrl,
+    4: snapshot?.premio_4_foto_url         || sorteiosData.find(s => s.numero_sorteio === 4)?.premios_edicao?.foto_url || premios.find(p => p.ordem === 4)?.foto_url || logoUrl,
+    5: snapshot?.premio_principal_foto_url || sorteiosData.find(s => s.numero_sorteio === 5)?.premios_edicao?.foto_url || premios.find(p => p.ordem === 5)?.foto_url || logoUrl,
   }
+  const fotoAbaAtiva = fotosPremios[sorteioAtual?.numero_sorteio ?? 0] ?? logoUrl
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -192,69 +199,99 @@ export default function HistoricoPage() {
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <section
-        className="relative py-24 text-center overflow-hidden"
-        style={{ background: 'linear-gradient(160deg, #1B5E20 0%, #2E7D32 50%, #1B5E20 100%)' }}
+        className="relative overflow-hidden"
+        style={{
+          background: 'radial-gradient(ellipse at 30% 50%, #2E7D32 0%, #1B5E20 40%, #0D3B16 100%)',
+          minHeight:  '420px',
+        }}
       >
-        {/* Linhas diagonais decorativas */}
+        {/* Pontos dourados — canto superior direito */}
         <div
-          className="absolute inset-0 opacity-5"
+          className="absolute top-0 right-0 w-48 h-48 opacity-20 pointer-events-none"
           style={{
-            backgroundImage: 'repeating-linear-gradient(45deg, white 0, white 1px, transparent 0, transparent 50%)',
-            backgroundSize:  '20px 20px',
+            backgroundImage: 'radial-gradient(circle, #FFC107 1px, transparent 1px)',
+            backgroundSize:  '16px 16px',
           }}
         />
-        {/* Glow dourado central */}
+        {/* Pontos dourados — canto inferior esquerdo */}
         <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full opacity-10 blur-3xl pointer-events-none"
-          style={{ background: '#FFC107' }}
+          className="absolute bottom-0 left-0 w-48 h-48 opacity-20 pointer-events-none"
+          style={{
+            backgroundImage: 'radial-gradient(circle, #FFC107 1px, transparent 1px)',
+            backgroundSize:  '16px 16px',
+          }}
+        />
+        {/* Arco decorativo direito */}
+        <div
+          className="absolute -right-24 top-1/2 -translate-y-1/2 w-64 h-64 rounded-full pointer-events-none opacity-10"
+          style={{ border: '40px solid #FFC107' }}
+        />
+        {/* Linha dourada horizontal acima das abas */}
+        <div
+          className="absolute bottom-16 left-0 right-0 h-px pointer-events-none"
+          style={{ background: 'linear-gradient(90deg, transparent, rgba(255,193,7,0.4), transparent)' }}
         />
 
-        <div className="relative z-10 max-w-2xl mx-auto px-4">
-          {/* Ícone troféu */}
-          <div
-            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-6"
-            style={{
-              background: 'rgba(255,193,7,0.15)',
-              border:     '1px solid rgba(255,193,7,0.3)',
-            }}
+        {/* Conteúdo central */}
+        <div
+          className="relative z-10 flex flex-col items-center justify-center text-center px-6 pt-16 pb-6"
+          style={{ minHeight: '340px' }}
+        >
+          <h1
+            className="font-black text-white leading-tight mb-4"
+            style={{ fontSize: 'clamp(48px, 8vw, 96px)' }}
           >
-            <Trophy size={32} style={{ color: '#FFC107' }} />
-          </div>
-
-          <h1 className="text-5xl lg:text-6xl font-black text-white mb-4 leading-tight">
-            Histórico de Resultados
+            Histórico de<br />Resultados
           </h1>
 
-          <div className="w-16 h-1 rounded-full mx-auto mb-5" style={{ background: '#FFC107' }} />
+          <div className="w-20 h-1 rounded-full mb-5" style={{ background: '#FFC107' }} />
 
-          <p className="text-green-200 text-lg">
-            Consulte os ganhadores e dezenas sorteadas<br />
-            de todas as edições encerradas
+          <p className="text-green-200 text-lg max-w-md">
+            Consulte os{' '}
+            <span style={{ color: '#FFC107', fontWeight: 700 }}>ganhadores</span>
+            {' '}e{' '}
+            <span style={{ color: '#FFC107', fontWeight: 700 }}>dezenas sorteadas</span>
+            <br />de todas as edições encerradas
           </p>
         </div>
-      </section>
 
-      {/* ── ABAS DOS PRÊMIOS ─────────────────────────────────────────────── */}
-      <div style={{ background: '#1B5E20' }}>
-        <div className="max-w-6xl mx-auto px-4 py-3 flex gap-2 flex-wrap justify-center">
-          {abas.map((aba, i) => (
-            <button
-              key={i}
-              onClick={() => setAbaAtiva(i)}
-              className="px-4 py-1.5 rounded-full text-sm font-semibold transition-all"
-              style={
-                abaAtiva === i
-                  ? { background: '#FFC107', color: '#1B5E20' }
-                  : { background: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.85)' }
-              }
-              onMouseEnter={e => { if (abaAtiva !== i) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.25)' }}
-              onMouseLeave={e => { if (abaAtiva !== i) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.15)' }}
-            >
-              {aba}
-            </button>
-          ))}
+        {/* Abas dentro do hero */}
+        <div className="relative z-10 flex justify-center pb-0">
+          <div
+            className="flex flex-wrap justify-center gap-1 px-3 py-2 rounded-t-2xl"
+            style={{
+              background:     'rgba(0,0,0,0.35)',
+              border:         '1px solid rgba(255,193,7,0.25)',
+              borderBottom:   'none',
+              backdropFilter: 'blur(8px)',
+            }}
+          >
+            {sorteiosData.length === 0 && !loading && (
+              <span className="text-white/40 text-sm px-4 py-2">Sem sorteios registrados</span>
+            )}
+            {sorteiosData.map((s, i) => (
+              <button
+                key={s.id}
+                onClick={() => setAbaAtiva(s.id)}
+                className="px-5 py-2 rounded-xl text-sm font-bold transition-all"
+                style={
+                  abaAtiva === s.id
+                    ? { background: 'linear-gradient(135deg, #FFC107, #FFB300)', color: '#1B5E20' }
+                    : { background: 'transparent', color: 'rgba(255,255,255,0.75)' }
+                }
+                onMouseEnter={e => {
+                  if (abaAtiva !== s.id) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.1)'
+                }}
+                onMouseLeave={e => {
+                  if (abaAtiva !== s.id) (e.currentTarget as HTMLElement).style.background = 'transparent'
+                }}
+              >
+                {s.premios_edicao?.nome || `${i + 1}º Prêmio`}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* ── FILTRO + DOWNLOAD ────────────────────────────────────────────── */}
       <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-4 flex-wrap">
@@ -344,14 +381,14 @@ export default function HistoricoPage() {
                     className="text-xs font-bold px-3 py-1 rounded-full"
                     style={{ background: '#FFC107', color: '#1B5E20' }}
                   >
-                    {abas[abaAtiva]}
+                    {nomeAbaAtiva}
                   </span>
                 </div>
                 <div className="p-6 flex flex-col items-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={fotosPremios[abaAtiva] ?? logoUrl}
-                    alt={abas[abaAtiva]}
+                    src={fotoAbaAtiva}
+                    alt={nomeAbaAtiva}
                     className="w-full max-h-40 object-contain rounded-xl"
                     onError={e => { (e.currentTarget as HTMLImageElement).src = logoUrl }}
                   />
@@ -474,14 +511,12 @@ export default function HistoricoPage() {
 
                 <div className="divide-y divide-gray-50">
                   {sorteiosData.map((s, index) => {
-                    const ganhadoresCount = ganhadores.filter(
-                      g => g.sorteio_id === s.id || g.sorteio_numero === s.numero_sorteio
-                    ).length
-                    const isAtivo = s.numero_sorteio === abaAtiva + 1
+                    const ganhadoresCount = ganhadores.filter(g => g.sorteio_id === s.id).length
+                    const isAtivo = s.id === abaAtiva
                     return (
                       <button
                         key={s.id}
-                        onClick={() => setAbaAtiva(s.numero_sorteio - 1)}
+                        onClick={() => setAbaAtiva(s.id)}
                         className="w-full flex items-center gap-4 px-5 py-4 transition-all hover:bg-gray-50 text-left"
                         style={{ background: isAtivo ? 'rgba(46,125,50,0.05)' : 'white' }}
                       >
