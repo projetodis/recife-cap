@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
   Layout, Save, Plus, Trash2, Camera, Eye, EyeOff,
-  Upload, ChevronUp, ChevronDown, Star, Image as ImageIcon,
+  Upload, ChevronUp, ChevronDown, Star, Image as ImageIcon, RefreshCw,
 } from 'lucide-react'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -527,6 +527,7 @@ export default function AdminLandingPage() {
   const [salvando, setSalvando]           = useState(false)
   const [previewMode, setPreviewMode]     = useState<'mobile' | 'desktop'>('mobile')
   const [uploadingKey, setUploadingKey]   = useState<string | null>(null)
+  const [iframeKey, setIframeKey]         = useState(0)
 
   useEffect(() => {
     fetch('/api/config')
@@ -563,7 +564,7 @@ export default function AdminLandingPage() {
     e.target.value = ''
   }
 
-  async function publicarAlteracoes() {
+  async function handlePublicar() {
     setSalvando(true)
     const updates = Object.entries(localConfigs).map(([chave, valor]) => ({ chave, valor }))
     await fetch('/api/admin/config', {
@@ -572,12 +573,13 @@ export default function AdminLandingPage() {
       body: JSON.stringify(updates),
     })
     setSalvando(false)
+    setIframeKey(k => k + 1)
   }
 
   const sharedProps = {
     configs: localConfigs,
     onChange,
-    onSave: publicarAlteracoes,
+    onSave: handlePublicar,
     saving: salvando,
   }
 
@@ -648,302 +650,83 @@ export default function AdminLandingPage() {
         )}
       </div>
 
-      {/* ── Preview dinâmico por seção ── */}
-      <div className="w-96 flex-shrink-0 border-l border-gray-100 bg-gray-100 flex flex-col">
+      {/* ── Preview via iframe ── */}
+      <div className="w-96 flex-shrink-0 sticky top-0 h-screen flex flex-col border-l bg-gray-100">
 
         {/* Cabeçalho */}
-        <div className="px-4 py-3 border-b border-gray-200 bg-white flex items-center justify-between flex-shrink-0">
-          <span className="text-sm font-bold text-gray-700">Preview</span>
-          <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
-            <button onClick={() => setPreviewMode('mobile')}
-              className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${
-                previewMode === 'mobile' ? 'bg-white shadow text-gray-800' : 'text-gray-500'
-              }`}>Mobile</button>
-            <button onClick={() => setPreviewMode('desktop')}
-              className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${
-                previewMode === 'desktop' ? 'bg-white shadow text-gray-800' : 'text-gray-500'
-              }`}>Desktop</button>
+        <div className="flex items-center justify-between px-4 py-3 border-b bg-white flex-shrink-0">
+          <span className="text-sm font-bold text-gray-600">Preview</span>
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+              <button onClick={() => setPreviewMode('mobile')}
+                className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${
+                  previewMode === 'mobile' ? 'bg-white shadow text-gray-800' : 'text-gray-500'
+                }`}>Mobile</button>
+              <button onClick={() => setPreviewMode('desktop')}
+                className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${
+                  previewMode === 'desktop' ? 'bg-white shadow text-gray-800' : 'text-gray-500'
+                }`}>Desktop</button>
+            </div>
+            <button
+              onClick={() => setIframeKey(k => k + 1)}
+              className="p-1.5 rounded-lg hover:bg-gray-100 transition-all"
+              title="Recarregar preview">
+              <RefreshCw size={14} className="text-gray-500" />
+            </button>
           </div>
         </div>
 
         {/* Frame */}
-        <div className="flex-1 overflow-auto flex items-start justify-center p-4">
+        <div className="flex-1 flex items-start justify-center p-4 overflow-auto">
 
           {/* ── Mobile ── */}
           {previewMode === 'mobile' && (
-            <div className="relative w-72 rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-gray-800 bg-white flex-shrink-0"
-              style={{ minHeight: 580 }}>
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-5 bg-gray-800 rounded-b-2xl z-10" />
-              <div className="overflow-y-auto" style={{ maxHeight: 580 }}>
-
-                {activeSection === 'hero' && (
-                  <div className="relative flex flex-col items-center justify-center text-center px-4 pt-10 pb-6"
-                    style={{
-                      minHeight: 280,
-                      background: localConfigs.fundo_hero_mobile_url
-                        ? `url(${localConfigs.fundo_hero_mobile_url}) center/cover`
-                        : `linear-gradient(135deg, ${localConfigs.cor_primaria || '#2E7D32'}, #1B5E20)`,
-                    }}>
-                    {localConfigs.logo_url && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={localConfigs.logo_url} alt="Logo" className="w-16 h-16 object-contain mb-3"
-                        onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
-                    )}
-                    <h1 className="text-xl font-black text-white mb-1">
-                      {localConfigs.hero_titulo || localConfigs.nome_sistema || 'Recife Cap'}
-                    </h1>
-                    <p className="text-xs font-bold mb-2" style={{ color: localConfigs.cor_secundaria || '#FFC107' }}>
-                      {localConfigs.hero_badge || 'SORTEIO TODA SEMANA'}
-                    </p>
-                    {localConfigs.hero_subtitulo && (
-                      <p className="text-xs text-white/80 mb-3">{localConfigs.hero_subtitulo}</p>
-                    )}
-                    <div className="text-xs px-3 py-1 rounded-full mb-3"
-                      style={{ background: 'rgba(255,255,255,0.2)', color: 'white' }}>
-                      PRÓXIMO SORTEIO: {(localConfigs.sorteio_dia_semana || 'SÁBADO').toUpperCase()} ÀS {(localConfigs.sorteio_horario || '09H00').toUpperCase()}
-                    </div>
-                    <button className="w-full py-2 rounded-full text-sm font-black mb-2"
-                      style={{ background: localConfigs.cor_secundaria || '#FFC107', color: localConfigs.cor_primaria || '#1B5E20' }}>
-                      {localConfigs.texto_btn_principal || 'Quero participar →'}
-                    </button>
-                    <button className="w-full py-2 rounded-full text-sm font-bold border border-white text-white">
-                      {localConfigs.texto_btn_secundario || 'Ver sorteio'}
-                    </button>
-                  </div>
-                )}
-
-                {activeSection === 'sobre' && (
-                  <div className="p-4 bg-white">
-                    <div className="text-center mb-3">
-                      <span className="text-xs px-3 py-1 rounded-full font-bold"
-                        style={{ background: 'rgba(46,125,50,0.1)', color: '#2E7D32' }}>
-                        QUEM SOMOS
-                      </span>
-                    </div>
-                    <h2 className="text-base font-black text-center mb-2" style={{ color: '#1B5E20' }}>
-                      {localConfigs.sobre_titulo || 'Sorteios que transformam vidas'}
-                    </h2>
-                    <p className="text-xs text-gray-600 text-center mb-3">
-                      {localConfigs.sobre_texto || 'O RECIFE CAP é um título de capitalização filantrópico.'}
-                    </p>
-                    {localConfigs.cartela_imagem_url && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={localConfigs.cartela_imagem_url} alt="Cartela"
-                        className="w-full rounded-xl mb-3"
-                        style={{ transform: 'perspective(800px) rotateY(-8deg) rotate(-2deg)' }}
-                        onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
-                    )}
-                    <div className="grid grid-cols-3 gap-2">
-                      {[
-                        { v: localConfigs.sobre_titulos_edicao || '100.000', l: 'Títulos' },
-                        { v: localConfigs.sobre_hospital ? '100%' : '100%', l: 'Via PIX' },
-                        { v: localConfigs.sobre_hospital?.split(' ')[0] || 'HULP', l: 'Hospital' },
-                      ].map(({ v, l }) => (
-                        <div key={l} className="text-center p-2 rounded-xl"
-                          style={{ background: 'rgba(46,125,50,0.06)' }}>
-                          <p className="font-black text-xs" style={{ color: '#2E7D32' }}>{v}</p>
-                          <p className="text-xs text-gray-400">{l}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {activeSection === 'como' && (
-                  <div className="p-4 bg-gray-50">
-                    <h2 className="text-base font-black text-center mb-4" style={{ color: '#1B5E20' }}>
-                      {localConfigs.como_titulo || 'Como Participar'}
-                    </h2>
-                    <div className="space-y-3">
-                      {[1, 2, 3, 4].map(n => (
-                        <div key={n} className="flex items-start gap-3 bg-white rounded-xl p-3">
-                          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white flex-shrink-0"
-                            style={{ background: localConfigs.cor_primaria || '#2E7D32' }}>
-                            {n}
-                          </div>
-                          <div>
-                            <p className="font-bold text-xs text-gray-800">
-                              {localConfigs[`como_passo${n}_titulo`] || `Passo ${n}`}
-                            </p>
-                            {localConfigs[`como_passo${n}_desc`] && (
-                              <p className="text-xs text-gray-500 mt-0.5">
-                                {localConfigs[`como_passo${n}_desc`]}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {activeSection === 'sorteio' && (
-                  <div className="p-4 bg-white">
-                    <h2 className="text-base font-black text-center mb-3" style={{ color: '#1B5E20' }}>
-                      {localConfigs.sorteio_titulo || 'Sorteio da Semana'}
-                    </h2>
-                    {localConfigs.banner_sorteio_mobile_url && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={localConfigs.banner_sorteio_mobile_url} alt="Banner"
-                        className="w-full rounded-xl mb-3"
-                        onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
-                    )}
-                    <div className="text-center p-3 rounded-xl"
-                      style={{ background: 'rgba(46,125,50,0.06)' }}>
-                      <p className="text-xs text-gray-500">{localConfigs.sorteio_subtitulo || 'Próximo sorteio'}</p>
-                      <p className="text-lg font-black" style={{ color: '#2E7D32' }}>
-                        {localConfigs.sorteio_dia_semana || 'Sábado'}
-                      </p>
-                      <p className="text-sm font-bold text-gray-600">{localConfigs.sorteio_horario || '09h00'}</p>
-                      {localConfigs.sorteio_cta && (
-                        <p className="text-xs text-gray-400 mt-1">{localConfigs.sorteio_cta}</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {activeSection === 'premios' && (
-                  <div className="p-4 bg-white">
-                    <h2 className="text-base font-black text-center mb-4" style={{ color: '#1B5E20' }}>
-                      Prêmios da Edição
-                    </h2>
-                    <div className="text-center p-4 rounded-2xl mb-3"
-                      style={{ background: localConfigs.cor_secundaria || '#FFC107' }}>
-                      <p className="text-2xl font-black" style={{ color: '#1B5E20' }}>
-                        R$ {localConfigs.premio_principal_valor || '120.000'}
-                      </p>
-                      <p className="text-xs font-bold" style={{ color: '#1B5E20' }}>Prêmio principal</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      {[1, 2, 3, 4].map(n => (
-                        <div key={n} className="text-center p-3 rounded-xl border border-gray-100">
-                          <p className="font-black text-sm" style={{ color: '#2E7D32' }}>
-                            {localConfigs[`premio_${n}_valor`]
-                              ? `R$ ${localConfigs[`premio_${n}_valor`]}`
-                              : 'R$ 5.000'}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {localConfigs[`premio_${n}_nome`] || `${n}º Prêmio`}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {activeSection === 'historico' && (
-                  <div className="p-4 bg-gray-50">
-                    <h2 className="text-base font-black text-center mb-3" style={{ color: '#1B5E20' }}>
-                      {localConfigs.historico_titulo || 'Histórico de Sorteios'}
-                    </h2>
-                    {localConfigs.historico_subtitulo && (
-                      <p className="text-xs text-gray-500 text-center mb-3">{localConfigs.historico_subtitulo}</p>
-                    )}
-                    <div className="space-y-2">
-                      {['1º Prêmio', '2º Prêmio', '3º Prêmio'].map(p => (
-                        <div key={p} className="bg-white rounded-xl p-3 flex justify-between items-center">
-                          <span className="text-xs font-bold text-gray-700">{p}</span>
-                          <span className="text-xs font-black" style={{ color: '#2E7D32' }}>R$ 5.000</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {activeSection === 'depoimentos' && (
-                  <div className="p-4 bg-gray-50">
-                    <h2 className="text-base font-black text-center mb-4" style={{ color: '#1B5E20' }}>
-                      Depoimentos
-                    </h2>
-                    <div className="bg-white rounded-xl p-4 shadow-sm">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                          style={{ background: localConfigs.cor_primaria || '#2E7D32' }}>G</div>
-                        <div>
-                          <p className="text-xs font-bold text-gray-800">Ganhador Exemplo</p>
-                          <p className="text-xs text-gray-400">Recife, PE</p>
-                        </div>
-                      </div>
-                      <p className="text-xs text-gray-600 italic">
-                        &quot;Não acreditei quando recebi o PIX! Sistema muito transparente.&quot;
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {activeSection === 'rodape' && (
-                  <div className="p-4" style={{ background: localConfigs.cor_primaria || '#1B5E20' }}>
-                    {localConfigs.logo_url && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={localConfigs.logo_url} alt="Logo"
-                        className="w-10 h-10 object-contain mb-3"
-                        onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
-                    )}
-                    <p className="text-white font-bold text-sm mb-1">
-                      {localConfigs.nome_sistema || 'Recife Cap'}
-                    </p>
-                    <p className="text-green-300 text-xs mb-3">
-                      {localConfigs.slogan || 'Filantropia Premiável'}
-                    </p>
-                    {localConfigs.rodape_cnpj && (
-                      <p className="text-green-400 text-xs">CNPJ: {localConfigs.rodape_cnpj}</p>
-                    )}
-                    {localConfigs.rodape_endereco && (
-                      <p className="text-green-400 text-xs">{localConfigs.rodape_endereco}</p>
-                    )}
-                    {localConfigs.rodape_susep && (
-                      <p className="text-green-400 text-xs mt-1">{localConfigs.rodape_susep}</p>
-                    )}
-                    <p className="text-green-500 text-xs mt-3 border-t border-green-700 pt-3">
-                      {localConfigs.rodape_copyright || `© ${new Date().getFullYear()} ${localConfigs.nome_sistema || 'Recife Cap'}.`}
-                    </p>
-                  </div>
-                )}
-
-              </div>
+            <div className="relative flex-shrink-0" style={{ width: 320, height: 640 }}>
+              {/* Bordas do celular */}
+              <div className="absolute inset-0 rounded-[2.5rem] border-[8px] border-gray-800 bg-gray-800 shadow-2xl z-10 pointer-events-none" />
+              {/* Notch */}
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 w-20 h-4 bg-gray-800 rounded-full z-20 pointer-events-none" />
+              {/* Barra home */}
+              <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-16 h-1 bg-gray-600 rounded-full z-20 pointer-events-none" />
+              <iframe
+                key={iframeKey}
+                src={`/?preview=mobile&t=${iframeKey}`}
+                className="absolute inset-0 w-full h-full rounded-[2rem] border-0"
+                title="Preview mobile"
+              />
             </div>
           )}
 
           {/* ── Desktop ── */}
           {previewMode === 'desktop' && (
-            <div className="w-full bg-white rounded-xl border border-gray-200 shadow-md overflow-hidden flex-shrink-0">
-              <div className="flex items-center justify-between px-5 py-2.5"
-                style={{ background: localConfigs.cor_primaria || '#2E7D32' }}>
-                <div className="flex items-center gap-2">
-                  {localConfigs.logo_url && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={localConfigs.logo_url} alt="Logo" className="w-7 h-7 object-contain"
-                      onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
-                  )}
-                  <span className="text-white font-black text-sm">
-                    {localConfigs.nome_sistema || 'Recife Cap'}
-                  </span>
-                </div>
-                <div className="flex gap-3">
-                  {['Início', 'Sorteio', 'Resultados', 'Comprar'].map(item => (
-                    <span key={item} className="text-white text-xs opacity-80">{item}</span>
-                  ))}
-                </div>
-              </div>
-              <div className="p-4 text-center min-h-[160px] flex flex-col items-center justify-center">
-                <p className="text-xs text-gray-300 uppercase tracking-wider mb-1">Seção ativa</p>
-                <p className="text-sm font-bold text-gray-600">
-                  {SECTIONS.find(s => s.id === activeSection)?.label}
-                </p>
-                <p className="text-xs text-gray-400 mt-1">Alterne para Mobile para o preview detalhado</p>
-              </div>
+            <div className="relative w-full overflow-hidden rounded-xl border shadow-md bg-white flex-shrink-0"
+              style={{ height: 500 }}>
+              <iframe
+                key={iframeKey}
+                src={`/?preview=desktop&t=${iframeKey}`}
+                className="absolute top-0 left-0 border-0"
+                style={{
+                  width: '1440px',
+                  height: '900px',
+                  transform: 'scale(0.25)',
+                  transformOrigin: 'top left',
+                }}
+                title="Preview desktop"
+              />
             </div>
           )}
 
         </div>
 
         {/* Botão publicar */}
-        <div className="p-4 border-t border-gray-200 bg-white flex-shrink-0">
-          <button onClick={publicarAlteracoes} disabled={salvando}
-            className="w-full py-3 rounded-xl font-black text-white text-sm transition-all hover:opacity-90 disabled:opacity-60 flex items-center justify-center gap-2"
-            style={{ background: 'linear-gradient(135deg, #2E7D32, #43A047)' }}>
-            <Save size={15} className="flex-shrink-0" />
-            {salvando ? 'Publicando…' : 'Publicar alterações'}
+        <div className="px-4 pb-4 pt-2 border-t bg-white flex-shrink-0">
+          <button
+            onClick={handlePublicar}
+            disabled={salvando}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-white transition-all hover:opacity-90 disabled:opacity-50"
+            style={{ background: 'linear-gradient(135deg, #1B5E20, #2E7D32)' }}>
+            <Save size={16} />
+            {salvando ? 'Publicando...' : 'Publicar alterações'}
           </button>
           <p className="text-xs text-gray-400 text-center mt-2">
             As alterações ficam visíveis imediatamente
