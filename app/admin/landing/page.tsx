@@ -1019,46 +1019,290 @@ export default function AdminLandingPage() {
 
           {/* ── Desktop ── */}
           {previewMode === 'desktop' && (
-            <div className="w-full rounded-xl overflow-hidden border shadow-md flex-shrink-0">
+            <div className="w-full rounded-xl overflow-hidden border shadow-md" style={{ minHeight: 400 }}>
+
               {/* Navbar desktop */}
-              <div className="flex items-center justify-between px-4 py-2.5"
+              <div className="flex items-center justify-between px-6 py-3"
                 style={{ background: localConfigs['cor_primaria'] || '#2E7D32' }}>
-                {localConfigs['logo_url'] ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={resolverUrl(localConfigs['logo_url'] || '')} alt="logo" className="h-5 object-contain" />
-                ) : (
-                  <span className="text-white font-bold text-xs">{localConfigs['nome_sistema'] || 'RECIFE CAP'}</span>
-                )}
-                <div className="flex gap-3">
-                  {['Sorteio', 'Cartelas', 'Contato'].map(l => (
-                    <span key={l} className="text-white text-xs opacity-70">{l}</span>
+                <div className="flex items-center gap-2">
+                  {localConfigs['logo_url'] ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={resolverUrl(localConfigs['logo_url'] || '')} alt="logo" className="h-7 object-contain" />
+                  ) : (
+                    <span className="text-white font-black text-sm">{localConfigs['nome_sistema'] || 'Recife Cap'}</span>
+                  )}
+                </div>
+                <div className="flex gap-5">
+                  {['Sorteio', 'Cartelas', 'Contato', 'Resultados'].map(l => (
+                    <span key={l} className="text-white text-xs opacity-80">{l}</span>
                   ))}
                 </div>
+                <button className="px-4 py-1.5 rounded-full text-xs font-black"
+                  style={{ background: localConfigs['cor_secundaria'] || '#FFC107', color: '#1B5E20' }}>
+                  Comprar
+                </button>
               </div>
-              {/* Conteúdo */}
-              <div className="px-6 py-5 text-center"
-                style={{ background: localConfigs['cor_fundo_site'] || '#F5F7FA', minHeight: 130 }}>
-                <p className="text-xs text-gray-400 uppercase tracking-widest mb-1.5">{activeLabel?.label}</p>
-                <p className="text-base font-bold"
-                  style={{ color: localConfigs['cor_primaria'] || '#2E7D32' }}>
-                  {activeSection === 'hero'        && (localConfigs['hero_titulo']       || 'RECIFE CAP')}
-                  {activeSection === 'sorteio'     && (localConfigs['sorteio_titulo']    || 'Sorteio da Semana')}
-                  {activeSection === 'sobre'       && (localConfigs['sobre_titulo']      || 'Quem Somos')}
-                  {activeSection === 'como'        && (localConfigs['como_titulo']       || 'Como Participar')}
-                  {activeSection === 'premios'     && 'Prêmios da Edição'}
-                  {activeSection === 'historico'   && (localConfigs['historico_titulo']  || 'Histórico de Sorteios')}
-                  {activeSection === 'depoimentos' && 'Depoimentos'}
-                  {activeSection === 'rodape'      && 'Rodapé'}
-                </p>
-                {(activeSection === 'hero' || activeSection === 'sorteio' || activeSection === 'sobre' || activeSection === 'historico') && (
-                  <p className="text-xs text-gray-500 mt-1 max-w-xs mx-auto">
-                    {activeSection === 'hero'      && (localConfigs['hero_subtitulo']      || '')}
-                    {activeSection === 'sorteio'   && (localConfigs['sorteio_subtitulo']   || '')}
-                    {activeSection === 'sobre'     && ((localConfigs['sobre_texto'] || '').slice(0, 90) || '')}
-                    {activeSection === 'historico' && (localConfigs['historico_subtitulo'] || '')}
-                  </p>
-                )}
-              </div>
+
+              {/* HERO desktop */}
+              {activeSection === 'hero' && (
+                <div className="relative flex items-center justify-center text-center px-12 py-16"
+                  style={{
+                    backgroundColor: localConfigs['cor_primaria'] || '#2E7D32',
+                    backgroundImage: localConfigs['fundo_hero_url']
+                      ? `url(${resolverUrl(localConfigs['fundo_hero_url'] || '')})`
+                      : 'none',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    minHeight: 320,
+                  }}>
+                  <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.3)' }} />
+                  <div className="relative z-10 max-w-lg">
+                    {localConfigs['logo_url'] && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={resolverUrl(localConfigs['logo_url'] || '')} alt="logo"
+                        className="w-20 h-20 object-contain mx-auto mb-4 drop-shadow-lg" />
+                    )}
+                    <h1 className="text-4xl font-black text-white mb-2 drop-shadow-lg">
+                      {localConfigs['hero_titulo'] || localConfigs['nome_sistema'] || 'Recife Cap'}
+                    </h1>
+                    <p className="text-sm font-black mb-2 uppercase tracking-widest drop-shadow"
+                      style={{ color: localConfigs['cor_secundaria'] || '#FFC107' }}>
+                      {localConfigs['hero_badge'] || 'SORTEIO TODA SEMANA'}
+                    </p>
+                    <p className="text-sm text-white opacity-80 mb-6 drop-shadow">
+                      {localConfigs['hero_subtitulo'] || localConfigs['slogan'] || 'Filantropia Premiável'}
+                    </p>
+                    <div className="flex gap-3 justify-center">
+                      <button className="px-8 py-3 rounded-full font-black text-sm shadow-lg"
+                        style={{ background: localConfigs['cor_secundaria'] || '#FFC107', color: '#1B5E20' }}>
+                        {localConfigs['texto_btn_principal'] || 'Quero participar →'}
+                      </button>
+                      <button className="px-8 py-3 rounded-full font-bold text-sm text-white"
+                        style={{ border: '2px solid rgba(255,255,255,0.5)' }}>
+                        {localConfigs['texto_btn_secundario'] || 'Ver sorteio'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* QUEM SOMOS desktop */}
+              {activeSection === 'sobre' && (
+                <div className="grid grid-cols-2 gap-8 px-10 py-10 bg-white items-center">
+                  <div>
+                    <span className="text-xs px-3 py-1 rounded-full font-bold mb-4 inline-block"
+                      style={{ background: 'rgba(46,125,50,0.1)', color: '#2E7D32' }}>
+                      QUEM SOMOS
+                    </span>
+                    <h2 className="text-2xl font-black mb-3 leading-tight" style={{ color: '#1B5E20' }}>
+                      {localConfigs['sobre_titulo'] || 'Sorteios que transformam vidas'}
+                    </h2>
+                    <p className="text-xs text-gray-600 leading-relaxed mb-4">
+                      {localConfigs['sobre_texto'] || 'O RECIFE CAP é um título de capitalização filantrópico.'}
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { v: `R$ ${localConfigs['premio_principal'] || '120.000'}`, l: 'Prêmio' },
+                        { v: localConfigs['sobre_titulos_edicao'] || '100.000', l: 'Títulos' },
+                        { v: '100%', l: 'Via PIX' },
+                      ].map(({ v, l }) => (
+                        <div key={l} className="text-center p-2 rounded-xl"
+                          style={{ background: 'rgba(46,125,50,0.06)' }}>
+                          <p className="font-black text-xs" style={{ color: '#2E7D32' }}>{v}</p>
+                          <p className="text-gray-400 mt-0.5" style={{ fontSize: 9 }}>{l}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    {localConfigs['cartela_imagem_url'] ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={resolverUrl(localConfigs['cartela_imagem_url'] || '')} alt=""
+                        className="w-full rounded-2xl shadow-xl"
+                        style={{ transform: 'perspective(800px) rotateY(-12deg) rotate(-3deg)', filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.25))' }} />
+                    ) : (
+                      <div className="w-full h-40 rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center">
+                        <p className="text-xs text-gray-300">Imagem da cartela</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* COMO PARTICIPAR desktop */}
+              {activeSection === 'como' && (
+                <div className="px-10 py-10" style={{ background: '#F5F7FA' }}>
+                  <h2 className="text-2xl font-black text-center mb-8" style={{ color: '#1B5E20' }}>
+                    Como Participar
+                  </h2>
+                  <div className="grid grid-cols-4 gap-4">
+                    {[1, 2, 3, 4].map(n => (
+                      <div key={n} className="bg-white rounded-2xl p-4 text-center shadow-sm">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-black text-white mx-auto mb-3"
+                          style={{ background: `linear-gradient(135deg, ${localConfigs['cor_primaria_escura'] || '#1B5E20'}, ${localConfigs['cor_primaria'] || '#2E7D32'})` }}>
+                          {n}
+                        </div>
+                        <p className="font-black text-xs text-gray-800 mb-1">
+                          {localConfigs[`passo_${n}_titulo`] || `Passo ${n}`}
+                        </p>
+                        <p className="text-gray-500 leading-relaxed" style={{ fontSize: 10 }}>
+                          {localConfigs[`passo_${n}_texto`] || ''}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* SORTEIO desktop */}
+              {activeSection === 'sorteio' && (
+                <div className="px-10 py-10 bg-white">
+                  <h2 className="text-2xl font-black text-center mb-6" style={{ color: '#1B5E20' }}>
+                    {localConfigs['sorteio_titulo'] || 'Sorteio da Semana'}
+                  </h2>
+                  <div className="max-w-md mx-auto">
+                    {localConfigs['banner_sorteio_url'] && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={resolverUrl(localConfigs['banner_sorteio_url'] || '')} alt="banner"
+                        className="w-full rounded-2xl mb-4 shadow-md" />
+                    )}
+                    <div className="text-center p-6 rounded-2xl"
+                      style={{ background: `linear-gradient(135deg, ${localConfigs['cor_primaria_escura'] || '#1B5E20'}, ${localConfigs['cor_primaria'] || '#2E7D32'})` }}>
+                      <p className="text-white text-sm opacity-80 mb-1">Prêmio acumulado desta edição</p>
+                      <p className="font-black text-3xl mb-1" style={{ color: localConfigs['cor_secundaria'] || '#FFC107' }}>
+                        R$ {localConfigs['premio_principal'] || '120.000'}
+                      </p>
+                      <p className="text-white text-xs opacity-60">
+                        {localConfigs['sorteio_dia_semana'] || 'Toda sexta-feira'} às {localConfigs['sorteio_horario'] || '21h00'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* PRÊMIOS desktop */}
+              {activeSection === 'premios' && (
+                <div className="px-10 py-10 bg-white">
+                  <h2 className="text-2xl font-black text-center mb-6" style={{ color: '#1B5E20' }}>
+                    Prêmios da Edição
+                  </h2>
+                  <div className="text-center p-6 rounded-2xl mb-6 max-w-xs mx-auto shadow-lg"
+                    style={{ background: `linear-gradient(135deg, ${localConfigs['cor_secundaria'] || '#FFC107'}, #FFB300)` }}>
+                    <p className="text-xs font-bold mb-1" style={{ color: '#1B5E20' }}>PRÊMIO PRINCIPAL</p>
+                    <p className="text-4xl font-black" style={{ color: '#1B5E20' }}>
+                      R$ {localConfigs['premio_principal'] || '120.000'}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-4 gap-4 max-w-2xl mx-auto">
+                    {[1, 2, 3, 4].map(n => (
+                      <div key={n} className="text-center p-3 rounded-2xl border shadow-sm bg-white">
+                        {localConfigs[`premio_${n}_foto_url`] && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={resolverUrl(localConfigs[`premio_${n}_foto_url`] || '')} alt=""
+                            className="w-12 h-12 object-contain mx-auto mb-2" />
+                        )}
+                        <p className="font-black text-sm" style={{ color: '#2E7D32' }}>
+                          R$ {localConfigs[`premio_${n}_valor`] || '5.000'}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {localConfigs[`premio_${n}_nome`] || `${n}º Prêmio`}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* HISTÓRICO desktop */}
+              {activeSection === 'historico' && (
+                <div className="px-10 py-10 text-center" style={{
+                  background: `radial-gradient(ellipse at 30% 50%, ${localConfigs['cor_primaria'] || '#2E7D32'} 0%, ${localConfigs['cor_primaria_escura'] || '#1B5E20'} 40%, #0D3B16 100%)`,
+                }}>
+                  <h2 className="text-3xl font-black text-white mb-3">Histórico de Resultados</h2>
+                  <div className="w-16 h-1 rounded-full mx-auto mb-4"
+                    style={{ background: localConfigs['cor_secundaria'] || '#FFC107' }} />
+                  <p className="text-green-200 text-sm mb-6">Consulte os ganhadores de todas as edições encerradas</p>
+                  <div className="max-w-md mx-auto space-y-2">
+                    {['1º Prêmio — R$ 5.000', '2º Prêmio — R$ 10.000', '3º Prêmio — R$ 15.000'].map(p => (
+                      <div key={p} className="flex justify-between items-center rounded-xl px-4 py-3"
+                        style={{ background: 'rgba(255,255,255,0.1)' }}>
+                        <span className="text-white text-sm font-bold">{p}</span>
+                        <span className="text-xs px-3 py-1 rounded-full font-bold"
+                          style={{ background: localConfigs['cor_secundaria'] || '#FFC107', color: '#1B5E20' }}>
+                          Ver
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* DEPOIMENTOS desktop */}
+              {activeSection === 'depoimentos' && (
+                <div className="px-10 py-10" style={{ background: '#F5F7FA' }}>
+                  <h2 className="text-2xl font-black text-center mb-6" style={{ color: '#1B5E20' }}>
+                    O que dizem nossos ganhadores
+                  </h2>
+                  <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto">
+                    {[
+                      { nome: 'Maria S.', cidade: 'Recife, PE', texto: 'Recebi o PIX na hora! Sistema muito transparente.' },
+                      { nome: 'João C.', cidade: 'Olinda, PE', texto: 'Ganhei e fui pago imediatamente. Recomendo!' },
+                    ].map(d => (
+                      <div key={d.nome} className="bg-white rounded-2xl p-5 shadow-sm">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-black flex-shrink-0"
+                            style={{ background: localConfigs['cor_primaria'] || '#2E7D32' }}>
+                            {d.nome[0]}
+                          </div>
+                          <div>
+                            <p className="text-sm font-black text-gray-800">{d.nome}</p>
+                            <p className="text-xs text-gray-400">{d.cidade}</p>
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-600 italic">&ldquo;{d.texto}&rdquo;</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* RODAPÉ desktop */}
+              {activeSection === 'rodape' && (
+                <div className="px-10 py-8"
+                  style={{ background: localConfigs['cor_primaria_escura'] || '#1B5E20' }}>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      {localConfigs['logo_url'] && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={resolverUrl(localConfigs['logo_url'] || '')} alt="logo"
+                          className="h-10 object-contain mb-3" />
+                      )}
+                      <p className="text-white font-black text-lg">
+                        {localConfigs['nome_sistema'] || 'Recife Cap'}
+                      </p>
+                      <p className="text-sm" style={{ color: localConfigs['cor_secundaria'] || '#FFC107' }}>
+                        {localConfigs['slogan'] || 'Filantropia Premiável'}
+                      </p>
+                    </div>
+                    <div className="text-right space-y-1">
+                      {localConfigs['whatsapp_suporte'] && (
+                        <p className="text-green-300 text-xs">{localConfigs['whatsapp_suporte']}</p>
+                      )}
+                      {localConfigs['email_suporte'] && (
+                        <p className="text-green-300 text-xs">{localConfigs['email_suporte']}</p>
+                      )}
+                      {localConfigs['rodape_cnpj'] && (
+                        <p className="text-green-400 text-xs">CNPJ: {localConfigs['rodape_cnpj']}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="border-t border-green-700 mt-4 pt-4 flex justify-between">
+                    <p className="text-green-500 text-xs">{localConfigs['rodape_direitos']}</p>
+                    <p className="text-green-500 text-xs">{localConfigs['rodape_texto']}</p>
+                  </div>
+                </div>
+              )}
+
             </div>
           )}
 
