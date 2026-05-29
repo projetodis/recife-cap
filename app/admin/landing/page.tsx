@@ -544,6 +544,13 @@ export default function AdminLandingPage() {
       .catch(() => setLoadingConfigs(false))
   }, [])
 
+  useEffect(() => {
+    console.log('localConfigs carregados:', localConfigs)
+    console.log('fundo_hero_mobile_url:', localConfigs['fundo_hero_mobile_url'])
+    console.log('fundo_hero_url:', localConfigs['fundo_hero_url'])
+    console.log('passo_1_titulo:', localConfigs['passo_1_titulo'])
+  }, [localConfigs])
+
   function onChange(chave: string, valor: string) {
     setLocalConfigs(prev => ({ ...prev, [chave]: valor }))
   }
@@ -686,7 +693,7 @@ export default function AdminLandingPage() {
               <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-16 h-1 bg-gray-600 rounded-full z-20 pointer-events-none" />
               {/* Conteúdo */}
               <div className="absolute inset-0 rounded-[2rem] overflow-auto"
-                style={{ background: localConfigs['cor_fundo_site'] || '#F5F7FA' }}>
+                style={{ background: localConfigs['cor_fundo_site'] || '#F5F7FA', zIndex: 5 }}>
                 {/* Navbar */}
                 <div className="flex items-center justify-between px-3 pt-8 pb-2 sticky top-0 z-10"
                   style={{ background: localConfigs['cor_primaria'] || '#2E7D32' }}>
