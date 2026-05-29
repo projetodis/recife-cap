@@ -9,7 +9,7 @@ import type { UserRole } from '@/types'
 import {
   LayoutDashboard, Users, Store, Calendar, Tag, Trophy,
   BarChart2, UserPlus, Activity, LayoutGrid, Settings,
-  Map, Bike, Route, User, Plus, CreditCard, LogOut, Package, Layout,
+  Map, Bike, Route, User, Plus, CreditCard, LogOut, Package, Layout, Globe,
 } from 'lucide-react'
 
 interface NavItem {
@@ -30,6 +30,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Relatórios',     href: '/admin/relatorios',      icon: <BarChart2 size={16} /> },
     { label: 'Usuários',       href: '/admin/usuarios',        icon: <UserPlus size={16} /> },
     { label: 'Logs',           href: '/admin/logs',            icon: <Activity size={16} /> },
+    { label: 'Clientes WL',    href: '/admin/clientes',        icon: <Globe size={16} /> },
     { label: 'Landing Page',   href: '/admin/landing',         icon: <LayoutGrid size={16} /> },
     { label: 'Configurações',  href: '/admin/configuracoes',   icon: <Settings size={16} /> },
   ],
