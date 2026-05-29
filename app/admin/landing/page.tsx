@@ -713,11 +713,13 @@ export default function AdminLandingPage() {
                         ? `url(${resolverUrl(localConfigs['fundo_hero_url'])}) center/cover no-repeat`
                         : `linear-gradient(160deg, ${localConfigs['cor_primaria_escura'] || '#1B5E20'} 0%, ${localConfigs['cor_primaria'] || '#2E7D32'} 60%, #388E3C 100%)`,
                       minHeight: 520,
-                      paddingTop: 40,
                     }}>
+                    {/* Overlay escuro para legibilidade */}
+                    <div className="absolute inset-0"
+                      style={{ background: 'rgba(0,0,0,0.25)', zIndex: 1 }} />
                     {/* Navbar */}
-                    <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 py-3 z-10"
-                      style={{ background: 'rgba(0,0,0,0.2)' }}>
+                    <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 py-3"
+                      style={{ zIndex: 20 }}>
                       {localConfigs['logo_url']
                         ? (
                           // eslint-disable-next-line @next/next/no-img-element
@@ -726,26 +728,29 @@ export default function AdminLandingPage() {
                           <div className="w-8 h-8 rounded-full bg-white opacity-30" />
                         )
                       }
-                      <div className="flex flex-col gap-1">
+                      <div className="flex flex-col gap-1 cursor-pointer">
                         <div className="w-5 h-0.5 bg-white rounded" />
                         <div className="w-5 h-0.5 bg-white rounded" />
                         <div className="w-5 h-0.5 bg-white rounded" />
                       </div>
                     </div>
-                    {/* Conteúdo centralizado */}
-                    <div className="flex flex-col items-center justify-center text-center px-5 py-8 mt-8">
-                      <h1 className="text-2xl font-black text-white mb-1 leading-tight drop-shadow-lg">
+                    {/* Conteúdo */}
+                    <div className="relative flex flex-col items-center justify-center text-center px-5 pt-16 pb-8"
+                      style={{ zIndex: 10 }}>
+                      <h1 className="text-2xl font-black text-white mb-1 leading-tight"
+                        style={{ textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>
                         {localConfigs['hero_titulo'] || localConfigs['nome_sistema'] || 'Recife Cap'}
                       </h1>
-                      <p className="text-xs font-black mb-2 uppercase tracking-wider drop-shadow"
-                        style={{ color: localConfigs['cor_secundaria'] || '#FFC107' }}>
+                      <p className="text-xs font-black mb-2 uppercase tracking-wider"
+                        style={{ color: localConfigs['cor_secundaria'] || '#FFC107', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
                         {localConfigs['hero_badge'] || 'SORTEIO TODA SEMANA'}
                       </p>
-                      <p className="text-xs text-white opacity-80 mb-5 drop-shadow">
+                      <p className="text-xs text-white opacity-90 mb-4"
+                        style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
                         {localConfigs['hero_subtitulo'] || localConfigs['slogan'] || 'Filantropia Premiável'}
                       </p>
-                      <div className="px-3 py-1.5 rounded-full text-xs text-white mb-5 text-center"
-                        style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)' }}>
+                      <div className="px-3 py-1.5 rounded-full text-xs text-white mb-5 text-center w-full"
+                        style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)' }}>
                         PRÓXIMO SORTEIO: {localConfigs['sorteio_dia_semana'] || 'TODA SEXTA'} ÀS {localConfigs['sorteio_horario'] || '21H00'}
                       </div>
                       <button className="w-full py-3 rounded-full text-sm font-black mb-3 shadow-lg"
