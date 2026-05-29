@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
   Globe, Plus, Edit2, Trash2, Copy, CheckCircle,
-  AlertTriangle, Clock, XCircle, RefreshCw,
+  AlertTriangle, Clock, XCircle, RefreshCw, Rocket,
 } from 'lucide-react'
 
 interface Cliente {
@@ -303,6 +303,14 @@ export default function ClientesView({ clientes: inicial, stats }: { clientes: C
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1 justify-end">
+                          <a
+                            href={`/admin/clientes/onboarding/${c.id}`}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white"
+                            style={{ background: '#2E7D32' }}
+                          >
+                            <Rocket size={12} />
+                            Setup
+                          </a>
                           {/* Status rápido */}
                           {c.status !== 'ativo' && (
                             <button
