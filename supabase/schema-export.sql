@@ -1,0 +1,8 @@
+-- ============================================================
+-- SCHEMA RECIFE CAP WHITE LABEL
+-- Executar este arquivo em ordem no novo projeto Supabase
+-- ============================================================
+-- 1. Acesse o SQL Editor do novo projeto Supabase
+-- 2. Cole e execute cada bloco em ordem
+-- 3. Verifique se não há erros antes de continuar
+-- ============================================================

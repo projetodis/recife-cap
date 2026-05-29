@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { getConfigs } from '@/lib/config'
 import ThemeProvider from '@/components/ThemeProvider'
+import StagingBanner from '@/components/StagingBanner'
 
 export async function generateMetadata(): Promise<Metadata> {
   const configs = await getConfigs()
@@ -17,6 +18,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="pt-BR">
       <body className="antialiased">
+        <StagingBanner />
         <ThemeProvider initialConfigs={configs}>
           {children}
         </ThemeProvider>
