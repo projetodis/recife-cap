@@ -686,7 +686,7 @@ export default function AdminLandingPage() {
               <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-16 h-1 bg-gray-600 rounded-full z-20 pointer-events-none" />
               {/* Conteúdo */}
               <div className="absolute inset-0 rounded-[2rem] overflow-auto"
-                style={{ background: localConfigs['cor_site_bg'] || '#F5F7FA' }}>
+                style={{ background: localConfigs['cor_fundo_site'] || '#F5F7FA' }}>
                 {/* Navbar */}
                 <div className="flex items-center justify-between px-3 pt-8 pb-2 sticky top-0 z-10"
                   style={{ background: localConfigs['cor_primaria'] || '#2E7D32' }}>
@@ -707,11 +707,15 @@ export default function AdminLandingPage() {
                 {activeSection === 'hero' && (
                   <div className="relative overflow-hidden"
                     style={{
-                      background: localConfigs['fundo_hero_mobile_url']
-                        ? `url(${resolverUrl(localConfigs['fundo_hero_mobile_url'])}) center/cover no-repeat`
+                      backgroundColor: localConfigs['cor_primaria'] || '#2E7D32',
+                      backgroundImage: localConfigs['fundo_hero_mobile_url']
+                        ? `url(${resolverUrl(localConfigs['fundo_hero_mobile_url'])})`
                         : localConfigs['fundo_hero_url']
-                        ? `url(${resolverUrl(localConfigs['fundo_hero_url'])}) center/cover no-repeat`
-                        : `linear-gradient(160deg, ${localConfigs['cor_primaria_escura'] || '#1B5E20'} 0%, ${localConfigs['cor_primaria'] || '#2E7D32'} 60%, #388E3C 100%)`,
+                        ? `url(${resolverUrl(localConfigs['fundo_hero_url'])})`
+                        : 'none',
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      backgroundRepeat: 'no-repeat',
                       minHeight: 520,
                     }}>
                     {/* Overlay escuro para legibilidade */}
@@ -785,7 +789,7 @@ export default function AdminLandingPage() {
                     </div>
                     <button className="w-full py-2.5 rounded-xl text-sm font-bold text-center"
                       style={{ background: localConfigs['cor_secundaria'] || '#FFC107', color: '#1B5E20' }}>
-                      {localConfigs['sorteio_cta'] || 'Garanta já sua cartela!'}
+                      {localConfigs['texto_btn_principal'] || 'Garanta já sua cartela!'}
                     </button>
                   </div>
                 )}
@@ -822,7 +826,7 @@ export default function AdminLandingPage() {
                   <div className="px-4 pt-5 pb-6">
                     <h2 className="text-sm font-bold text-center mb-4"
                       style={{ color: localConfigs['cor_primaria'] || '#2E7D32' }}>
-                      {localConfigs['como_titulo'] || 'Como Participar'}
+                      Como Participar
                     </h2>
                     <div className="space-y-3">
                       {[1, 2, 3, 4].map(n => (
@@ -832,9 +836,9 @@ export default function AdminLandingPage() {
                             {n}
                           </div>
                           <div>
-                            <p className="text-xs font-semibold text-gray-800">{localConfigs[`como_passo${n}_titulo`] || `Passo ${n}`}</p>
-                            {localConfigs[`como_passo${n}_desc`] && (
-                              <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{localConfigs[`como_passo${n}_desc`]}</p>
+                            <p className="text-xs font-semibold text-gray-800">{localConfigs[`passo_${n}_titulo`] || `Passo ${n}`}</p>
+                            {localConfigs[`passo_${n}_texto`] && (
+                              <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{localConfigs[`passo_${n}_texto`]}</p>
                             )}
                           </div>
                         </div>
@@ -872,10 +876,10 @@ export default function AdminLandingPage() {
                   <div className="px-4 pt-5 pb-6">
                     <h2 className="text-sm font-bold text-center mb-1"
                       style={{ color: localConfigs['cor_primaria'] || '#2E7D32' }}>
-                      {localConfigs['historico_titulo'] || 'Histórico de Sorteios'}
+                      Histórico de Resultados
                     </h2>
                     <p className="text-xs text-gray-400 text-center mb-3">
-                      {localConfigs['historico_subtitulo'] || 'Confira os ganhadores das últimas edições'}
+                      Consulte os contemplados de todas as edições encerradas
                     </p>
                     <div className="space-y-2">
                       {[1, 2, 3].map(n => (
@@ -928,11 +932,11 @@ export default function AdminLandingPage() {
                       )}
                     </div>
                     <div className="px-5 space-y-1.5 pb-4">
-                      {localConfigs['rodape_whatsapp'] && (
-                        <p className="text-white text-xs opacity-80 text-center">{localConfigs['rodape_whatsapp']}</p>
+                      {localConfigs['whatsapp_suporte'] && (
+                        <p className="text-white text-xs opacity-80 text-center">{localConfigs['whatsapp_suporte']}</p>
                       )}
-                      {localConfigs['rodape_email'] && (
-                        <p className="text-white text-xs opacity-80 text-center">{localConfigs['rodape_email']}</p>
+                      {localConfigs['email_suporte'] && (
+                        <p className="text-white text-xs opacity-80 text-center">{localConfigs['email_suporte']}</p>
                       )}
                       {localConfigs['rodape_endereco'] && (
                         <p className="text-white text-xs opacity-60 text-center">{localConfigs['rodape_endereco']}</p>
@@ -941,7 +945,7 @@ export default function AdminLandingPage() {
                         <p className="text-white text-xs opacity-50 text-center">{localConfigs['rodape_cnpj']}</p>
                       )}
                       <p className="text-white text-xs opacity-40 text-center pt-2 border-t border-white/10">
-                        {localConfigs['rodape_copyright'] || '© 2025 Recife Cap. Todos os direitos reservados.'}
+                        {localConfigs['rodape_direitos'] || '© 2025 Recife Cap. Todos os direitos reservados.'}
                       </p>
                     </div>
                   </div>
@@ -970,7 +974,7 @@ export default function AdminLandingPage() {
               </div>
               {/* Conteúdo */}
               <div className="px-6 py-5 text-center"
-                style={{ background: localConfigs['cor_site_bg'] || '#F5F7FA', minHeight: 130 }}>
+                style={{ background: localConfigs['cor_fundo_site'] || '#F5F7FA', minHeight: 130 }}>
                 <p className="text-xs text-gray-400 uppercase tracking-widest mb-1.5">{activeLabel?.label}</p>
                 <p className="text-base font-bold"
                   style={{ color: localConfigs['cor_primaria'] || '#2E7D32' }}>
