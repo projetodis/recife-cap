@@ -781,72 +781,95 @@ export default function AdminLandingPage() {
 
                 {/* Sorteio */}
                 {activeSection === 'sorteio' && (
-                  <div className="px-4 pt-5 pb-6">
-                    <h2 className="text-sm font-bold text-center mb-3"
-                      style={{ color: localConfigs['cor_primaria'] || '#2E7D32' }}>
-                      {localConfigs['sorteio_titulo'] || 'Sorteio da Semana'}
-                    </h2>
-                    <div className="rounded-2xl p-4 text-center mb-3"
-                      style={{ background: localConfigs['cor_primaria'] || '#2E7D32' }}>
-                      <p className="text-white text-xs opacity-80 mb-1">{localConfigs['sorteio_subtitulo'] || 'Prêmio acumulado desta edição'}</p>
-                      <p className="font-black text-2xl" style={{ color: localConfigs['cor_secundaria'] || '#FFC107' }}>R$ 0,00</p>
-                      <p className="text-white text-xs opacity-60 mt-1">
-                        {localConfigs['sorteio_dia_semana'] || 'Sábado'} às {localConfigs['sorteio_horario'] || '09h'}
-                      </p>
+                  <div className="bg-white">
+                    {(localConfigs['banner_sorteio_mobile_url'] || localConfigs['banner_sorteio_url']) && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={resolverUrl(localConfigs['banner_sorteio_mobile_url'] || localConfigs['banner_sorteio_url'] || '')}
+                        alt="banner" className="w-full" />
+                    )}
+                    <div className="px-4 py-5">
+                      <h2 className="text-lg font-black text-center mb-4" style={{ color: localConfigs['cor_primaria'] || '#2E7D32' }}>
+                        {localConfigs['sorteio_titulo'] || 'Sorteio da Semana'}
+                      </h2>
+                      <div className="rounded-2xl p-4 text-center mb-3"
+                        style={{ background: `linear-gradient(135deg, ${localConfigs['cor_primaria_escura'] || '#1B5E20'}, ${localConfigs['cor_primaria'] || '#2E7D32'})` }}>
+                        <p className="text-white text-xs opacity-80 mb-1">Prêmio acumulado desta edição</p>
+                        <p className="font-black text-2xl" style={{ color: localConfigs['cor_secundaria'] || '#FFC107' }}>
+                          R$ {localConfigs['premio_principal'] || '120.000'}
+                        </p>
+                        <p className="text-white text-xs opacity-60 mt-1">
+                          {localConfigs['sorteio_dia_semana'] || 'Toda sexta-feira'} às {localConfigs['sorteio_horario'] || '21h00'}
+                        </p>
+                      </div>
+                      <button className="w-full py-3 rounded-full text-sm font-black"
+                        style={{ background: localConfigs['cor_secundaria'] || '#FFC107', color: '#1B5E20' }}>
+                        {localConfigs['texto_btn_principal'] || 'Quero participar →'}
+                      </button>
                     </div>
-                    <button className="w-full py-2.5 rounded-xl text-sm font-bold text-center"
-                      style={{ background: localConfigs['cor_secundaria'] || '#FFC107', color: '#1B5E20' }}>
-                      {localConfigs['texto_btn_principal'] || 'Garanta já sua cartela!'}
-                    </button>
                   </div>
                 )}
 
                 {/* Quem Somos */}
                 {activeSection === 'sobre' && (
-                  <div className="px-4 pt-5 pb-6">
-                    <h2 className="text-sm font-bold text-center mb-3"
-                      style={{ color: localConfigs['cor_primaria'] || '#2E7D32' }}>
-                      {localConfigs['sobre_titulo'] || 'Quem Somos'}
+                  <div className="bg-white px-4 py-6">
+                    <span className="block text-center text-xs px-3 py-1 rounded-full font-bold mb-4 mx-auto w-fit"
+                      style={{ background: 'rgba(46,125,50,0.1)', color: '#2E7D32' }}>
+                      QUEM SOMOS
+                    </span>
+                    <h2 className="text-lg font-black text-center mb-3 leading-tight" style={{ color: '#1B5E20' }}>
+                      {localConfigs['sobre_titulo'] || 'Sorteios que transformam vidas'}
                     </h2>
-                    {localConfigs['cartela_imagem_url'] && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={resolverUrl(localConfigs['cartela_imagem_url'] || '')} alt=""
-                        className="w-full h-28 object-contain rounded-xl mb-3 bg-gray-100" />
-                    )}
-                    <p className="text-xs text-gray-600 leading-relaxed line-clamp-6">
-                      {localConfigs['sobre_texto'] || 'Somos uma organização filantrópica comprometida com a saúde infantil.'}
+                    <p className="text-xs text-gray-600 text-center leading-relaxed mb-4">
+                      {localConfigs['sobre_texto'] || 'O RECIFE CAP é um título de capitalização filantrópico.'}{' '}
+                      Contribua com o <strong style={{ color: '#1B5E20' }}>{localConfigs['sobre_hospital'] || 'Hospital Infantil Varela Santiago'}</strong>.
                     </p>
-                    {localConfigs['sobre_hospital'] && (
-                      <div className="mt-3 p-2 rounded-lg text-xs font-semibold text-center"
-                        style={{ background: (localConfigs['cor_primaria'] || '#2E7D32') + '18', color: localConfigs['cor_primaria'] || '#2E7D32' }}>
-                        {localConfigs['sobre_hospital']}
+                    {localConfigs['cartela_imagem_url'] ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={resolverUrl(localConfigs['cartela_imagem_url'])}
+                        alt="" className="w-full rounded-2xl mb-4 shadow-lg"
+                        style={{ transform: 'perspective(600px) rotateY(-8deg) rotate(-2deg)', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.2))' }} />
+                    ) : (
+                      <div className="w-full h-28 rounded-2xl mb-4 border-2 border-dashed border-gray-200 flex items-center justify-center">
+                        <p className="text-xs text-gray-300">Imagem da cartela</p>
                       </div>
                     )}
-                    {localConfigs['sobre_titulos_edicao'] && (
-                      <p className="text-xs text-gray-400 text-center mt-2">{localConfigs['sobre_titulos_edicao']}</p>
-                    )}
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { v: `R$ ${localConfigs['premio_principal'] || '120.000'}`, l: 'Prêmio' },
+                        { v: localConfigs['sobre_titulos_edicao'] || '100.000', l: 'Títulos' },
+                        { v: '100%', l: 'Via PIX' },
+                      ].map(({ v, l }) => (
+                        <div key={l} className="text-center p-2 rounded-xl"
+                          style={{ background: 'rgba(46,125,50,0.06)', border: '1px solid rgba(46,125,50,0.12)' }}>
+                          <p className="font-black text-xs" style={{ color: '#2E7D32' }}>{v}</p>
+                          <p className="text-gray-400 mt-0.5" style={{ fontSize: 9 }}>{l}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 
                 {/* Como Participar */}
                 {activeSection === 'como' && (
-                  <div className="px-4 pt-5 pb-6">
-                    <h2 className="text-sm font-bold text-center mb-4"
-                      style={{ color: localConfigs['cor_primaria'] || '#2E7D32' }}>
+                  <div className="px-4 py-6" style={{ background: '#F5F7FA' }}>
+                    <h2 className="text-lg font-black text-center mb-5" style={{ color: '#1B5E20' }}>
                       Como Participar
                     </h2>
                     <div className="space-y-3">
                       {[1, 2, 3, 4].map(n => (
-                        <div key={n} className="flex items-start gap-3">
-                          <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-black text-white"
-                            style={{ background: localConfigs['cor_primaria'] || '#2E7D32' }}>
+                        <div key={n} className="flex items-start gap-3 bg-white rounded-2xl p-3 shadow-sm">
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-white flex-shrink-0"
+                            style={{ background: `linear-gradient(135deg, ${localConfigs['cor_primaria_escura'] || '#1B5E20'}, ${localConfigs['cor_primaria'] || '#2E7D32'})` }}>
                             {n}
                           </div>
                           <div>
-                            <p className="text-xs font-semibold text-gray-800">{localConfigs[`passo_${n}_titulo`] || `Passo ${n}`}</p>
-                            {localConfigs[`passo_${n}_texto`] && (
-                              <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{localConfigs[`passo_${n}_texto`]}</p>
-                            )}
+                            <p className="font-black text-xs text-gray-800">
+                              {localConfigs[`passo_${n}_titulo`] || `Passo ${n}`}
+                            </p>
+                            <p className="text-gray-500 mt-0.5 leading-relaxed" style={{ fontSize: 10 }}>
+                              {localConfigs[`passo_${n}_texto`] || ''}
+                            </p>
                           </div>
                         </div>
                       ))}
@@ -856,22 +879,32 @@ export default function AdminLandingPage() {
 
                 {/* Prêmios */}
                 {activeSection === 'premios' && (
-                  <div className="px-4 pt-5 pb-6">
-                    <h2 className="text-sm font-bold text-center mb-3"
-                      style={{ color: localConfigs['cor_primaria'] || '#2E7D32' }}>
+                  <div className="bg-white px-4 py-6">
+                    <h2 className="text-lg font-black text-center mb-4" style={{ color: '#1B5E20' }}>
                       Prêmios da Edição
                     </h2>
-                    <div className="space-y-2">
-                      {[1, 2, 3].map(n => (
-                        <div key={n} className="flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-100 shadow-sm">
-                          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0"
-                            style={{ background: localConfigs['cor_secundaria'] || '#FFC107', color: '#1B5E20' }}>
-                            {n}°
-                          </div>
-                          <div>
-                            <p className="text-xs font-semibold text-gray-700">{n}° Prêmio</p>
-                            <p className="text-xs text-gray-400">Gerenciado em Edições</p>
-                          </div>
+                    <div className="text-center p-4 rounded-2xl mb-4 shadow-md"
+                      style={{ background: `linear-gradient(135deg, ${localConfigs['cor_secundaria'] || '#FFC107'}, #FFB300)` }}>
+                      <p className="text-xs font-bold mb-1" style={{ color: '#1B5E20' }}>PRÊMIO PRINCIPAL</p>
+                      <p className="text-3xl font-black" style={{ color: '#1B5E20' }}>
+                        R$ {localConfigs['premio_principal'] || '120.000'}
+                      </p>
+                      <p className="text-xs font-bold mt-1" style={{ color: '#1B5E20' }}>VALOR LÍQUIDO</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[1, 2, 3, 4].map(n => (
+                        <div key={n} className="text-center p-3 rounded-2xl border shadow-sm bg-white">
+                          {localConfigs[`premio_${n}_foto_url`] && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={resolverUrl(localConfigs[`premio_${n}_foto_url`] || '')}
+                              alt="" className="w-10 h-10 object-contain mx-auto mb-2" />
+                          )}
+                          <p className="font-black text-sm" style={{ color: '#2E7D32' }}>
+                            R$ {localConfigs[`premio_${n}_valor`] || '5.000'}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {localConfigs[`premio_${n}_nome`] || `${n}º Prêmio`}
+                          </p>
                         </div>
                       ))}
                     </div>
@@ -880,23 +913,24 @@ export default function AdminLandingPage() {
 
                 {/* Histórico */}
                 {activeSection === 'historico' && (
-                  <div className="px-4 pt-5 pb-6">
-                    <h2 className="text-sm font-bold text-center mb-1"
-                      style={{ color: localConfigs['cor_primaria'] || '#2E7D32' }}>
+                  <div className="px-4 py-6" style={{
+                    background: `radial-gradient(ellipse at 30% 50%, ${localConfigs['cor_primaria'] || '#2E7D32'} 0%, ${localConfigs['cor_primaria_escura'] || '#1B5E20'} 40%, #0D3B16 100%)`,
+                  }}>
+                    <h2 className="text-xl font-black text-white text-center mb-2">
                       Histórico de Resultados
                     </h2>
-                    <p className="text-xs text-gray-400 text-center mb-3">
-                      Consulte os contemplados de todas as edições encerradas
+                    <div className="w-12 h-1 rounded-full mx-auto mb-3"
+                      style={{ background: localConfigs['cor_secundaria'] || '#FFC107' }} />
+                    <p className="text-green-200 text-xs text-center mb-5">
+                      Consulte os ganhadores de todas as edições encerradas
                     </p>
                     <div className="space-y-2">
-                      {[1, 2, 3].map(n => (
-                        <div key={n} className="flex items-center justify-between p-3 rounded-xl bg-white border border-gray-100">
-                          <div>
-                            <p className="text-xs font-semibold text-gray-700">Edição #{n}</p>
-                            <p className="text-xs text-gray-400">Resultado publicado</p>
-                          </div>
-                          <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                            style={{ background: (localConfigs['cor_primaria'] || '#2E7D32') + '18', color: localConfigs['cor_primaria'] || '#2E7D32' }}>
+                      {['1º Prêmio — R$ 5.000', '2º Prêmio — R$ 10.000', '3º Prêmio — R$ 15.000'].map(p => (
+                        <div key={p} className="flex justify-between items-center rounded-xl px-3 py-2"
+                          style={{ background: 'rgba(255,255,255,0.1)' }}>
+                          <span className="text-white text-xs font-bold">{p}</span>
+                          <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+                            style={{ background: localConfigs['cor_secundaria'] || '#FFC107', color: '#1B5E20' }}>
                             Ver
                           </span>
                         </div>
@@ -907,53 +941,75 @@ export default function AdminLandingPage() {
 
                 {/* Depoimentos */}
                 {activeSection === 'depoimentos' && (
-                  <div className="px-4 pt-5 pb-6">
-                    <h2 className="text-sm font-bold text-center mb-3"
-                      style={{ color: localConfigs['cor_primaria'] || '#2E7D32' }}>
-                      Depoimentos
+                  <div className="px-4 py-6" style={{ background: '#F5F7FA' }}>
+                    <h2 className="text-lg font-black text-center mb-5" style={{ color: '#1B5E20' }}>
+                      O que dizem nossos ganhadores
                     </h2>
-                    <div className="rounded-2xl p-4 bg-white border border-gray-100 shadow-sm">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-white text-sm flex-shrink-0"
-                          style={{ background: localConfigs['cor_primaria'] || '#2E7D32' }}>G</div>
-                        <div>
-                          <p className="text-xs font-semibold text-gray-800">Ganhador Exemplo</p>
-                          <p className="text-xs text-gray-400">Recife, PE</p>
+                    <div className="space-y-3">
+                      {[
+                        { nome: 'Maria S.', cidade: 'Recife, PE', texto: 'Recebi o PIX na hora! Sistema muito transparente e confiável.' },
+                        { nome: 'João C.', cidade: 'Olinda, PE', texto: 'Ganhei e fui pago imediatamente. Recomendo a todos!' },
+                      ].map(d => (
+                        <div key={d.nome} className="bg-white rounded-2xl p-4 shadow-sm">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-black text-sm flex-shrink-0"
+                              style={{ background: localConfigs['cor_primaria'] || '#2E7D32' }}>
+                              {d.nome[0]}
+                            </div>
+                            <div>
+                              <p className="text-xs font-black text-gray-800">{d.nome}</p>
+                              <p className="text-gray-400" style={{ fontSize: 10 }}>{d.cidade}</p>
+                            </div>
+                            <div className="ml-auto flex gap-0.5">
+                              {[1, 2, 3, 4, 5].map(s => (
+                                <div key={s} className="w-2 h-2 rounded-full"
+                                  style={{ background: localConfigs['cor_secundaria'] || '#FFC107' }} />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-xs text-gray-600 italic">&ldquo;{d.texto}&rdquo;</p>
                         </div>
-                      </div>
-                      <p className="text-xs text-gray-600 italic">&ldquo;Ganhei com apenas uma cartela! Incrível!&rdquo;</p>
-                      <p className="text-xs mt-1.5" style={{ color: localConfigs['cor_secundaria'] || '#FFC107' }}>★★★★★</p>
+                      ))}
                     </div>
                   </div>
                 )}
 
                 {/* Rodapé */}
                 {activeSection === 'rodape' && (
-                  <div className="pt-5 pb-4" style={{ background: localConfigs['cor_primaria'] || '#2E7D32' }}>
-                    <div className="flex justify-center mb-3">
-                      {localConfigs['logo_url'] ? (
+                  <div style={{ background: localConfigs['cor_primaria_escura'] || '#1B5E20' }}>
+                    <div className="px-5 pt-8 pb-4 text-center">
+                      {localConfigs['logo_url'] && (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={resolverUrl(localConfigs['logo_url'] || '')} alt="logo" className="h-9 object-contain" />
-                      ) : (
-                        <p className="text-white font-black text-sm">{localConfigs['nome_sistema'] || 'RECIFE CAP'}</p>
+                        <img src={resolverUrl(localConfigs['logo_url'] || '')}
+                          alt="logo" className="w-12 h-12 object-contain mx-auto mb-3" />
                       )}
-                    </div>
-                    <div className="px-5 space-y-1.5 pb-4">
-                      {localConfigs['whatsapp_suporte'] && (
-                        <p className="text-white text-xs opacity-80 text-center">{localConfigs['whatsapp_suporte']}</p>
-                      )}
-                      {localConfigs['email_suporte'] && (
-                        <p className="text-white text-xs opacity-80 text-center">{localConfigs['email_suporte']}</p>
-                      )}
-                      {localConfigs['rodape_endereco'] && (
-                        <p className="text-white text-xs opacity-60 text-center">{localConfigs['rodape_endereco']}</p>
-                      )}
-                      {localConfigs['rodape_cnpj'] && (
-                        <p className="text-white text-xs opacity-50 text-center">{localConfigs['rodape_cnpj']}</p>
-                      )}
-                      <p className="text-white text-xs opacity-40 text-center pt-2 border-t border-white/10">
-                        {localConfigs['rodape_direitos'] || '© 2025 Recife Cap. Todos os direitos reservados.'}
+                      <p className="text-white font-black text-base mb-1">
+                        {localConfigs['nome_sistema'] || 'Recife Cap'}
                       </p>
+                      <p className="text-xs mb-4" style={{ color: localConfigs['cor_secundaria'] || '#FFC107' }}>
+                        {localConfigs['slogan'] || 'Filantropia Premiável'}
+                      </p>
+                      <div className="flex justify-center gap-4 mb-4">
+                        {localConfigs['instagram_url'] && (
+                          <span className="text-green-300 text-xs">Instagram</span>
+                        )}
+                        {localConfigs['facebook_url'] && (
+                          <span className="text-green-300 text-xs">Facebook</span>
+                        )}
+                        {localConfigs['whatsapp_suporte'] && (
+                          <span className="text-green-300 text-xs">WhatsApp</span>
+                        )}
+                      </div>
+                      <div className="border-t border-green-700 pt-4 space-y-1">
+                        {localConfigs['rodape_cnpj'] && (
+                          <p className="text-green-400 text-xs">CNPJ: {localConfigs['rodape_cnpj']}</p>
+                        )}
+                        {localConfigs['rodape_endereco'] && (
+                          <p className="text-green-400 text-xs">{localConfigs['rodape_endereco']}</p>
+                        )}
+                        <p className="text-green-500 text-xs mt-2">{localConfigs['rodape_texto']}</p>
+                        <p className="text-green-600 text-xs">{localConfigs['rodape_direitos']}</p>
+                      </div>
                     </div>
                   </div>
                 )}
