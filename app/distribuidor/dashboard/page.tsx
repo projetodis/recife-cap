@@ -1,9 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
 import {
-  AlertCircle, Store, Package, Route, BarChart2,
-  TrendingUp, Bike, CheckCircle, Tag, Users,
+  TrendingUp, Clock, DollarSign, Store, AlertCircle,
+  CheckCircle, Target, LayoutGrid, Bike, Package, Route,
+  BarChart2,
 } from 'lucide-react'
 
 export default async function DistribuidorDashboard() {
@@ -46,11 +46,11 @@ export default async function DistribuidorDashboard() {
   const faturamentoMes   = vendasMes.reduce((acc, v) => acc + Number(v.valor), 0)
   const faturamentoTotal = vendas?.reduce((acc, v) => acc + Number(v.valor), 0) ?? 0
 
-  const comissaoPendente = comissoes?.filter(c => c.status === 'pendente')
+  const comissaoPendente  = comissoes?.filter(c => c.status === 'pendente')
     .reduce((acc, c) => acc + Number(c.valor), 0) ?? 0
-  const comissaoPaga = comissoes?.filter(c => c.status === 'pago')
+  const comissaoPaga      = comissoes?.filter(c => c.status === 'pago')
     .reduce((acc, c) => acc + Number(c.valor), 0) ?? 0
-  const comissaoMes = comissoes?.filter(c => c.created_at >= inicioMes && c.status === 'pendente')
+  const comissaoMes       = comissoes?.filter(c => c.created_at >= inicioMes && c.status === 'pendente')
     .reduce((acc, c) => acc + Number(c.valor), 0) ?? 0
 
   const totalCartelas    = cartelas?.length ?? 0
@@ -58,272 +58,248 @@ export default async function DistribuidorDashboard() {
   const cartelasComDist  = cartelas?.filter(c => c.status === 'em_estoque_distribuidor').length ?? 0
   const cartelasNoPDV    = cartelas?.filter(c => c.status === 'em_estoque_pdv').length ?? 0
 
-  const pdvsAtivos   = pdvs?.filter(p => p.status === 'ativo').length ?? 0
-  const metaMensal   = dist.meta_mensal ?? 0
-  const progressoMeta = metaMensal > 0 ? Math.min(100, Math.round(faturamentoMes / metaMensal * 100)) : null
+  const metaMensal = dist.meta_mensal ?? 0
 
-  const statusPix: Record<string, { label: string; bg: string; text: string }> = {
-    pendente:             { label: 'PIX não cadastrado',       bg: '#F5F5F5',  text: '#6B7280' },
-    aguardando_validacao: { label: 'PIX aguardando validação', bg: '#FFF8E1',  text: '#B45309' },
-    validado:             { label: 'PIX validado',             bg: '#E8F5E9',  text: '#2E7D32' },
-    rejeitado:            { label: 'PIX rejeitado',            bg: '#FEF2F2',  text: '#DC2626' },
-  }
-  const pixStatus = statusPix[profile?.status_pix ?? 'pendente']
+  // Aliases para o novo JSX
+  const chavePix        = profile?.chave_pix
+  const comissaoRecebida = comissaoPaga
+  const cartelasComigo   = cartelasComDist
 
-  function moeda(v: number) {
-    return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  function fmt(v: number) {
+    return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   }
 
   return (
-    <div style={{ background: '#F5F7FA', minHeight: '100vh' }} className="p-1">
+    <div className="space-y-6">
 
       {/* HEADER */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black text-gray-900">Painel do distribuidor</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Bem-vindo, {profile?.nome}</p>
+          <p className="text-sm text-gray-500 mt-0.5">Bem-vindo, {profile?.nome || 'Distribuidor'}</p>
         </div>
-        <span
-          className="text-xs font-medium px-3 py-1 rounded-full"
-          style={{ background: pixStatus.bg, color: pixStatus.text }}
-        >
-          {pixStatus.label}
-        </span>
+        {!chavePix ? (
+          <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium"
+            style={{ background: '#FFF8E1', color: '#B45309' }}>
+            <AlertCircle size={16} />
+            PIX não cadastrado
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium"
+            style={{ background: '#E8F5E9', color: '#2E7D32' }}>
+            <CheckCircle size={16} />
+            PIX cadastrado
+          </div>
+        )}
       </div>
 
       {/* ALERTA PIX */}
-      {profile?.status_pix !== 'validado' && (
-        <div
-          className="rounded-xl p-4 mb-6 flex items-center justify-between"
-          style={{ background: '#FFF8E1', borderLeft: '4px solid #FFC107' }}
-        >
+      {!chavePix && (
+        <div className="flex items-center justify-between p-4 rounded-2xl border-l-4"
+          style={{ background: '#FFF8E1', borderLeftColor: '#FFC107' }}>
           <div className="flex items-center gap-3">
-            <AlertCircle size={18} style={{ color: '#F59E0B', flexShrink: 0 }} />
-            <p className="text-sm text-amber-800">
+            <AlertCircle size={18} style={{ color: '#F59E0B' }} />
+            <p className="text-sm font-medium text-yellow-800">
               Cadastre sua chave PIX para receber comissões.
             </p>
           </div>
-          <Link
-            href="/distribuidor/perfil"
-            className="text-xs font-semibold ml-4 whitespace-nowrap"
-            style={{ color: '#2E7D32' }}
-          >
-            Atualizar perfil
-          </Link>
+          <a href="/distribuidor/perfil"
+            className="text-sm font-bold hover:underline"
+            style={{ color: '#2E7D32' }}>
+            Atualizar perfil &rarr;
+          </a>
         </div>
       )}
 
-      {/* STATS CARDS */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      {/* STAT CARDS */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           {
             label: 'Faturamento do mês',
-            value: moeda(faturamentoMes),
-            sub:   `Total: ${moeda(faturamentoTotal)}`,
-            Icon:  TrendingUp,
+            valor: `R$ ${fmt(faturamentoMes)}`,
+            sub: `Total: R$ ${fmt(faturamentoTotal)}`,
+            icon: TrendingUp, cor: '#2E7D32', bg: '#E8F5E9',
           },
           {
             label: 'Comissão pendente',
-            value: moeda(comissaoPendente),
-            sub:   `Este mês: ${moeda(comissaoMes)}`,
-            Icon:  AlertCircle,
+            valor: `R$ ${fmt(comissaoPendente)}`,
+            sub: `Este mês: R$ ${fmt(comissaoMes)}`,
+            icon: Clock, cor: '#F59E0B', bg: '#FFF8E1',
           },
           {
             label: 'Comissão recebida',
-            value: moeda(comissaoPaga),
-            sub:   `${dist.comissao_pct ?? 0}% sobre vendas`,
-            Icon:  CheckCircle,
+            valor: `R$ ${fmt(comissaoRecebida)}`,
+            sub: `${dist.comissao_pct ?? 15}% sobre vendas`,
+            icon: DollarSign, cor: '#1565C0', bg: '#E3F2FD',
           },
           {
             label: 'Meus PDVs',
-            value: pdvsAtivos,
-            sub:   `${pdvs?.length ?? 0} cadastrados`,
-            Icon:  Store,
+            valor: pdvs?.length || 0,
+            sub: `${pdvs?.length || 0} cadastrados`,
+            icon: Store, cor: '#2E7D32', bg: '#E8F5E9',
           },
-        ].map(({ label, value, sub, Icon }) => (
-          <div key={label} className="bg-white rounded-2xl border p-5" style={{ borderColor: '#E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: '#E8F5E9' }}>
-                <Icon size={16} style={{ color: '#2E7D32' }} />
+        ].map(({ label, valor, sub, icon: Icon, cor, bg }) => (
+          <div key={label} className="bg-white rounded-2xl border p-5 shadow-sm">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: bg }}>
+                <Icon size={20} style={{ color: cor }} />
               </div>
-              <p className="text-xs text-gray-500 uppercase tracking-wider">{label}</p>
+              <p className="text-xs text-gray-500 uppercase tracking-wider leading-tight">{label}</p>
             </div>
-            <p className="text-2xl font-black text-gray-900 mb-0.5">{value}</p>
-            <p className="text-xs text-gray-400">{sub}</p>
+            <p className="font-black text-xl text-gray-900">{valor}</p>
+            <p className="text-xs text-gray-400 mt-1">{sub}</p>
           </div>
         ))}
       </div>
 
       {/* META MENSAL */}
-      {progressoMeta !== null && (
-        <div className="bg-white rounded-2xl border p-5 mb-6" style={{ borderColor: '#E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-          <div className="flex justify-between items-center mb-2">
-            <p className="text-sm font-bold text-gray-700">Meta mensal</p>
-            <p className="text-sm font-black" style={{ color: '#2E7D32' }}>{progressoMeta}%</p>
+      {metaMensal > 0 && (
+        <div className="bg-white rounded-2xl border p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Target size={16} style={{ color: '#2E7D32' }} />
+              <span className="font-bold text-gray-700 text-sm">Meta mensal</span>
+            </div>
+            <span className="text-sm font-black" style={{ color: '#2E7D32' }}>
+              {Math.min(100, Math.round((faturamentoMes / metaMensal) * 100))}%
+            </span>
           </div>
-          <div className="h-2.5 rounded-full overflow-hidden" style={{ background: '#F3F4F6' }}>
-            <div
-              className="h-full rounded-full transition-all duration-700"
-              style={{ width: `${progressoMeta}%`, background: 'linear-gradient(90deg, #1B5E20, #66BB6A)' }}
-            />
+          <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+            <div className="h-full rounded-full transition-all duration-700"
+              style={{
+                width: `${Math.min(100, (faturamentoMes / metaMensal) * 100)}%`,
+                background: 'linear-gradient(90deg, #2E7D32, #66BB6A)',
+              }} />
           </div>
-          <div className="flex justify-between text-xs text-gray-400 mt-1.5">
-            <span>{moeda(faturamentoMes)} alcançado</span>
-            <span>Meta: {moeda(metaMensal)}</span>
-          </div>
+          <p className="text-xs text-gray-400 mt-2">
+            R$ {fmt(faturamentoMes)} de R$ {fmt(metaMensal)}
+          </p>
         </div>
       )}
 
-      {/* SEÇÃO MÉDIA: Cartelas + PDVs + Motoboys */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      {/* CARDS MEIO */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
         {/* Cartelas */}
-        <div className="bg-white rounded-2xl border p-5" style={{ borderColor: '#E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Tag size={16} style={{ color: '#2E7D32' }} />
-              <h2 className="text-sm font-bold text-gray-700">Cartelas</h2>
-            </div>
+        <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b flex items-center justify-between"
+            style={{ background: 'rgba(46,125,50,0.04)' }}>
+            <h3 className="font-bold text-gray-700 text-sm flex items-center gap-2">
+              <LayoutGrid size={16} style={{ color: '#2E7D32' }} /> Cartelas
+            </h3>
+            <a href="/distribuidor/cartelas"
+              className="text-xs font-bold" style={{ color: '#2E7D32' }}>
+              Gerenciar &rarr;
+            </a>
           </div>
-          <div className="space-y-3">
+          <div className="divide-y divide-gray-50">
             {[
-              { label: 'Total recebidas', value: totalCartelas },
-              { label: 'Vendidas',        value: cartelasVendidas },
-              { label: 'Nos PDVs',        value: cartelasNoPDV },
-              { label: 'Comigo',          value: cartelasComDist },
-            ].map(c => (
-              <div key={c.label} className="flex justify-between text-sm">
-                <span className="text-gray-500">{c.label}</span>
-                <span className="font-bold text-gray-800">{c.value.toLocaleString('pt-BR')}</span>
+              { label: 'Total recebidas', valor: totalCartelas,    cor: 'text-gray-800' },
+              { label: 'Vendidas',        valor: cartelasVendidas, cor: 'text-green-600' },
+              { label: 'Nos PDVs',        valor: cartelasNoPDV,    cor: 'text-blue-600' },
+              { label: 'Comigo',          valor: cartelasComigo,   cor: 'text-yellow-600' },
+            ].map(({ label, valor, cor }) => (
+              <div key={label} className="flex items-center justify-between px-5 py-3">
+                <span className="text-sm text-gray-600">{label}</span>
+                <span className={`font-black text-sm ${cor}`}>{valor}</span>
               </div>
             ))}
           </div>
-          {totalCartelas > 0 && (
-            <div className="mt-4">
-              <div className="h-1.5 rounded-full overflow-hidden flex" style={{ background: '#F3F4F6' }}>
-                <div className="h-full" style={{ width: `${cartelasVendidas / totalCartelas * 100}%`, background: '#2E7D32' }} />
-                <div className="h-full" style={{ width: `${cartelasNoPDV / totalCartelas * 100}%`, background: '#FFC107' }} />
-                <div className="h-full" style={{ width: `${cartelasComDist / totalCartelas * 100}%`, background: '#D1D5DB' }} />
-              </div>
-            </div>
-          )}
-          <Link href="/distribuidor/cartelas" className="block text-xs font-semibold mt-3" style={{ color: '#2E7D32' }}>
-            Gerenciar cartelas
-          </Link>
         </div>
 
-        {/* PDVs */}
-        <div className="bg-white rounded-2xl border p-5" style={{ borderColor: '#E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Store size={16} style={{ color: '#2E7D32' }} />
-              <h2 className="text-sm font-bold text-gray-700">Meus PDVs</h2>
-            </div>
-            <Link href="/distribuidor/pdvs/novo" className="text-xs font-semibold" style={{ color: '#2E7D32' }}>
+        {/* Meus PDVs */}
+        <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b flex items-center justify-between"
+            style={{ background: 'rgba(46,125,50,0.04)' }}>
+            <h3 className="font-bold text-gray-700 text-sm flex items-center gap-2">
+              <Store size={16} style={{ color: '#2E7D32' }} /> Meus PDVs
+            </h3>
+            <a href="/distribuidor/pdvs/novo"
+              className="text-xs font-bold" style={{ color: '#2E7D32' }}>
               + Novo
-            </Link>
+            </a>
           </div>
-          {pdvs && pdvs.length > 0 ? (
-            <div className="space-y-2">
-              {pdvs.slice(0, 5).map(p => (
-                <div key={p.id} className="flex items-center justify-between text-sm">
-                  <span className="text-gray-700 truncate">{p.nome}</span>
-                  <span
-                    className="text-xs px-2 py-0.5 rounded-full flex-shrink-0"
-                    style={p.status === 'ativo'
-                      ? { background: '#E8F5E9', color: '#2E7D32' }
-                      : p.status === 'sem_estoque'
-                      ? { background: '#FFF8E1', color: '#B45309' }
-                      : { background: '#F5F5F5', color: '#6B7280' }
-                    }
-                  >
-                    {p.status === 'ativo' ? 'Ativo' : p.status === 'sem_estoque' ? 'Sem estoque' : 'Inativo'}
-                  </span>
-                </div>
-              ))}
-              {(pdvs?.length ?? 0) > 5 && (
-                <p className="text-xs text-gray-400">+{(pdvs?.length ?? 0) - 5} mais</p>
-              )}
-            </div>
-          ) : (
-            <p className="text-xs text-gray-400">Nenhum PDV cadastrado</p>
-          )}
-          <Link href="/distribuidor/pdvs" className="block text-xs font-semibold mt-3" style={{ color: '#2E7D32' }}>
-            Ver todos
-          </Link>
+          <div className="divide-y divide-gray-50">
+            {pdvs?.slice(0, 4).map((pdv: any) => (
+              <div key={pdv.id} className="flex items-center justify-between px-5 py-3">
+                <p className="text-sm font-bold text-gray-800 truncate">{pdv.nome}</p>
+                <span className="text-xs px-2 py-0.5 rounded-full font-bold flex-shrink-0 ml-2"
+                  style={{ background: '#E8F5E9', color: '#2E7D32' }}>
+                  Ativo
+                </span>
+              </div>
+            ))}
+            {!pdvs?.length && (
+              <p className="px-5 py-3 text-xs text-gray-400">Nenhum PDV cadastrado</p>
+            )}
+          </div>
+          <div className="px-5 py-3 border-t">
+            <a href="/distribuidor/pdvs"
+              className="text-xs font-bold" style={{ color: '#2E7D32' }}>
+              Ver todos &rarr;
+            </a>
+          </div>
         </div>
 
         {/* Motoboys */}
-        <div className="bg-white rounded-2xl border p-5" style={{ borderColor: '#E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Bike size={16} style={{ color: '#2E7D32' }} />
-              <h2 className="text-sm font-bold text-gray-700">Motoboys</h2>
-            </div>
-            <Link href="/distribuidor/motoboys/novo" className="text-xs font-semibold" style={{ color: '#2E7D32' }}>
+        <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b flex items-center justify-between"
+            style={{ background: 'rgba(46,125,50,0.04)' }}>
+            <h3 className="font-bold text-gray-700 text-sm flex items-center gap-2">
+              <Bike size={16} style={{ color: '#2E7D32' }} /> Motoboys
+            </h3>
+            <a href="/distribuidor/motoboys/novo"
+              className="text-xs font-bold" style={{ color: '#2E7D32' }}>
               + Novo
-            </Link>
+            </a>
           </div>
-          {motoboys && motoboys.length > 0 ? (
-            <div className="space-y-2">
-              {motoboys.map(m => (
-                <div key={m.id} className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0"
-                      style={{ background: '#E8F5E9', color: '#2E7D32' }}
-                    >
-                      {m.nome?.charAt(0).toUpperCase()}
-                    </div>
-                    <span className="text-gray-700 truncate">{m.nome}</span>
+          <div className="divide-y divide-gray-50">
+            {motoboys?.slice(0, 4).map((mb: any) => (
+              <div key={mb.id} className="flex items-center justify-between px-5 py-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white flex-shrink-0"
+                    style={{ background: '#2E7D32' }}>
+                    {mb.nome?.charAt(0)?.toUpperCase()}
                   </div>
-                  <span
-                    className="text-xs px-2 py-0.5 rounded-full flex-shrink-0"
-                    style={m.status === 'ativo'
-                      ? { background: '#E8F5E9', color: '#2E7D32' }
-                      : { background: '#F5F5F5', color: '#6B7280' }
-                    }
-                  >
-                    {m.status === 'ativo' ? 'Ativo' : 'Inativo'}
-                  </span>
+                  <p className="text-sm font-bold text-gray-800 truncate">{mb.nome}</p>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-xs text-gray-400">Nenhum motoboy cadastrado</p>
-          )}
-          <Link href="/distribuidor/rotas/nova" className="block text-xs font-semibold mt-3" style={{ color: '#2E7D32' }}>
-            Criar rota de entrega
-          </Link>
+                <span className="text-xs px-2 py-0.5 rounded-full font-bold flex-shrink-0 ml-2"
+                  style={{ background: '#E8F5E9', color: '#2E7D32' }}>
+                  Ativo
+                </span>
+              </div>
+            ))}
+            {!motoboys?.length && (
+              <p className="px-5 py-3 text-xs text-gray-400">Nenhum motoboy cadastrado</p>
+            )}
+          </div>
+          <div className="px-5 py-3 border-t">
+            <a href="/distribuidor/motoboys"
+              className="text-xs font-bold" style={{ color: '#2E7D32' }}>
+              Criar rota de entrega &rarr;
+            </a>
+          </div>
         </div>
       </div>
 
       {/* AÇÕES RÁPIDAS */}
-      <div>
-        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Ações rápidas</p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[
-            { label: 'Cadastrar PDV',   href: '/distribuidor/pdvs/novo',      Icon: Store },
-            { label: 'Enviar cartelas', href: '/distribuidor/cartelas',       Icon: Package },
-            { label: 'Criar rota',      href: '/distribuidor/rotas/nova',     Icon: Route },
-            { label: 'Ver relatórios',  href: '/distribuidor/relatorios',     Icon: BarChart2 },
-          ].map(({ label, href, Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className="bg-white rounded-2xl border p-5 text-center transition-all hover:shadow-md group"
-              style={{ borderColor: '#E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
-            >
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-3 transition-colors group-hover:bg-[#2E7D32]"
-                style={{ background: '#E8F5E9' }}
-              >
-                <Icon size={20} className="transition-colors" style={{ color: '#2E7D32' }} />
-              </div>
-              <p className="text-xs font-bold text-gray-700">{label}</p>
-            </Link>
-          ))}
-        </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: 'Cadastrar PDV',  href: '/distribuidor/pdvs/novo',  icon: Store },
+          { label: 'Enviar cartelas', href: '/distribuidor/cartelas',  icon: Package },
+          { label: 'Criar rota',     href: '/distribuidor/rotas/nova', icon: Route },
+          { label: 'Ver relatórios', href: '/distribuidor/relatorios', icon: BarChart2 },
+        ].map(({ label, href, icon: Icon }) => (
+          <a key={label} href={href}
+            className="bg-white rounded-2xl border p-5 shadow-sm flex flex-col items-center justify-center gap-3 text-center transition-all hover:shadow-md hover:border-green-200 group">
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110"
+              style={{ background: '#E8F5E9' }}>
+              <Icon size={22} style={{ color: '#2E7D32' }} />
+            </div>
+            <p className="text-sm font-bold text-gray-700">{label}</p>
+          </a>
+        ))}
       </div>
 
     </div>

@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
-import { Route, Bike, Calendar, User, Plus } from 'lucide-react'
+import { Route, Plus, User, Calendar } from 'lucide-react'
 
 export default async function RotasPage() {
   const supabase = await createClient()
@@ -30,114 +29,107 @@ export default async function RotasPage() {
     if (p.status === 'visitado') paradasPorRota[p.rota_id].visitadas++
   })
 
-  const statusStyle: Record<string, { bg: string; text: string; label: string }> = {
-    pendente:     { bg: '#FFF8E1',  text: '#B45309', label: 'Pendente' },
-    em_andamento: { bg: '#E8F5E9',  text: '#2E7D32', label: 'Em andamento' },
-    concluida:    { bg: '#F5F5F5',  text: '#6B7280', label: 'Concluída' },
-  }
+  // Enriquecer rotas com dados de paradas e motoboy
+  const rotasEnriquecidas = (rotas ?? []).map((r: any) => {
+    const pp = paradasPorRota[r.id] ?? { total: 0, visitadas: 0 }
+    return {
+      ...r,
+      motoboy_nome:       r.motoboys?.nome ?? null,
+      total_paradas:      pp.total,
+      paradas_concluidas: pp.visitadas,
+    }
+  })
 
   return (
-    <div style={{ background: '#F5F7FA', minHeight: '100vh' }} className="p-1">
+    <div className="space-y-6">
 
       {/* HEADER */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black text-gray-900">Rotas de entrega</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{rotas?.length ?? 0} rotas registradas</p>
+          <p className="text-sm text-gray-500">{rotasEnriquecidas.length} rotas registradas</p>
         </div>
-        <Link
-          href="/distribuidor/rotas/nova"
-          className="flex items-center gap-2 px-4 py-2.5 text-white text-sm font-bold rounded-xl transition hover:opacity-90"
-          style={{ background: '#2E7D32' }}
-        >
-          <Plus size={16} />
+        <a href="/distribuidor/rotas/nova"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-white transition-all hover:opacity-90"
+          style={{ background: 'linear-gradient(135deg, #1B5E20, #2E7D32)' }}>
+          <Plus size={18} />
           Nova rota
-        </Link>
+        </a>
       </div>
 
-      {rotas && rotas.length > 0 ? (
+      {!rotasEnriquecidas.length ? (
+        <div className="bg-white rounded-2xl border p-12 shadow-sm text-center">
+          <Route size={48} className="text-gray-200 mx-auto mb-4" />
+          <p className="font-bold text-gray-400 text-lg">Nenhuma rota registrada ainda</p>
+          <a href="/distribuidor/rotas/nova"
+            className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 rounded-xl font-bold text-white"
+            style={{ background: '#2E7D32' }}>
+            <Plus size={16} /> Criar primeira rota
+          </a>
+        </div>
+      ) : (
         <div className="space-y-3">
-          {rotas.map((r: any) => {
-            const pp  = paradasPorRota[r.id] ?? { total: 0, visitadas: 0 }
-            const pct = pp.total > 0 ? Math.round(pp.visitadas / pp.total * 100) : 0
-            const st  = statusStyle[r.status] ?? statusStyle.pendente
+          {rotasEnriquecidas.map(rota => {
+            const pct = rota.total_paradas > 0
+              ? Math.round((rota.paradas_concluidas / rota.total_paradas) * 100)
+              : 0
+            const statusCfg = ({
+              pendente:     { bg: '#FFF8E1', color: '#B45309', label: 'Pendente' },
+              em_andamento: { bg: '#E8F5E9', color: '#2E7D32', label: 'Em andamento' },
+              concluida:    { bg: '#F5F5F5', color: '#9E9E9E', label: 'Concluída' },
+            } as Record<string, { bg: string; color: string; label: string }>)[rota.status]
+              ?? { bg: '#FFF8E1', color: '#B45309', label: rota.status }
 
             return (
-              <div
-                key={r.id}
-                className="bg-white rounded-2xl border p-5"
-                style={{ borderColor: '#E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
-              >
-                <div className="flex items-start justify-between mb-3">
-
-                  {/* Lado esquerdo */}
-                  <div className="flex items-start gap-3">
-                    <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{ background: '#E8F5E9' }}
-                    >
+              <div key={rota.id}
+                className="bg-white rounded-2xl border shadow-sm p-5 hover:shadow-md transition-all">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-4 flex-1 min-w-0">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{ background: '#E8F5E9' }}>
                       <Route size={18} style={{ color: '#2E7D32' }} />
                     </div>
-                    <div>
-                      <h3 className="font-bold text-gray-900">{r.nome}</h3>
-                      <div className="flex items-center gap-3 mt-1">
-                        {r.motoboys?.nome && (
-                          <span className="flex items-center gap-1 text-xs text-gray-400">
-                            <User size={11} />
-                            {r.motoboys.nome}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-black text-gray-900">{rota.nome || 'Rota sem nome'}</p>
+                      <div className="flex items-center gap-3 mt-1 flex-wrap">
+                        {rota.motoboy_nome && (
+                          <span className="text-xs text-gray-500 flex items-center gap-1">
+                            <User size={11} /> {rota.motoboy_nome}
                           </span>
                         )}
-                        <span className="flex items-center gap-1 text-xs text-gray-400">
-                          <Calendar size={11} />
-                          {new Date(r.data_rota).toLocaleDateString('pt-BR')}
-                        </span>
+                        {rota.data_rota && (
+                          <span className="text-xs text-gray-500 flex items-center gap-1">
+                            <Calendar size={11} />
+                            {new Date(rota.data_rota + 'T12:00:00').toLocaleDateString('pt-BR')}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
-
-                  {/* Lado direito */}
-                  <span
-                    className="text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0"
-                    style={{ background: st.bg, color: st.text }}
-                  >
-                    {st.label}
-                  </span>
-                </div>
-
-                {/* Progresso */}
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: '#F3F4F6' }}>
-                    <div
-                      className="h-full rounded-full transition-all"
-                      style={{ width: `${pct}%`, background: '#2E7D32' }}
-                    />
+                  <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                    <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+                      style={{ background: statusCfg.bg, color: statusCfg.color }}>
+                      {statusCfg.label}
+                    </span>
+                    <span className="text-xs text-gray-400">
+                      {rota.paradas_concluidas}/{rota.total_paradas} paradas
+                    </span>
                   </div>
-                  <span className="text-xs text-gray-400 flex-shrink-0 flex items-center gap-1">
-                    <Bike size={11} />
-                    {pp.visitadas}/{pp.total} paradas
-                  </span>
                 </div>
+                {rota.total_paradas > 0 && (
+                  <div className="mt-4">
+                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full transition-all"
+                        style={{
+                          width: `${pct}%`,
+                          background: 'linear-gradient(90deg, #2E7D32, #66BB6A)',
+                        }} />
+                    </div>
+                  </div>
+                )}
               </div>
             )
           })}
-        </div>
-      ) : (
-        <div
-          className="bg-white rounded-2xl border p-16 text-center"
-          style={{ borderColor: '#E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
-        >
-          <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: '#F5F5F5' }}>
-            <Route size={32} className="text-gray-300" />
-          </div>
-          <p className="font-bold text-gray-400 text-sm mb-4">Nenhuma rota criada ainda.</p>
-          <Link
-            href="/distribuidor/rotas/nova"
-            className="inline-flex items-center gap-2 px-4 py-2.5 text-white text-sm font-bold rounded-xl transition hover:opacity-90"
-            style={{ background: '#2E7D32' }}
-          >
-            <Plus size={16} />
-            Criar primeira rota
-          </Link>
         </div>
       )}
     </div>
